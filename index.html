@@ -3,54 +3,1640 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Tech Lab</title>
+    <meta name="theme-color" content="#090c12">
+    <meta name="description" content="My personal space for AI, coding, productivity and creative projects.">
+    <title>My Tech Lab — Ideas in progress</title>
     <style>
+        :root {
+            color-scheme: dark;
+            --background: #090c12;
+            --surface: #10151e;
+            --surface-raised: #141b26;
+            --border: rgba(179, 197, 221, 0.12);
+            --text: #edf2f8;
+            --muted: #8995a6;
+            --accent: #9de8d4;
+            --accent-soft: rgba(157, 232, 212, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background: #111827;
-            color: white;
+            min-width: 320px;
+            margin: 0;
+            background:
+                radial-gradient(ellipse at 50% -18%, rgba(87, 130, 154, 0.16), transparent 48%),
+                var(--background);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        a {
+            color: inherit;
+        }
+
+        .page-shell {
+            width: min(100% - 48px, 1080px);
+            margin: 0 auto;
+        }
+
+        .site-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            min-height: 84px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 11px;
+            color: var(--text);
+            font-size: 14px;
+            font-weight: 650;
+            letter-spacing: -0.02em;
+            text-decoration: none;
+        }
+
+        .brand-mark {
+            display: grid;
+            width: 30px;
+            height: 30px;
+            place-items: center;
+            border: 1px solid rgba(157, 232, 212, 0.24);
+            border-radius: 9px;
+            background: var(--accent-soft);
+            color: var(--accent);
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 13px;
+        }
+
+        .site-nav {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: clamp(14px, 2.4vw, 28px);
+        }
+
+        .header-link {
+            color: #b6c0cd;
+            font-size: 13px;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: color 160ms ease;
+        }
+
+        .header-link:hover,
+        .header-link:focus-visible {
+            color: var(--accent);
+        }
+
+        main {
+            padding: 88px 0 96px;
+        }
+
+        .intro {
+            max-width: 700px;
+            margin: 0 auto 62px;
             text-align: center;
-            padding: 80px 20px;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            margin: 0 0 23px;
+            color: var(--accent);
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 11px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .eyebrow::before {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 12px rgba(157, 232, 212, 0.75);
+            content: "";
         }
 
         h1 {
-            font-size: 42px;
+            margin: 0;
+            font-size: clamp(42px, 7vw, 72px);
+            font-weight: 620;
+            letter-spacing: -0.065em;
+            line-height: 1.04;
         }
 
-        p {
-            color: #9ca3af;
-            font-size: 18px;
+        .intro-copy {
+            max-width: 510px;
+            margin: 22px auto 0;
+            color: var(--muted);
+            font-size: clamp(16px, 2vw, 18px);
+            line-height: 1.7;
         }
 
-        .card {
-            background: #1f2937;
-            padding: 25px;
-            margin: 20px auto;
-            max-width: 500px;
+        .dashboard-section {
+            margin: -20px 0 52px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .dashboard-stat {
+            min-width: 0;
+            padding: 18px 19px;
+            border: 1px solid var(--border);
             border-radius: 12px;
+            background: linear-gradient(145deg, rgba(20, 27, 38, 0.88), rgba(13, 18, 26, 0.9));
+        }
+
+        .dashboard-value {
+            display: block;
+            color: var(--text);
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: clamp(25px, 3.4vw, 34px);
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.06em;
+            line-height: 1.1;
+        }
+
+        .dashboard-label {
+            display: block;
+            margin-top: 9px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .clock-panel {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            max-width: 560px;
+            margin: 0 auto 62px;
+            padding: 22px 26px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: linear-gradient(120deg, rgba(20, 27, 38, 0.9), rgba(13, 18, 26, 0.88));
+        }
+
+        .clock-calendar {
+            display: grid;
+            gap: 6px;
+        }
+
+        .clock-label {
+            color: #748194;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 10px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .clock-weekday {
+            color: #dce5ef;
+            font-size: 15px;
+            font-weight: 550;
+        }
+
+        .clock-date {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .clock-time {
+            color: var(--accent);
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: clamp(28px, 5vw, 38px);
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.06em;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        .daily-focus-section {
+            margin: 0 0 62px;
+        }
+
+        .daily-focus-panel {
+            padding: 24px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: linear-gradient(145deg, rgba(20, 27, 38, 0.88), rgba(13, 18, 26, 0.9));
+        }
+
+        .daily-focus-header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .daily-focus-date {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .daily-focus-list {
+            display: grid;
+            gap: 10px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .daily-focus-item {
+            display: grid;
+            grid-template-columns: 30px minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: rgba(7, 10, 15, 0.28);
+        }
+
+        .daily-focus-number {
+            color: var(--accent);
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 12px;
+        }
+
+        .daily-focus-input {
+            width: 100%;
+            min-width: 0;
+            min-height: 38px;
+            padding: 0 10px;
+            border: 1px solid transparent;
+            border-radius: 7px;
+            outline: none;
+            background: transparent;
+            color: var(--text);
+            font: inherit;
+            font-size: 14px;
+        }
+
+        .daily-focus-input::placeholder {
+            color: #677486;
+        }
+
+        .daily-focus-input:focus-visible {
+            border-color: rgba(157, 232, 212, 0.4);
+            background: rgba(7, 10, 15, 0.45);
+            box-shadow: 0 0 0 3px rgba(157, 232, 212, 0.08);
+        }
+
+        .daily-focus-clear {
+            min-height: 34px;
+            padding: 0 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: transparent;
+            color: #aab5c3;
+            font: inherit;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 160ms ease, border-color 160ms ease;
+        }
+
+        .daily-focus-clear:hover,
+        .daily-focus-clear:focus-visible {
+            border-color: rgba(157, 232, 212, 0.5);
+            background: rgba(157, 232, 212, 0.1);
+            color: var(--accent);
+        }
+
+        .daily-focus-input:disabled,
+        .daily-focus-clear:disabled {
+            cursor: not-allowed;
+            opacity: 0.55;
+        }
+
+        .daily-focus-status {
+            min-height: 1.4em;
+            margin: 14px 0 0;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .notes-section {
+            margin: 0 0 62px;
+        }
+
+        .notes-panel {
+            padding: 24px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: linear-gradient(145deg, rgba(20, 27, 38, 0.88), rgba(13, 18, 26, 0.9));
+        }
+
+        .notes-form {
+            display: grid;
+            gap: 12px;
+        }
+
+        .notes-input {
+            width: 100%;
+            min-height: 104px;
+            padding: 14px 15px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            outline: none;
+            background: rgba(7, 10, 15, 0.55);
+            color: var(--text);
+            font: inherit;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: vertical;
+        }
+
+        .notes-input::placeholder {
+            color: #677486;
+        }
+
+        .notes-input:focus-visible {
+            border-color: rgba(157, 232, 212, 0.55);
+            box-shadow: 0 0 0 3px rgba(157, 232, 212, 0.08);
+        }
+
+        .notes-form-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .notes-status {
+            min-height: 1.4em;
+            margin: 0;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .notes-save,
+        .note-delete {
+            border: 1px solid rgba(157, 232, 212, 0.22);
+            border-radius: 8px;
+            background: var(--accent-soft);
+            color: var(--accent);
+            font: inherit;
+            cursor: pointer;
+            transition: background 160ms ease, border-color 160ms ease;
+        }
+
+        .notes-save {
+            min-height: 40px;
+            padding: 0 16px;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .notes-save:hover,
+        .notes-save:focus-visible,
+        .note-delete:hover,
+        .note-delete:focus-visible {
+            border-color: rgba(157, 232, 212, 0.5);
+            background: rgba(157, 232, 212, 0.16);
+        }
+
+        .notes-save:disabled,
+        .notes-input:disabled {
+            cursor: not-allowed;
+            opacity: 0.55;
+        }
+
+        .notes-list {
+            display: grid;
+            gap: 10px;
+            margin: 18px 0 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .note-item {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 16px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: rgba(7, 10, 15, 0.28);
+        }
+
+        .note-content {
+            min-width: 0;
+        }
+
+        .note-text {
+            margin: 0;
+            color: #d7e0eb;
+            font-size: 14px;
+            line-height: 1.65;
+            overflow-wrap: anywhere;
+            white-space: pre-wrap;
+        }
+
+        .note-timestamp {
+            display: block;
+            margin-top: 9px;
+            color: #758194;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 10px;
+            line-height: 1.5;
+        }
+
+        .note-delete {
+            flex: 0 0 auto;
+            min-height: 34px;
+            padding: 0 10px;
+            border-color: var(--border);
+            background: transparent;
+            color: #aab5c3;
+            font-size: 12px;
+        }
+
+        .notes-empty {
+            margin: 18px 0 0;
+            color: #758194;
+            font-size: 13px;
+        }
+
+        .tasks-section {
+            margin: 0 0 62px;
+        }
+
+        .tasks-panel {
+            padding: 24px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: linear-gradient(145deg, rgba(20, 27, 38, 0.88), rgba(13, 18, 26, 0.9));
+        }
+
+        .task-form {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 140px auto;
+            align-items: end;
+            gap: 12px;
+        }
+
+        .task-field {
+            display: grid;
+            gap: 8px;
+        }
+
+        .task-input,
+        .task-priority-select {
+            width: 100%;
+            min-height: 42px;
+            padding: 0 12px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            outline: none;
+            background: rgba(7, 10, 15, 0.55);
+            color: var(--text);
+            font: inherit;
+            font-size: 13px;
+        }
+
+        .task-input::placeholder {
+            color: #677486;
+        }
+
+        .task-input:focus-visible,
+        .task-priority-select:focus-visible {
+            border-color: rgba(157, 232, 212, 0.55);
+            box-shadow: 0 0 0 3px rgba(157, 232, 212, 0.08);
+        }
+
+        .task-priority-select {
+            cursor: pointer;
+        }
+
+        .task-add,
+        .task-delete {
+            min-height: 40px;
+            padding: 0 14px;
+            border: 1px solid rgba(157, 232, 212, 0.22);
+            border-radius: 8px;
+            background: var(--accent-soft);
+            color: var(--accent);
+            font: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: background 160ms ease, border-color 160ms ease;
+        }
+
+        .task-add:hover,
+        .task-add:focus-visible,
+        .task-delete:hover,
+        .task-delete:focus-visible {
+            border-color: rgba(157, 232, 212, 0.5);
+            background: rgba(157, 232, 212, 0.16);
+        }
+
+        .task-add:disabled,
+        .task-input:disabled,
+        .task-priority-select:disabled {
+            cursor: not-allowed;
+            opacity: 0.55;
+        }
+
+        .tasks-status {
+            min-height: 1.4em;
+            margin: 12px 0 0;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .task-group {
+            margin-top: 24px;
+        }
+
+        .task-group-title {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin: 0;
+            color: #b6c1cf;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .task-count {
+            color: #718094;
+            font-size: 10px;
+            letter-spacing: 0;
+        }
+
+        .task-list {
+            display: grid;
+            gap: 9px;
+            margin: 12px 0 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+            padding: 13px 14px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: rgba(7, 10, 15, 0.28);
+        }
+
+        .task-item.is-completed .task-name {
+            color: #778393;
+            text-decoration: line-through;
+            text-decoration-color: #667384;
+        }
+
+        .task-checkbox {
+            width: 17px;
+            height: 17px;
+            flex: 0 0 auto;
+            margin: 0;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+
+        .task-name {
+            min-width: 0;
+            flex: 1;
+            color: #d7e0eb;
+            font-size: 14px;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+
+        .task-priority {
+            flex: 0 0 auto;
+            padding: 4px 8px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            color: #aab5c3;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 10px;
+        }
+
+        .task-priority-high {
+            border-color: rgba(239, 133, 133, 0.24);
+            background: rgba(239, 133, 133, 0.08);
+            color: #f0a2a2;
+        }
+
+        .task-priority-medium {
+            border-color: rgba(236, 194, 119, 0.22);
+            background: rgba(236, 194, 119, 0.07);
+            color: #e6c47f;
+        }
+
+        .task-priority-low {
+            border-color: rgba(157, 232, 212, 0.18);
+            background: var(--accent-soft);
+            color: var(--accent);
+        }
+
+        .task-delete {
+            min-height: 32px;
+            padding: 0 9px;
+            border-color: var(--border);
+            background: transparent;
+            color: #aab5c3;
+            font-size: 12px;
+            font-weight: 400;
+        }
+
+        .task-empty {
+            margin: 12px 0 0;
+            color: #758194;
+            font-size: 13px;
+        }
+
+        .projects-heading {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin: 0 0 18px;
+            color: #aeb9c7;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .projects-heading::after {
+            height: 1px;
+            flex: 1;
+            background: var(--border);
+            content: "";
+        }
+
+        .project-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .project-card {
+            position: relative;
+            display: flex;
+            min-height: 238px;
+            flex-direction: column;
+            overflow: hidden;
+            padding: 25px 24px 23px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: linear-gradient(145deg, rgba(20, 27, 38, 0.96), rgba(13, 18, 26, 0.94));
+            transition: border-color 180ms ease, transform 180ms ease, background 180ms ease;
+        }
+
+        .project-card::after {
+            position: absolute;
+            right: -52px;
+            bottom: -96px;
+            width: 180px;
+            height: 180px;
+            border: 1px solid rgba(157, 232, 212, 0.07);
+            border-radius: 50%;
+            box-shadow: 0 0 0 20px rgba(157, 232, 212, 0.018), 0 0 0 40px rgba(157, 232, 212, 0.014);
+            content: "";
+            pointer-events: none;
+        }
+
+        .project-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(157, 232, 212, 0.3);
+            background: linear-gradient(145deg, rgba(23, 33, 44, 0.98), rgba(14, 20, 28, 0.98));
+        }
+
+        .card-topline {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: auto;
+        }
+
+        .card-icon {
+            display: grid;
+            width: 40px;
+            height: 40px;
+            place-items: center;
+            border: 1px solid rgba(157, 232, 212, 0.15);
+            border-radius: 11px;
+            background: var(--accent-soft);
+            color: var(--accent);
+        }
+
+        .card-icon svg {
+            width: 19px;
+            height: 19px;
+            fill: none;
+            stroke: currentColor;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-width: 1.5;
+        }
+
+        .card-number {
+            color: #657182;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 11px;
+        }
+
+        .project-card h3 {
+            margin: 30px 0 9px;
+            font-size: 18px;
+            font-weight: 570;
+            letter-spacing: -0.025em;
+        }
+
+        .project-card p {
+            max-width: 260px;
+            margin: 0;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.65;
+        }
+
+        .site-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 20px 0 28px;
+            border-top: 1px solid var(--border);
+            color: #697586;
+            font-size: 12px;
+        }
+
+        .footer-note {
+            margin: 0;
+        }
+
+        .footer-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .footer-status::before {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #75c9a7;
+            content: "";
+        }
+
+        @media (max-width: 700px) {
+            .page-shell {
+                width: min(100% - 40px, 540px);
+            }
+
+            .site-header {
+                align-items: flex-start;
+                flex-direction: column;
+                justify-content: center;
+                gap: 13px;
+                padding: 14px 0;
+                min-height: 72px;
+            }
+
+            .site-nav {
+                width: 100%;
+                justify-content: space-between;
+                gap: 10px;
+            }
+
+            .header-link {
+                font-size: 12px;
+            }
+
+            main {
+                padding: 70px 0 72px;
+            }
+
+            .intro {
+                margin-bottom: 46px;
+            }
+
+            .dashboard-section {
+                margin: -8px 0 42px;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .dashboard-stat {
+                padding: 16px;
+            }
+
+            .notes-section {
+                margin-bottom: 46px;
+            }
+
+            .tasks-section {
+                margin-bottom: 46px;
+            }
+
+            .daily-focus-section {
+                margin-bottom: 46px;
+            }
+
+            .notes-panel {
+                padding: 18px;
+            }
+
+            .daily-focus-panel {
+                padding: 18px;
+            }
+
+            .tasks-panel {
+                padding: 18px;
+            }
+
+            .task-form {
+                grid-template-columns: minmax(0, 1fr) 120px;
+            }
+
+            .task-add {
+                grid-column: 1 / -1;
+            }
+
+            .clock-panel {
+                margin-bottom: 46px;
+                padding: 20px;
+            }
+
+            .project-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .project-card {
+                min-height: 190px;
+                padding: 21px;
+            }
+
+            .project-card h3 {
+                margin-top: 25px;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .page-shell {
+                width: calc(100% - 32px);
+            }
+
+            main {
+                padding-top: 58px;
+            }
+
+            .intro-copy {
+                font-size: 15px;
+            }
+
+            .clock-panel {
+                gap: 12px;
+                padding: 18px 16px;
+            }
+
+            .clock-time {
+                font-size: 28px;
+            }
+
+            .notes-form-footer {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .notes-save {
+                width: 100%;
+            }
+
+            .note-item {
+                gap: 10px;
+                padding: 13px;
+            }
+
+            .task-form {
+                grid-template-columns: 1fr;
+            }
+
+            .task-add {
+                grid-column: auto;
+                width: 100%;
+            }
+
+            .task-item {
+                flex-wrap: wrap;
+                gap: 10px;
+                padding: 12px;
+            }
+
+            .task-name {
+                flex-basis: calc(100% - 40px);
+            }
+
+            .task-priority {
+                margin-left: 29px;
+            }
+
+            .task-delete {
+                margin-left: auto;
+            }
+
+            .daily-focus-item {
+                grid-template-columns: 24px minmax(0, 1fr) auto;
+                gap: 8px;
+                padding: 10px;
+            }
+
+            .daily-focus-header {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 6px;
+            }
+
+            .daily-focus-input {
+                padding: 0 6px;
+                font-size: 13px;
+            }
+
+            .daily-focus-clear {
+                padding: 0 8px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            html {
+                scroll-behavior: auto;
+            }
+
+            *,
+            *::before,
+            *::after {
+                transition-duration: 0.01ms !important;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="page-shell">
+        <header class="site-header">
+            <a class="brand" href="#" aria-label="My Tech Lab home">
+                <span class="brand-mark" aria-hidden="true">&lt;/&gt;</span>
+                <span>My Tech Lab</span>
+            </a>
+            <nav class="site-nav" aria-label="Dashboard modules">
+                <a class="header-link" href="#daily-focus-section">Focus</a>
+                <a class="header-link" href="#task-manager-section">Tasks</a>
+                <a class="header-link" href="#quick-notes-section">Notes</a>
+                <a class="header-link" href="#projects">Projects</a>
+            </nav>
+        </header>
 
-    <h1>My Touch Lab</h1>
+        <main>
+            <section class="intro" aria-labelledby="page-title">
+                <p class="eyebrow">A personal workspace</p>
+                <h1 id="page-title">Ideas in progress.</h1>
+                <p class="intro-copy">A little corner of the internet for exploring technology, building useful things, and following creative curiosity.</p>
+            </section>
 
-    <p>My personal space for AI, coding and creative projects.</p>
+            <section class="dashboard-section" aria-label="Dashboard summary">
+                <div class="dashboard-grid">
+                    <article class="dashboard-stat">
+                        <span class="dashboard-value" id="dashboard-pending-tasks">0</span>
+                        <span class="dashboard-label">Pending tasks</span>
+                    </article>
+                    <article class="dashboard-stat">
+                        <span class="dashboard-value" id="dashboard-completed-tasks">0</span>
+                        <span class="dashboard-label">Completed tasks</span>
+                    </article>
+                    <article class="dashboard-stat">
+                        <span class="dashboard-value" id="dashboard-focus-items">0</span>
+                        <span class="dashboard-label">Today's focus items</span>
+                    </article>
+                    <article class="dashboard-stat">
+                        <span class="dashboard-value" id="dashboard-saved-notes">0</span>
+                        <span class="dashboard-label">Saved notes</span>
+                    </article>
+                </div>
+            </section>
 
-    <div class="card">
-        <h2>AI Experiments</h2>
-        <p>Exploring the possibilities of artificial intelligence.</p>
+            <section class="clock-panel" aria-label="Local date and time">
+                <div class="clock-calendar">
+                    <span class="clock-label">Today</span>
+                    <span class="clock-weekday" id="clock-weekday"></span>
+                    <time class="clock-date" id="clock-date"></time>
+                </div>
+                <time class="clock-time" id="clock-time" aria-label="Current local time"></time>
+            </section>
+
+            <section class="daily-focus-section" id="daily-focus-section" aria-labelledby="daily-focus-title">
+                <h2 class="projects-heading" id="daily-focus-title">Daily Focus</h2>
+                <div class="daily-focus-panel">
+                    <div class="daily-focus-header">
+                        <span class="clock-label">Three priorities for</span>
+                        <time class="daily-focus-date" id="daily-focus-date"></time>
+                    </div>
+                    <ol class="daily-focus-list" id="daily-focus-list">
+                        <li class="daily-focus-item">
+                            <span class="daily-focus-number" aria-hidden="true">01</span>
+                            <input class="daily-focus-input" type="text" maxlength="160" placeholder="First priority" aria-label="Daily priority 1">
+                            <button class="daily-focus-clear" type="button" aria-label="Clear priority 1">Clear</button>
+                        </li>
+                        <li class="daily-focus-item">
+                            <span class="daily-focus-number" aria-hidden="true">02</span>
+                            <input class="daily-focus-input" type="text" maxlength="160" placeholder="Second priority" aria-label="Daily priority 2">
+                            <button class="daily-focus-clear" type="button" aria-label="Clear priority 2">Clear</button>
+                        </li>
+                        <li class="daily-focus-item">
+                            <span class="daily-focus-number" aria-hidden="true">03</span>
+                            <input class="daily-focus-input" type="text" maxlength="160" placeholder="Third priority" aria-label="Daily priority 3">
+                            <button class="daily-focus-clear" type="button" aria-label="Clear priority 3">Clear</button>
+                        </li>
+                    </ol>
+                    <p class="daily-focus-status" id="daily-focus-status" role="status" aria-live="polite"></p>
+                </div>
+            </section>
+
+            <section class="tasks-section" id="task-manager-section" aria-labelledby="tasks-title">
+                <h2 class="projects-heading" id="tasks-title">Task Manager</h2>
+                <div class="tasks-panel">
+                    <form class="task-form" id="task-form">
+                        <label class="task-field">
+                            <span class="clock-label">New task</span>
+                            <input class="task-input" id="task-input" name="task" type="text" placeholder="What needs to get done?" maxlength="240" required>
+                        </label>
+                        <label class="task-field">
+                            <span class="clock-label">Priority</span>
+                            <select class="task-priority-select" id="task-priority" name="priority">
+                                <option value="high">High</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="low">Low</option>
+                            </select>
+                        </label>
+                        <button class="task-add" id="task-add" type="submit">Add task</button>
+                    </form>
+                    <p class="tasks-status" id="tasks-status" role="status" aria-live="polite"></p>
+
+                    <section class="task-group" aria-labelledby="pending-title">
+                        <h3 class="task-group-title" id="pending-title">Pending <span class="task-count" id="pending-count"></span></h3>
+                        <ul class="task-list" id="pending-tasks"></ul>
+                        <p class="task-empty" id="pending-empty">Nothing pending. Enjoy the breathing room.</p>
+                    </section>
+                    <section class="task-group" aria-labelledby="completed-title">
+                        <h3 class="task-group-title" id="completed-title">Completed <span class="task-count" id="completed-count"></span></h3>
+                        <ul class="task-list" id="completed-tasks"></ul>
+                        <p class="task-empty" id="completed-empty">Completed tasks will appear here.</p>
+                    </section>
+                </div>
+            </section>
+
+            <section class="notes-section" id="quick-notes-section" aria-labelledby="notes-title">
+                <h2 class="projects-heading" id="notes-title">Quick Notes</h2>
+                <div class="notes-panel">
+                    <form class="notes-form" id="notes-form">
+                        <label class="clock-label" for="note-input">Capture a thought</label>
+                        <textarea class="notes-input" id="note-input" name="note" placeholder="Write a quick note..." required></textarea>
+                        <div class="notes-form-footer">
+                            <p class="notes-status" id="notes-status" role="status" aria-live="polite"></p>
+                            <button class="notes-save" id="notes-save" type="submit">Save note</button>
+                        </div>
+                    </form>
+                    <ul class="notes-list" id="notes-list" aria-label="Saved notes"></ul>
+                    <p class="notes-empty" id="notes-empty">Your saved notes will appear here.</p>
+                </div>
+            </section>
+
+            <section id="projects" aria-labelledby="projects-title">
+                <h2 class="projects-heading" id="projects-title">Selected areas</h2>
+                <div class="project-grid">
+                    <article class="project-card">
+                        <div class="card-topline">
+                            <span class="card-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24"><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.64 5.64l1.42 1.42m9.88 9.88 1.42 1.42m0-12.72-1.42 1.42m-9.88 9.88-1.42 1.42"/><circle cx="12" cy="12" r="4"/></svg>
+                            </span>
+                            <span class="card-number">01 / 03</span>
+                        </div>
+                        <h3>AI Experiments</h3>
+                        <p>Exploring the possibilities of artificial intelligence.</p>
+                    </article>
+
+                    <article class="project-card">
+                        <div class="card-topline">
+                            <span class="card-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4m8-4v4M4 10h16m-11 4h3m-3 3h7"/></svg>
+                            </span>
+                            <span class="card-number">02 / 03</span>
+                        </div>
+                        <h3>Personal Productivity</h3>
+                        <p>Building tools to make life and work more efficient.</p>
+                    </article>
+
+                    <article class="project-card">
+                        <div class="card-topline">
+                            <span class="card-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24"><path d="m12 3 1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2L12 3Z"/><path d="m19 15 .9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9L19 15Z"/></svg>
+                            </span>
+                            <span class="card-number">03 / 03</span>
+                        </div>
+                        <h3>Creative Projects</h3>
+                        <p>Turning ideas into reality.</p>
+                    </article>
+                </div>
+            </section>
+        </main>
+
+        <footer class="site-footer">
+            <p class="footer-note">Made for curiosity, one experiment at a time.</p>
+            <span class="footer-status">Always exploring</span>
+        </footer>
     </div>
+    <script>
+        const weekdayFormatter = new Intl.DateTimeFormat(undefined, { weekday: "long" });
+        const dateFormatter = new Intl.DateTimeFormat(undefined, {
+            year: "numeric",
+            month: "long",
+            day: "numeric"
+        });
+        const timeFormatter = new Intl.DateTimeFormat(undefined, {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hourCycle: "h23"
+        });
+        const noteTimestampFormatter = new Intl.DateTimeFormat(undefined, {
+            dateStyle: "medium",
+            timeStyle: "short"
+        });
+        const notesStorageKey = "my-tech-lab-notes";
+        const notesForm = document.getElementById("notes-form");
+        const noteInput = document.getElementById("note-input");
+        const notesSave = document.getElementById("notes-save");
+        const notesList = document.getElementById("notes-list");
+        const notesEmpty = document.getElementById("notes-empty");
+        const notesStatus = document.getElementById("notes-status");
+        let notes = [];
+        let notesStorageReady = false;
+        const tasksStorageKey = "my-tech-lab-tasks";
+        const taskForm = document.getElementById("task-form");
+        const taskInput = document.getElementById("task-input");
+        const taskPriority = document.getElementById("task-priority");
+        const taskAdd = document.getElementById("task-add");
+        const tasksStatus = document.getElementById("tasks-status");
+        const pendingTasks = document.getElementById("pending-tasks");
+        const completedTasks = document.getElementById("completed-tasks");
+        const pendingEmpty = document.getElementById("pending-empty");
+        const completedEmpty = document.getElementById("completed-empty");
+        const pendingCount = document.getElementById("pending-count");
+        const completedCount = document.getElementById("completed-count");
+        let tasks = [];
+        let tasksStorageReady = false;
+        const dailyFocusStorageKey = "my-tech-lab-daily-focus";
+        const dailyFocusDate = document.getElementById("daily-focus-date");
+        const dailyFocusInputs = [...document.querySelectorAll(".daily-focus-input")];
+        const dailyFocusClearButtons = [...document.querySelectorAll(".daily-focus-clear")];
+        const dailyFocusStatus = document.getElementById("daily-focus-status");
+        let dailyFocus = { date: "", priorities: ["", "", ""] };
+        let dailyFocusStorageReady = false;
+        const dashboardPendingTasks = document.getElementById("dashboard-pending-tasks");
+        const dashboardCompletedTasks = document.getElementById("dashboard-completed-tasks");
+        const dashboardFocusItems = document.getElementById("dashboard-focus-items");
+        const dashboardSavedNotes = document.getElementById("dashboard-saved-notes");
 
-    <div class="card">
-        <h2>Personal Productivity</h2>
-        <p>Building tools to make life and work more efficient.</p>
-    </div>
+        function updateDashboardStats() {
+            dashboardPendingTasks.textContent = String(tasks.filter((task) => !task.completed).length);
+            dashboardCompletedTasks.textContent = String(tasks.filter((task) => task.completed).length);
+            dashboardFocusItems.textContent = String(
+                dailyFocus.priorities.filter((priority) => priority.trim().length > 0).length
+            );
+            dashboardSavedNotes.textContent = String(notes.length);
+        }
 
-    <div class="card">
-        <h2>Creative Projects</h2>
-        <p>Turning ideas into reality.</p>
-    </div>
+        function updateClock() {
+            const now = new Date();
+            document.getElementById("clock-weekday").textContent = weekdayFormatter.format(now);
+            document.getElementById("clock-date").textContent = dateFormatter.format(now);
+            document.getElementById("clock-date").dateTime = [
+                now.getFullYear(),
+                String(now.getMonth() + 1).padStart(2, "0"),
+                String(now.getDate()).padStart(2, "0")
+            ].join("-");
+            document.getElementById("clock-time").textContent = timeFormatter.format(now);
+            document.getElementById("clock-time").dateTime = now.toISOString();
 
+            const today = getLocalDateKey(now);
+            if (dailyFocusStorageReady && dailyFocus.date !== today) {
+                startDailyFocus(today);
+            }
+            dailyFocusDate.textContent = dateFormatter.format(now);
+            dailyFocusDate.dateTime = today;
+        }
+
+        function getLocalDateKey(date) {
+            return [
+                date.getFullYear(),
+                String(date.getMonth() + 1).padStart(2, "0"),
+                String(date.getDate()).padStart(2, "0")
+            ].join("-");
+        }
+
+        function setDailyFocusUnavailable(message, error) {
+            dailyFocusStatus.textContent = message;
+            dailyFocusStatus.setAttribute("role", "alert");
+            dailyFocusInputs.forEach((input) => { input.disabled = true; });
+            dailyFocusClearButtons.forEach((button) => { button.disabled = true; });
+            if (error) {
+                console.error("Daily Focus error:", error);
+            }
+        }
+
+        function persistDailyFocus() {
+            try {
+                localStorage.setItem(dailyFocusStorageKey, JSON.stringify(dailyFocus));
+                dailyFocusStatus.textContent = "Saved automatically in this browser.";
+                dailyFocusStatus.setAttribute("role", "status");
+                return true;
+            } catch (error) {
+                dailyFocusStatus.textContent = "Unable to save priorities. Check browser storage settings and try again.";
+                console.error("Daily Focus could not save priorities:", error);
+                return false;
+            }
+        }
+
+        function startDailyFocus(dateKey) {
+            dailyFocus = { date: dateKey, priorities: ["", "", ""] };
+            dailyFocusInputs.forEach((input) => { input.value = ""; });
+            persistDailyFocus();
+            dailyFocusStatus.textContent = "A fresh list is ready for today.";
+            updateDashboardStats();
+        }
+
+        function loadDailyFocus() {
+            try {
+                const today = getLocalDateKey(new Date());
+                const savedFocus = localStorage.getItem(dailyFocusStorageKey);
+                if (savedFocus !== null) {
+                    const parsedFocus = JSON.parse(savedFocus);
+                    if (
+                        !parsedFocus ||
+                        typeof parsedFocus.date !== "string" ||
+                        !Array.isArray(parsedFocus.priorities) ||
+                        parsedFocus.priorities.length !== 3 ||
+                        parsedFocus.priorities.some((priority) => typeof priority !== "string")
+                    ) {
+                        throw new Error("Stored daily priorities have an invalid format.");
+                    }
+                    dailyFocus = parsedFocus;
+                }
+
+                dailyFocusStorageReady = true;
+                if (dailyFocus.date !== today) {
+                    startDailyFocus(today);
+                } else {
+                    dailyFocusInputs.forEach((input, index) => {
+                        input.value = dailyFocus.priorities[index];
+                    });
+                    dailyFocusStatus.textContent = "Saved automatically in this browser.";
+                }
+                dailyFocusDate.textContent = dateFormatter.format(new Date());
+                dailyFocusDate.dateTime = today;
+                updateDashboardStats();
+            } catch (error) {
+                setDailyFocusUnavailable("Unable to load daily priorities. Browser storage may be unavailable or corrupted.", error);
+            }
+        }
+
+        dailyFocusInputs.forEach((input, index) => {
+            input.addEventListener("input", () => {
+                if (!dailyFocusStorageReady) {
+                    return;
+                }
+                const value = input.value;
+                const today = getLocalDateKey(new Date());
+                if (dailyFocus.date !== today) {
+                    startDailyFocus(today);
+                    input.value = value;
+                }
+                dailyFocus.priorities[index] = value;
+                persistDailyFocus();
+                updateDashboardStats();
+            });
+        });
+
+        dailyFocusClearButtons.forEach((button, index) => {
+            button.addEventListener("click", () => {
+                if (!dailyFocusStorageReady) {
+                    return;
+                }
+                const today = getLocalDateKey(new Date());
+                if (dailyFocus.date !== today) {
+                    startDailyFocus(today);
+                    return;
+                }
+                dailyFocus.priorities[index] = "";
+                dailyFocusInputs[index].value = "";
+                persistDailyFocus();
+                dailyFocusStatus.textContent = `Priority ${index + 1} cleared.`;
+                updateDashboardStats();
+                dailyFocusInputs[index].focus();
+            });
+        });
+
+        function setNotesUnavailable(message, error) {
+            notesStatus.textContent = message;
+            notesStatus.setAttribute("role", "alert");
+            noteInput.disabled = true;
+            notesSave.disabled = true;
+            if (error) {
+                console.error("Quick Notes error:", error);
+            }
+        }
+
+        function renderNotes() {
+            notesList.replaceChildren();
+            notesEmpty.hidden = notes.length > 0;
+            updateDashboardStats();
+
+            for (const note of notes) {
+                const item = document.createElement("li");
+                item.className = "note-item";
+
+                const content = document.createElement("div");
+                content.className = "note-content";
+
+                const text = document.createElement("p");
+                text.className = "note-text";
+                text.textContent = note.text;
+
+                const timestamp = document.createElement("time");
+                timestamp.className = "note-timestamp";
+                timestamp.dateTime = note.createdAt;
+                timestamp.textContent = noteTimestampFormatter.format(new Date(note.createdAt));
+
+                const deleteButton = document.createElement("button");
+                deleteButton.className = "note-delete";
+                deleteButton.type = "button";
+                deleteButton.textContent = "Delete";
+                deleteButton.setAttribute("aria-label", `Delete note saved ${timestamp.textContent}`);
+                deleteButton.addEventListener("click", () => deleteNote(note.id));
+
+                content.append(text, timestamp);
+                item.append(content, deleteButton);
+                notesList.append(item);
+            }
+        }
+
+        function persistNotes(nextNotes) {
+            try {
+                localStorage.setItem(notesStorageKey, JSON.stringify(nextNotes));
+                notes = nextNotes;
+                renderNotes();
+                notesStatus.textContent = "Saved in this browser.";
+                notesStatus.setAttribute("role", "status");
+                return true;
+            } catch (error) {
+                notesStatus.textContent = "Unable to save notes. Check browser storage settings and try again.";
+                console.error("Quick Notes could not be saved:", error);
+                return false;
+            }
+        }
+
+        function deleteNote(noteId) {
+            if (!notesStorageReady) {
+                return;
+            }
+            const nextNotes = notes.filter((note) => note.id !== noteId);
+            if (persistNotes(nextNotes)) {
+                notesStatus.textContent = "Note deleted.";
+            }
+        }
+
+        function loadNotes() {
+            try {
+                const savedNotes = localStorage.getItem(notesStorageKey);
+                if (savedNotes !== null) {
+                    const parsedNotes = JSON.parse(savedNotes);
+                    if (!Array.isArray(parsedNotes) || parsedNotes.some((note) =>
+                        !note ||
+                        typeof note.id !== "string" ||
+                        typeof note.text !== "string" ||
+                        typeof note.createdAt !== "string" ||
+                        Number.isNaN(Date.parse(note.createdAt))
+                    )) {
+                        throw new Error("Stored notes have an invalid format.");
+                    }
+                    notes = parsedNotes;
+                }
+                notesStorageReady = true;
+                renderNotes();
+            } catch (error) {
+                setNotesUnavailable("Unable to load saved notes. Browser storage may be unavailable or corrupted.", error);
+            }
+        }
+
+        notesForm.addEventListener("submit", (event) => {
+            event.preventDefault();
+            const text = noteInput.value.trim();
+            if (!text) {
+                notesStatus.textContent = "Write a note before saving.";
+                noteInput.focus();
+                return;
+            }
+            if (!notesStorageReady) {
+                return;
+            }
+
+            const note = {
+                id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+                text,
+                createdAt: new Date().toISOString()
+            };
+            if (persistNotes([note, ...notes])) {
+                noteInput.value = "";
+                noteInput.focus();
+            }
+        });
+
+        function setTasksUnavailable(message, error) {
+            tasksStatus.textContent = message;
+            tasksStatus.setAttribute("role", "alert");
+            taskInput.disabled = true;
+            taskPriority.disabled = true;
+            taskAdd.disabled = true;
+            if (error) {
+                console.error("Task Manager error:", error);
+            }
+        }
+
+        function renderTaskGroup(taskGroup, list, emptyMessage, count) {
+            list.replaceChildren();
+            count.textContent = `(${taskGroup.length})`;
+            emptyMessage.hidden = taskGroup.length > 0;
+
+            for (const task of taskGroup) {
+                const item = document.createElement("li");
+                item.className = `task-item${task.completed ? " is-completed" : ""}`;
+
+                const checkbox = document.createElement("input");
+                checkbox.className = "task-checkbox";
+                checkbox.type = "checkbox";
+                checkbox.checked = task.completed;
+                checkbox.setAttribute("aria-label", `${task.completed ? "Mark as pending" : "Mark as completed"}: ${task.text}`);
+                checkbox.addEventListener("change", () => toggleTask(task.id));
+
+                const name = document.createElement("span");
+                name.className = "task-name";
+                name.textContent = task.text;
+
+                const priority = document.createElement("span");
+                priority.className = `task-priority task-priority-${task.priority}`;
+                priority.textContent = task.priority[0].toUpperCase() + task.priority.slice(1);
+
+                const deleteButton = document.createElement("button");
+                deleteButton.className = "task-delete";
+                deleteButton.type = "button";
+                deleteButton.textContent = "Delete";
+                deleteButton.setAttribute("aria-label", `Delete task: ${task.text}`);
+                deleteButton.addEventListener("click", () => deleteTask(task.id));
+
+                item.append(checkbox, name, priority, deleteButton);
+                list.append(item);
+            }
+        }
+
+        function renderTasks() {
+            const pending = tasks.filter((task) => !task.completed);
+            const completed = tasks.filter((task) => task.completed);
+            renderTaskGroup(pending, pendingTasks, pendingEmpty, pendingCount);
+            renderTaskGroup(completed, completedTasks, completedEmpty, completedCount);
+            updateDashboardStats();
+        }
+
+        function persistTasks(nextTasks) {
+            try {
+                localStorage.setItem(tasksStorageKey, JSON.stringify(nextTasks));
+                tasks = nextTasks;
+                renderTasks();
+                tasksStatus.textContent = "Tasks saved in this browser.";
+                tasksStatus.setAttribute("role", "status");
+                return true;
+            } catch (error) {
+                tasksStatus.textContent = "Unable to save tasks. Check browser storage settings and try again.";
+                console.error("Task Manager could not save tasks:", error);
+                return false;
+            }
+        }
+
+        function toggleTask(taskId) {
+            if (!tasksStorageReady) {
+                return;
+            }
+            const nextTasks = tasks.map((task) =>
+                task.id === taskId ? { ...task, completed: !task.completed } : task
+            );
+            persistTasks(nextTasks);
+        }
+
+        function deleteTask(taskId) {
+            if (!tasksStorageReady) {
+                return;
+            }
+            if (persistTasks(tasks.filter((task) => task.id !== taskId))) {
+                tasksStatus.textContent = "Task deleted.";
+            }
+        }
+
+        function loadTasks() {
+            try {
+                const savedTasks = localStorage.getItem(tasksStorageKey);
+                if (savedTasks !== null) {
+                    const parsedTasks = JSON.parse(savedTasks);
+                    if (!Array.isArray(parsedTasks) || parsedTasks.some((task) =>
+                        !task ||
+                        typeof task.id !== "string" ||
+                        typeof task.text !== "string" ||
+                        !["high", "medium", "low"].includes(task.priority) ||
+                        typeof task.completed !== "boolean" ||
+                        typeof task.createdAt !== "string" ||
+                        Number.isNaN(Date.parse(task.createdAt))
+                    )) {
+                        throw new Error("Stored tasks have an invalid format.");
+                    }
+                    tasks = parsedTasks;
+                }
+                tasksStorageReady = true;
+                renderTasks();
+            } catch (error) {
+                setTasksUnavailable("Unable to load saved tasks. Browser storage may be unavailable or corrupted.", error);
+            }
+        }
+
+        taskForm.addEventListener("submit", (event) => {
+            event.preventDefault();
+            const text = taskInput.value.trim();
+            if (!text) {
+                tasksStatus.textContent = "Enter a task before adding it.";
+                taskInput.focus();
+                return;
+            }
+            if (!tasksStorageReady) {
+                return;
+            }
+
+            const task = {
+                id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+                text,
+                priority: taskPriority.value,
+                completed: false,
+                createdAt: new Date().toISOString()
+            };
+            if (persistTasks([task, ...tasks])) {
+                taskInput.value = "";
+                taskPriority.value = "medium";
+                taskInput.focus();
+            }
+        });
+
+        loadDailyFocus();
+        updateClock();
+        window.setInterval(updateClock, 1000);
+        loadNotes();
+        loadTasks();
+    </script>
 </body>
 </html>
