@@ -44,7 +44,7 @@
         }
 
         .page-shell {
-            width: min(100% - 48px, 1080px);
+            width: min(100% - 48px, 1200px);
             margin: 0 auto;
         }
 
@@ -185,21 +185,48 @@
         }
 
         .clock-panel {
-            display: flex;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
             align-items: center;
-            justify-content: space-between;
-            gap: 24px;
-            max-width: 560px;
-            margin: 0 auto 62px;
-            padding: 22px 26px;
+            gap: 32px;
+            grid-column: 1 / -1;
+            width: 100%;
+            margin: 0 0 62px;
+            padding: 30px 36px;
             border: 1px solid var(--border);
             border-radius: 14px;
-            background: linear-gradient(120deg, rgba(20, 27, 38, 0.9), rgba(13, 18, 26, 0.88));
+            background:
+                radial-gradient(ellipse at 50% 0, rgba(157, 232, 212, 0.07), transparent 58%),
+                linear-gradient(120deg, rgba(20, 27, 38, 0.94), rgba(13, 18, 26, 0.92));
+        }
+
+        .clock-welcome {
+            min-width: 0;
+        }
+
+        .clock-greeting {
+            margin: 10px 0 7px;
+            color: var(--text);
+            font-size: clamp(20px, 2.4vw, 27px);
+            font-weight: 580;
+            letter-spacing: -0.045em;
+            line-height: 1.15;
+        }
+
+        .clock-welcome-copy {
+            margin: 0;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.5;
         }
 
         .clock-calendar {
             display: grid;
-            gap: 6px;
+            justify-items: end;
+            gap: 7px;
+            padding-left: 28px;
+            border-left: 1px solid var(--border);
+            text-align: right;
         }
 
         .clock-label {
@@ -212,27 +239,35 @@
 
         .clock-weekday {
             color: #dce5ef;
-            font-size: 15px;
+            font-size: 13px;
             font-weight: 550;
         }
 
         .clock-date {
-            color: var(--muted);
-            font-size: 13px;
+            color: var(--text);
+            font-size: 15px;
+            font-weight: 550;
         }
 
         .clock-time {
             color: var(--accent);
             font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-            font-size: clamp(28px, 5vw, 38px);
+            font-size: clamp(36px, 5vw, 56px);
             font-variant-numeric: tabular-nums;
-            letter-spacing: -0.06em;
+            letter-spacing: -0.07em;
             line-height: 1;
             white-space: nowrap;
+            text-align: center;
         }
 
         .daily-focus-section {
+            grid-column: 1 / -1;
             margin: 0 0 62px;
+        }
+
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
         }
 
         .daily-focus-panel {
@@ -342,7 +377,10 @@
             margin: 0 0 62px;
         }
 
-        .notes-panel {
+        .notes-panel,
+        .tasks-panel {
+            display: flex;
+            flex-direction: column;
             padding: 24px;
             border: 1px solid var(--border);
             border-radius: 14px;
@@ -485,13 +523,6 @@
 
         .tasks-section {
             margin: 0 0 62px;
-        }
-
-        .tasks-panel {
-            padding: 24px;
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            background: linear-gradient(145deg, rgba(20, 27, 38, 0.88), rgba(13, 18, 26, 0.9));
         }
 
         .task-form {
@@ -707,6 +738,8 @@
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 16px;
+            max-width: 1080px;
+            margin: 0 auto;
         }
 
         .project-card {
@@ -820,6 +853,34 @@
             content: "";
         }
 
+        @media (min-width: 850px) {
+            .workspace-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                column-gap: 24px;
+            }
+
+            .tasks-section,
+            .notes-section {
+                align-self: start;
+                margin-bottom: 62px;
+            }
+
+            .notes-panel,
+            .tasks-panel {
+                min-height: 360px;
+            }
+
+            .daily-focus-section {
+                margin-bottom: 36px;
+            }
+        }
+
+        @media (min-width: 1280px) {
+            .page-shell {
+                width: min(100% - 80px, 1200px);
+            }
+        }
+
         @media (max-width: 700px) {
             .page-shell {
                 width: min(100% - 40px, 540px);
@@ -876,15 +937,12 @@
                 margin-bottom: 46px;
             }
 
-            .notes-panel {
+            .notes-panel,
+            .tasks-panel {
                 padding: 18px;
             }
 
             .daily-focus-panel {
-                padding: 18px;
-            }
-
-            .tasks-panel {
                 padding: 18px;
             }
 
@@ -897,8 +955,24 @@
             }
 
             .clock-panel {
+                grid-template-columns: minmax(0, 1fr);
+                justify-items: center;
+                gap: 20px;
                 margin-bottom: 46px;
-                padding: 20px;
+                padding: 26px 20px;
+                text-align: center;
+            }
+
+            .clock-welcome {
+                text-align: center;
+            }
+
+            .clock-calendar {
+                justify-items: center;
+                padding: 16px 0 0;
+                border-top: 1px solid var(--border);
+                border-left: 0;
+                text-align: center;
             }
 
             .project-grid {
@@ -930,8 +1004,8 @@
             }
 
             .clock-panel {
-                gap: 12px;
-                padding: 18px 16px;
+                gap: 18px;
+                padding: 22px 16px;
             }
 
             .clock-time {
@@ -1057,40 +1131,34 @@
                 </div>
             </section>
 
+            <div class="workspace-grid">
             <section class="clock-panel" aria-label="Local date and time">
-                <div class="clock-calendar">
-                    <span class="clock-label">Today</span>
-                    <span class="clock-weekday" id="clock-weekday"></span>
-                    <time class="clock-date" id="clock-date"></time>
+                <div class="clock-welcome">
+                    <span class="clock-label">Your dashboard</span>
+                    <h2 class="clock-greeting">Good to see you.</h2>
+                    <p class="clock-welcome-copy">Welcome back to My Tech Lab.</p>
                 </div>
                 <time class="clock-time" id="clock-time" aria-label="Current local time"></time>
+                <div class="clock-calendar">
+                    <span class="clock-label">Today</span>
+                    <time class="clock-date" id="clock-date"></time>
+                    <span class="clock-weekday" id="clock-weekday"></span>
+                </div>
             </section>
 
-            <section class="daily-focus-section" id="daily-focus-section" aria-labelledby="daily-focus-title">
-                <h2 class="projects-heading" id="daily-focus-title">Daily Focus</h2>
-                <div class="daily-focus-panel">
-                    <div class="daily-focus-header">
-                        <span class="clock-label">Three priorities for</span>
-                        <time class="daily-focus-date" id="daily-focus-date"></time>
-                    </div>
-                    <ol class="daily-focus-list" id="daily-focus-list">
-                        <li class="daily-focus-item">
-                            <span class="daily-focus-number" aria-hidden="true">01</span>
-                            <input class="daily-focus-input" type="text" maxlength="160" placeholder="First priority" aria-label="Daily priority 1">
-                            <button class="daily-focus-clear" type="button" aria-label="Clear priority 1">Clear</button>
-                        </li>
-                        <li class="daily-focus-item">
-                            <span class="daily-focus-number" aria-hidden="true">02</span>
-                            <input class="daily-focus-input" type="text" maxlength="160" placeholder="Second priority" aria-label="Daily priority 2">
-                            <button class="daily-focus-clear" type="button" aria-label="Clear priority 2">Clear</button>
-                        </li>
-                        <li class="daily-focus-item">
-                            <span class="daily-focus-number" aria-hidden="true">03</span>
-                            <input class="daily-focus-input" type="text" maxlength="160" placeholder="Third priority" aria-label="Daily priority 3">
-                            <button class="daily-focus-clear" type="button" aria-label="Clear priority 3">Clear</button>
-                        </li>
-                    </ol>
-                    <p class="daily-focus-status" id="daily-focus-status" role="status" aria-live="polite"></p>
+            <section class="notes-section" id="quick-notes-section" aria-labelledby="notes-title">
+                <h2 class="projects-heading" id="notes-title">Quick Notes</h2>
+                <div class="notes-panel">
+                    <form class="notes-form" id="notes-form">
+                        <label class="clock-label" for="note-input">Capture a thought</label>
+                        <textarea class="notes-input" id="note-input" name="note" placeholder="Write a quick note..." required></textarea>
+                        <div class="notes-form-footer">
+                            <p class="notes-status" id="notes-status" role="status" aria-live="polite"></p>
+                            <button class="notes-save" id="notes-save" type="submit">Save note</button>
+                        </div>
+                    </form>
+                    <ul class="notes-list" id="notes-list" aria-label="Saved notes"></ul>
+                    <p class="notes-empty" id="notes-empty">Your saved notes will appear here.</p>
                 </div>
             </section>
 
@@ -1127,21 +1195,34 @@
                 </div>
             </section>
 
-            <section class="notes-section" id="quick-notes-section" aria-labelledby="notes-title">
-                <h2 class="projects-heading" id="notes-title">Quick Notes</h2>
-                <div class="notes-panel">
-                    <form class="notes-form" id="notes-form">
-                        <label class="clock-label" for="note-input">Capture a thought</label>
-                        <textarea class="notes-input" id="note-input" name="note" placeholder="Write a quick note..." required></textarea>
-                        <div class="notes-form-footer">
-                            <p class="notes-status" id="notes-status" role="status" aria-live="polite"></p>
-                            <button class="notes-save" id="notes-save" type="submit">Save note</button>
-                        </div>
-                    </form>
-                    <ul class="notes-list" id="notes-list" aria-label="Saved notes"></ul>
-                    <p class="notes-empty" id="notes-empty">Your saved notes will appear here.</p>
+            <section class="daily-focus-section" id="daily-focus-section" aria-labelledby="daily-focus-title">
+                <h2 class="projects-heading" id="daily-focus-title">Daily Focus</h2>
+                <div class="daily-focus-panel">
+                    <div class="daily-focus-header">
+                        <span class="clock-label">Three priorities for</span>
+                        <time class="daily-focus-date" id="daily-focus-date"></time>
+                    </div>
+                    <ol class="daily-focus-list" id="daily-focus-list">
+                        <li class="daily-focus-item">
+                            <span class="daily-focus-number" aria-hidden="true">01</span>
+                            <input class="daily-focus-input" type="text" maxlength="160" placeholder="First priority" aria-label="Daily priority 1">
+                            <button class="daily-focus-clear" type="button" aria-label="Clear priority 1">Clear</button>
+                        </li>
+                        <li class="daily-focus-item">
+                            <span class="daily-focus-number" aria-hidden="true">02</span>
+                            <input class="daily-focus-input" type="text" maxlength="160" placeholder="Second priority" aria-label="Daily priority 2">
+                            <button class="daily-focus-clear" type="button" aria-label="Clear priority 2">Clear</button>
+                        </li>
+                        <li class="daily-focus-item">
+                            <span class="daily-focus-number" aria-hidden="true">03</span>
+                            <input class="daily-focus-input" type="text" maxlength="160" placeholder="Third priority" aria-label="Daily priority 3">
+                            <button class="daily-focus-clear" type="button" aria-label="Clear priority 3">Clear</button>
+                        </li>
+                    </ol>
+                    <p class="daily-focus-status" id="daily-focus-status" role="status" aria-live="polite"></p>
                 </div>
             </section>
+            </div>
 
             <section id="projects" aria-labelledby="projects-title">
                 <h2 class="projects-heading" id="projects-title">Selected areas</h2>
