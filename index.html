@@ -853,7 +853,7 @@
             content: "";
         }
 
-        @media (min-width: 850px) {
+        @media (min-width: 701px) {
             .workspace-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
                 column-gap: 24px;
@@ -872,6 +872,16 @@
 
             .daily-focus-section {
                 margin-bottom: 36px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .task-form {
+                grid-template-columns: minmax(0, 1fr) 120px;
+            }
+
+            .task-add {
+                grid-column: 1 / -1;
             }
         }
 
@@ -944,14 +954,6 @@
 
             .daily-focus-panel {
                 padding: 18px;
-            }
-
-            .task-form {
-                grid-template-columns: minmax(0, 1fr) 120px;
-            }
-
-            .task-add {
-                grid-column: 1 / -1;
             }
 
             .clock-panel {
