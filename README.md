@@ -4,4 +4,5 @@ My personal space for AI, coding and creative projects.
 - AI experiments
 - Personal productivity tools
 - Creative projects
+
 Created in 2026.
