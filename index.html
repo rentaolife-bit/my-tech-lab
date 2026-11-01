@@ -401,6 +401,231 @@
             line-height: 1.3;
         }
 
+        .daily-planning {
+            margin-top: 30px;
+            padding: 22px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: rgba(7, 10, 15, 0.32);
+        }
+
+        .daily-planning-header,
+        .daily-planning-title-row {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px 16px;
+        }
+
+        .daily-planning-title {
+            margin: 0;
+            color: var(--text);
+            font-size: 17px;
+            font-weight: 580;
+            letter-spacing: -0.025em;
+        }
+
+        .daily-planning-date {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .daily-planning-mode {
+            color: #748194;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 10px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .planning-stat-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .planning-stat {
+            display: grid;
+            gap: 8px;
+            padding: 14px 16px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            background: rgba(20, 27, 38, 0.62);
+        }
+
+        .planning-stat-label {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .planning-stat-value {
+            color: var(--text);
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 24px;
+            font-variant-numeric: tabular-nums;
+            line-height: 1;
+        }
+
+        .planning-details {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 18px;
+            margin-top: 22px;
+        }
+
+        .planning-block-title {
+            margin: 0 0 10px;
+            color: #b6c1cf;
+            font-size: 12px;
+            font-weight: 550;
+        }
+
+        .planning-focus-list {
+            display: grid;
+            gap: 8px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .planning-focus-item {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            color: #d7e0eb;
+            font-size: 13px;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+
+        .planning-focus-number {
+            flex: 0 0 auto;
+            color: var(--accent);
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 10px;
+        }
+
+        .planning-advice {
+            margin: 0;
+            color: #c5cfdb;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .planning-empty {
+            margin: 9px 0 0;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .planning-proposal {
+            margin-top: 22px;
+            padding-top: 18px;
+            border-top: 1px solid var(--border);
+        }
+
+        .planning-proposal-description {
+            margin: 6px 0 14px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .planning-proposal-fields {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .planning-proposal-field {
+            display: grid;
+            min-width: 0;
+            gap: 7px;
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .planning-proposal-input {
+            width: 100%;
+            min-width: 0;
+            min-height: 40px;
+            padding: 0 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            outline: none;
+            background: rgba(7, 10, 15, 0.55);
+            color: var(--text);
+            font: inherit;
+            font-size: 13px;
+        }
+
+        .planning-proposal-input:focus-visible {
+            border-color: rgba(157, 232, 212, 0.55);
+            box-shadow: 0 0 0 3px rgba(157, 232, 212, 0.08);
+        }
+
+        .planning-controls {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .planning-refresh,
+        .planning-confirm {
+            min-height: 40px;
+            padding: 0 14px;
+            border-radius: 8px;
+            font: inherit;
+            font-size: 12px;
+            font-weight: 550;
+            cursor: pointer;
+            transition: background 160ms ease, border-color 160ms ease;
+        }
+
+        .planning-refresh {
+            border: 1px solid var(--border);
+            background: transparent;
+            color: #c2ccd8;
+        }
+
+        .planning-refresh:hover,
+        .planning-refresh:focus-visible {
+            border-color: rgba(157, 232, 212, 0.4);
+            background: rgba(157, 232, 212, 0.08);
+        }
+
+        .planning-confirm {
+            border: 1px solid rgba(157, 232, 212, 0.22);
+            background: var(--accent-soft);
+            color: var(--accent);
+        }
+
+        .planning-confirm:hover,
+        .planning-confirm:focus-visible {
+            border-color: rgba(157, 232, 212, 0.5);
+            background: rgba(157, 232, 212, 0.16);
+        }
+
+        .planning-refresh:disabled,
+        .planning-confirm:disabled {
+            cursor: not-allowed;
+            opacity: 0.55;
+        }
+
+        .planning-status {
+            flex: 1 1 220px;
+            min-height: 1.4em;
+            margin: 0;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
         .daily-focus-section {
             grid-column: 1 / -1;
             margin: 0 0 62px;
@@ -1118,6 +1343,19 @@
                 width: 100%;
             }
 
+            .daily-planning {
+                padding: 18px 14px;
+            }
+
+            .planning-stat-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .planning-details,
+            .planning-proposal-fields {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
             .daily-focus-panel {
                 padding: 18px;
             }
@@ -1336,6 +1574,69 @@
                             </button>
                         </div>
                     </div>
+
+                    <section class="daily-planning" aria-labelledby="daily-planning-title">
+                        <div class="daily-planning-header">
+                            <div>
+                                <div class="daily-planning-title-row">
+                                    <h3 class="daily-planning-title" id="daily-planning-title">Daily Planning｜今日概览</h3>
+                                    <span class="daily-planning-mode">本地规则</span>
+                                </div>
+                            </div>
+                            <time class="daily-planning-date" id="daily-planning-date"></time>
+                        </div>
+
+                        <div class="planning-stat-grid" aria-label="今日待办统计">
+                            <article class="planning-stat">
+                                <span class="planning-stat-label">待完成任务</span>
+                                <strong class="planning-stat-value" id="planning-pending-count">—</strong>
+                            </article>
+                            <article class="planning-stat">
+                                <span class="planning-stat-label">高优先级任务</span>
+                                <strong class="planning-stat-value" id="planning-high-count">—</strong>
+                            </article>
+                            <article class="planning-stat">
+                                <span class="planning-stat-label">今日重点</span>
+                                <strong class="planning-stat-value" id="planning-focus-count">—</strong>
+                            </article>
+                        </div>
+
+                        <div class="planning-details">
+                            <div>
+                                <h4 class="planning-block-title">今日三个重点</h4>
+                                <ol class="planning-focus-list" id="planning-focus-list"></ol>
+                            </div>
+                            <div>
+                                <h4 class="planning-block-title">今日工作建议</h4>
+                                <p class="planning-advice" id="planning-advice"></p>
+                                <p class="planning-empty" id="planning-no-tasks" hidden></p>
+                            </div>
+                        </div>
+
+                        <form class="planning-proposal" id="planning-proposal-form">
+                            <h4 class="planning-block-title">建议重点（检查后才会更新）</h4>
+                            <p class="planning-proposal-description">建议仅来自已有重点和待办任务；你可以先修改，再确认应用。</p>
+                            <div class="planning-proposal-fields">
+                                <label class="planning-proposal-field" for="planning-proposal-1">
+                                    重点 1
+                                    <input class="planning-proposal-input" id="planning-proposal-1" type="text" maxlength="160">
+                                </label>
+                                <label class="planning-proposal-field" for="planning-proposal-2">
+                                    重点 2
+                                    <input class="planning-proposal-input" id="planning-proposal-2" type="text" maxlength="160">
+                                </label>
+                                <label class="planning-proposal-field" for="planning-proposal-3">
+                                    重点 3
+                                    <input class="planning-proposal-input" id="planning-proposal-3" type="text" maxlength="160">
+                                </label>
+                            </div>
+                            <div class="planning-controls">
+                                <button class="planning-refresh" id="planning-refresh" type="button">重新规划</button>
+                                <button class="planning-confirm" id="planning-confirm" type="submit" disabled>确认并更新重点</button>
+                                <p class="planning-status" id="planning-status" role="status" aria-live="polite"></p>
+                            </div>
+                        </form>
+                    </section>
                 </div>
             </section>
 
@@ -1518,6 +1819,22 @@
         });
         const aiAssistantForm = document.getElementById("ai-assistant-form");
         const aiAssistantStatus = document.getElementById("ai-assistant-status");
+        const planningDate = document.getElementById("daily-planning-date");
+        const planningPendingCount = document.getElementById("planning-pending-count");
+        const planningHighCount = document.getElementById("planning-high-count");
+        const planningFocusCount = document.getElementById("planning-focus-count");
+        const planningFocusList = document.getElementById("planning-focus-list");
+        const planningAdvice = document.getElementById("planning-advice");
+        const planningNoTasks = document.getElementById("planning-no-tasks");
+        const planningProposalForm = document.getElementById("planning-proposal-form");
+        const planningProposalInputs = [1, 2, 3].map((index) =>
+            document.getElementById(`planning-proposal-${index}`)
+        );
+        const planningRefreshButton = document.getElementById("planning-refresh");
+        const planningConfirmButton = document.getElementById("planning-confirm");
+        const planningStatus = document.getElementById("planning-status");
+        let dailyPlanningReady = false;
+        let dailyPlanningSourceSignature = "";
         const aiShortcutMessages = {
             "daily-planning": "“每日计划”暂未接入 AI 服务，目前不会生成计划。",
             "task-organization": "“任务整理”暂未接入 AI 服务，目前不会生成整理结果。",
@@ -1600,6 +1917,186 @@
             ].join("-");
         }
 
+        function readDailyPlanningData() {
+            if (!tasksStorageReady || !dailyFocusStorageReady) {
+                throw new Error("Task and Daily Focus data are not ready.");
+            }
+
+            const today = getLocalDateKey(new Date());
+            const savedTasks = localStorage.getItem(tasksStorageKey);
+            const latestTasks = savedTasks === null ? [] : JSON.parse(savedTasks);
+            if (!Array.isArray(latestTasks) || latestTasks.some((task) =>
+                !task ||
+                typeof task.id !== "string" ||
+                typeof task.text !== "string" ||
+                !["high", "medium", "low"].includes(task.priority) ||
+                typeof task.completed !== "boolean" ||
+                typeof task.createdAt !== "string" ||
+                Number.isNaN(Date.parse(task.createdAt))
+            )) {
+                throw new Error("Stored tasks have an invalid format.");
+            }
+
+            const savedFocus = localStorage.getItem(dailyFocusStorageKey);
+            let priorities = ["", "", ""];
+            if (savedFocus !== null) {
+                const parsedFocus = JSON.parse(savedFocus);
+                if (
+                    !parsedFocus ||
+                    typeof parsedFocus.date !== "string" ||
+                    !Array.isArray(parsedFocus.priorities) ||
+                    parsedFocus.priorities.length !== 3 ||
+                    parsedFocus.priorities.some((priority) => typeof priority !== "string")
+                ) {
+                    throw new Error("Stored daily priorities have an invalid format.");
+                }
+                if (parsedFocus.date === today) {
+                    priorities = parsedFocus.priorities;
+                }
+            }
+
+            return { today, tasks: latestTasks, priorities };
+        }
+
+        function createDailyPlanProposal(tasksForToday, priorities) {
+            const proposal = [...priorities];
+            const included = new Set(
+                proposal.map((priority) => priority.trim().toLocaleLowerCase()).filter(Boolean)
+            );
+            const priorityRank = { high: 0, medium: 1, low: 2 };
+            const pending = tasksForToday
+                .filter((task) => !task.completed && task.text.length <= 160)
+                .map((task, index) => ({ task, index }))
+                .sort((left, right) => {
+                    return priorityRank[left.task.priority] - priorityRank[right.task.priority] ||
+                        left.index - right.index;
+                });
+
+            for (const { task } of pending) {
+                if (proposal.every((priority) => priority.trim())) {
+                    break;
+                }
+                const normalizedText = task.text.trim().toLocaleLowerCase();
+                if (!normalizedText || included.has(normalizedText)) {
+                    continue;
+                }
+                const emptyIndex = proposal.findIndex((priority) => !priority.trim());
+                if (emptyIndex !== -1) {
+                    proposal[emptyIndex] = task.text;
+                    included.add(normalizedText);
+                }
+            }
+            return proposal;
+        }
+
+        function renderDailyPlanning(data, announce = false) {
+            const pendingTasksForToday = data.tasks.filter((task) => !task.completed);
+            const highPriorityCount = pendingTasksForToday.filter((task) => task.priority === "high").length;
+            const focusedPriorities = data.priorities.filter((priority) => priority.trim());
+            const date = new Date(`${data.today}T12:00:00`);
+
+            planningDate.textContent = dateFormatter.format(date);
+            planningDate.dateTime = data.today;
+            planningPendingCount.textContent = String(pendingTasksForToday.length);
+            planningHighCount.textContent = String(highPriorityCount);
+            planningFocusCount.textContent = String(focusedPriorities.length);
+
+            planningFocusList.replaceChildren();
+            data.priorities.forEach((priority, index) => {
+                const item = document.createElement("li");
+                item.className = "planning-focus-item";
+                const number = document.createElement("span");
+                number.className = "planning-focus-number";
+                number.textContent = String(index + 1).padStart(2, "0");
+                const text = document.createElement("span");
+                text.textContent = priority.trim() || "尚未设置";
+                item.append(number, text);
+                planningFocusList.append(item);
+            });
+
+            planningNoTasks.hidden = pendingTasksForToday.length > 0;
+            planningNoTasks.textContent = "目前没有待完成任务。";
+            if (pendingTasksForToday.length === 0) {
+                planningAdvice.textContent = "可以继续推进今日重点，或在 Task Manager 添加待办。";
+            } else if (highPriorityCount > 0) {
+                planningAdvice.textContent = "建议先处理一项高优先级任务，再安排其他待办。";
+            } else {
+                planningAdvice.textContent = "目前没有高优先级待办，建议从现有任务中选择最重要的一项开始。";
+            }
+
+            createDailyPlanProposal(data.tasks, data.priorities).forEach((priority, index) => {
+                planningProposalInputs[index].value = priority;
+            });
+
+            dailyPlanningSourceSignature = JSON.stringify(data);
+            dailyPlanningReady = true;
+            planningRefreshButton.disabled = false;
+            planningConfirmButton.disabled = false;
+            planningStatus.setAttribute("role", "status");
+            planningStatus.textContent = announce
+                ? "已重新读取本地任务和今日重点。"
+                : "今日概览已根据本地数据生成；建议仅供检查，不会自动修改重点。";
+        }
+
+        function refreshDailyPlanning(announce = true) {
+            try {
+                renderDailyPlanning(readDailyPlanningData(), announce);
+            } catch (error) {
+                dailyPlanningReady = false;
+                dailyPlanningSourceSignature = "";
+                planningConfirmButton.disabled = true;
+                planningDate.textContent = "";
+                planningDate.removeAttribute("datetime");
+                planningPendingCount.textContent = "—";
+                planningHighCount.textContent = "—";
+                planningFocusCount.textContent = "—";
+                planningFocusList.replaceChildren();
+                planningAdvice.textContent = "尚未生成今日概览。";
+                planningNoTasks.hidden = true;
+                planningStatus.textContent = "无法读取最新任务或每日重点，请检查本地数据后重试。";
+                planningStatus.setAttribute("role", "alert");
+                console.error("Daily Planning could not read local data:", error);
+            }
+        }
+
+        function confirmDailyPlan(event) {
+            event.preventDefault();
+            if (!dailyPlanningReady || !tasksStorageReady || !dailyFocusStorageReady) {
+                refreshDailyPlanning();
+                return;
+            }
+
+            let latestData;
+            try {
+                latestData = readDailyPlanningData();
+            } catch (error) {
+                refreshDailyPlanning();
+                console.error("Daily Planning could not verify local data before saving:", error);
+                return;
+            }
+            if (JSON.stringify(latestData) !== dailyPlanningSourceSignature) {
+                renderDailyPlanning(latestData, true);
+                planningStatus.textContent = "来源数据已有变化；请检查更新后的建议，再次确认。";
+                return;
+            }
+
+            const updatedFocus = {
+                date: latestData.today,
+                priorities: planningProposalInputs.map((input) => input.value.trim())
+            };
+            if (persistDailyFocus(updatedFocus)) {
+                dailyFocusInputs.forEach((input, index) => {
+                    input.value = updatedFocus.priorities[index];
+                });
+                updateDashboardStats();
+                renderDailyPlanning({ ...latestData, priorities: updatedFocus.priorities });
+                planningStatus.textContent = "已确认，今日重点已更新并保存。";
+            } else {
+                planningStatus.textContent = "重点未能保存，请检查浏览器存储设置后重试。";
+                planningStatus.setAttribute("role", "alert");
+            }
+        }
+
         function setDailyFocusUnavailable(message, error) {
             dailyFocusStatus.textContent = message;
             dailyFocusStatus.setAttribute("role", "alert");
@@ -1610,11 +2107,15 @@
             }
         }
 
-        function persistDailyFocus() {
+        function persistDailyFocus(nextFocus = dailyFocus) {
             try {
-                localStorage.setItem(dailyFocusStorageKey, JSON.stringify(dailyFocus));
+                localStorage.setItem(dailyFocusStorageKey, JSON.stringify(nextFocus));
+                dailyFocus = nextFocus;
                 dailyFocusStatus.textContent = "Saved automatically in this browser.";
                 dailyFocusStatus.setAttribute("role", "status");
+                if (tasksStorageReady && dailyFocusStorageReady) {
+                    refreshDailyPlanning(false);
+                }
                 return true;
             } catch (error) {
                 dailyFocusStatus.textContent = "Unable to save priorities. Check browser storage settings and try again.";
@@ -1870,6 +2371,7 @@
             renderTaskGroup(pending, pendingTasks, pendingEmpty, pendingCount);
             renderTaskGroup(completed, completedTasks, completedEmpty, completedCount);
             updateDashboardStats();
+            refreshDailyPlanning(false);
         }
 
         function persistTasks(nextTasks) {
@@ -1971,11 +2473,17 @@
             });
         });
 
+        planningRefreshButton.addEventListener("click", () => {
+            refreshDailyPlanning(true);
+        });
+        planningProposalForm.addEventListener("submit", confirmDailyPlan);
+
         loadDailyFocus();
         updateClock();
         window.setInterval(updateClock, 1000);
         loadNotes();
         loadTasks();
+        refreshDailyPlanning(false);
     </script>
 </body>
 </html>
