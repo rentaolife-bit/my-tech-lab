@@ -2655,6 +2655,245 @@
             color: #f0a8a8;
         }
 
+        .module-management-center {
+            margin-top: 56px;
+            padding: 26px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: linear-gradient(145deg, rgba(20, 27, 38, 0.88), rgba(13, 18, 26, 0.92));
+        }
+
+        .module-management-heading {
+            margin: 0;
+            font-size: clamp(22px, 3vw, 28px);
+            letter-spacing: -0.04em;
+        }
+
+        .module-management-description {
+            margin: 8px 0 20px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.65;
+        }
+
+        .module-management-stats,
+        .module-management-category-list,
+        .module-management-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
+            gap: 10px;
+        }
+
+        .module-management-stat,
+        .module-management-category,
+        .module-management-card {
+            min-width: 0;
+            padding: 15px;
+            border: 1px solid var(--border);
+            border-radius: 11px;
+            background: rgba(8, 12, 18, 0.42);
+        }
+
+        .module-management-stat-label,
+        .module-management-category-count {
+            display: block;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .module-management-stat-value {
+            display: block;
+            margin-top: 7px;
+            color: var(--accent);
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 25px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .module-management-section-heading {
+            margin: 24px 0 12px;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .module-management-category {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            min-height: 48px;
+            color: var(--text);
+            font: inherit;
+            text-align: left;
+            cursor: pointer;
+            transition: border-color 160ms ease, background 160ms ease;
+        }
+
+        .module-management-category:hover,
+        .module-management-category:focus-visible,
+        .module-management-category[aria-pressed="true"] {
+            border-color: rgba(157, 232, 212, 0.48);
+            background: var(--accent-soft);
+        }
+
+        .module-management-category-count {
+            flex: 0 0 auto;
+            color: var(--accent);
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+
+        .module-management-filters {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            margin: 18px 0 0;
+        }
+
+        .module-management-filter-label {
+            display: flex;
+            flex: 1 1 220px;
+            align-items: center;
+            gap: 9px;
+            min-width: 0;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .module-management-filter {
+            min-width: 0;
+            min-height: 40px;
+            flex: 1;
+            padding: 0 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--surface-raised);
+            color: var(--text);
+            font: inherit;
+        }
+
+        .module-management-category-group {
+            min-width: 0;
+        }
+
+        .module-management-category-group[hidden],
+        .module-management-content[hidden],
+        .module-management-details[hidden] {
+            display: none;
+        }
+
+        .module-management-list {
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+        }
+
+        .module-management-card {
+            display: block;
+            width: 100%;
+            color: inherit;
+            font: inherit;
+            text-align: left;
+            cursor: pointer;
+            transition: border-color 160ms ease, transform 160ms ease;
+        }
+
+        .module-management-card:hover,
+        .module-management-card:focus-visible {
+            transform: translateY(-2px);
+            border-color: rgba(157, 232, 212, 0.42);
+        }
+
+        .module-management-card-title {
+            display: block;
+            color: var(--text);
+            font-size: 15px;
+            font-weight: 620;
+            overflow-wrap: anywhere;
+        }
+
+        .module-management-card-description,
+        .module-management-card-relation {
+            display: block;
+            margin: 8px 0 0;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.55;
+            overflow-wrap: anywhere;
+        }
+
+        .module-management-card-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 12px;
+        }
+
+        .module-management-badge {
+            max-width: 100%;
+            padding: 4px 7px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            color: #b7c3d1;
+            font-size: 10px;
+            overflow-wrap: anywhere;
+        }
+
+        .module-management-empty {
+            margin: 14px 0 0;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .module-management-detail-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .module-management-detail-heading {
+            min-width: 0;
+            margin: 0;
+            font-size: clamp(20px, 3vw, 26px);
+            overflow-wrap: anywhere;
+        }
+
+        .module-management-details-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin: 18px 0 0;
+        }
+
+        .module-management-detail-item {
+            min-width: 0;
+            padding: 13px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            background: rgba(8, 12, 18, 0.35);
+        }
+
+        .module-management-detail-item dt {
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .module-management-detail-item dd {
+            margin: 6px 0 0;
+            color: var(--text);
+            font-size: 13px;
+            line-height: 1.55;
+            overflow-wrap: anywhere;
+        }
+
+        .module-management-detail-item code {
+            color: var(--accent);
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 11px;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
         @media (min-width: 601px) {
             .workspace-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2684,6 +2923,10 @@
 
             .data-center-overview {
                 grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .module-management-stats {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
 
             .task-add {
@@ -2719,6 +2962,7 @@
                 width: 100%;
                 justify-content: space-between;
                 gap: 10px;
+                flex-wrap: wrap;
             }
 
             .header-link {
@@ -2833,8 +3077,17 @@
                 padding: 18px;
             }
 
+            .module-management-center {
+                margin-top: 42px;
+                padding: 18px;
+            }
+
             .data-center-overview,
             .data-center-preview-list {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .module-management-details-grid {
                 grid-template-columns: minmax(0, 1fr);
             }
 
@@ -3088,6 +3341,7 @@
                 <a class="header-link" href="#task-manager-section">Tasks</a>
                 <a class="header-link" href="#quick-notes-section">Notes</a>
                 <a class="header-link" href="#projects">Projects</a>
+                <a class="header-link" href="#module-management-center-section">Modules</a>
                 <a class="header-link" href="#data-center-section">Data</a>
             </nav>
         </header>
@@ -3730,6 +3984,32 @@
                 </div>
             </section>
 
+            <section class="module-management-center" id="module-management-center-section" aria-labelledby="module-management-heading">
+                <h2 class="module-management-heading" id="module-management-heading">Module Management Center｜模块管理中心</h2>
+                <p class="module-management-description">只读查看 Module Registry 中的模块定义、分类、实现状态和关系。实现状态不代表服务运行状态。</p>
+                <div class="module-management-stats" id="module-management-stats" aria-label="模块实现状态总览"></div>
+                <div class="module-management-content" id="module-management-content">
+                    <h3 class="module-management-section-heading">模块分类</h3>
+                    <div class="module-management-category-list" id="module-management-category-list" aria-label="按分类筛选模块"></div>
+                    <div class="module-management-filters">
+                        <label class="module-management-filter-label" for="module-management-status-filter">
+                            实现状态
+                            <select class="module-management-filter" id="module-management-status-filter">
+                                <option value="all">全部状态</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div id="module-management-list" aria-live="polite"></div>
+                </div>
+                <section class="module-management-details" id="module-management-details" aria-labelledby="module-management-detail-heading" hidden>
+                    <div class="module-management-detail-header">
+                        <h3 class="module-management-detail-heading" id="module-management-detail-heading"></h3>
+                        <button class="data-center-button" id="module-management-back" type="button">返回模块列表</button>
+                    </div>
+                    <dl class="module-management-details-grid" id="module-management-detail-fields"></dl>
+                </section>
+            </section>
+
             <section class="data-center" id="data-center-section" aria-labelledby="data-center-heading">
                 <h2 class="data-center-heading" id="data-center-heading">Data Center｜数据管理中心</h2>
                 <p class="data-center-description">查看、导出和恢复本浏览器中的 My Tech Lab 持久化数据。数据不会上传到服务器。</p>
@@ -3800,6 +4080,337 @@
         const aiChatEmpty = document.getElementById("ai-chat-empty");
         const aiChatClearButton = document.getElementById("ai-chat-clear");
         const aiWorkerEndpoint = "https://my-tech-lab-api.rentao-life.workers.dev";
+        const moduleRegistry = Object.freeze([
+            {
+                id: "ai-assistant",
+                name: "AI Assistant",
+                description: "个人 AI 对话入口及 AI 工作流承载区。",
+                category: "ai",
+                type: "standalone",
+                entry: {
+                    targetSelector: ".ai-assistant-section",
+                    navigationSelector: null,
+                    shortcutSelector: null
+                },
+                parentId: null,
+                status: "implemented",
+                dataOwnership: "none"
+            },
+            {
+                id: "daily-planning",
+                name: "Daily Planning",
+                description: "根据现有任务和 Daily Focus 生成每日计划建议。",
+                category: "ai",
+                type: "embedded-workflow",
+                entry: {
+                    targetSelector: ".daily-planning",
+                    navigationSelector: null,
+                    shortcutSelector: '[data-ai-feature="daily-planning"]'
+                },
+                parentId: "ai-assistant",
+                status: "implemented",
+                dataOwnership: "shared"
+            },
+            {
+                id: "task-organization",
+                name: "Task Organization",
+                description: "分析任务描述并在用户确认后添加至 Task Manager。",
+                category: "ai",
+                type: "embedded-workflow",
+                entry: {
+                    targetSelector: "#task-organizer",
+                    navigationSelector: null,
+                    shortcutSelector: '[data-ai-feature="task-organization"]'
+                },
+                parentId: "ai-assistant",
+                status: "implemented",
+                dataOwnership: "shared"
+            },
+            {
+                id: "document-summary",
+                name: "Document Summary",
+                description: "分析用户提供的资料，并管理已保存的总结历史。",
+                category: "ai",
+                type: "embedded-workflow",
+                entry: {
+                    targetSelector: "#document-summary-workspace",
+                    navigationSelector: null,
+                    shortcutSelector: '[data-ai-feature="document-summary"]'
+                },
+                parentId: "ai-assistant",
+                status: "implemented",
+                dataOwnership: "own"
+            },
+            {
+                id: "ideas-writing",
+                name: "Ideas & Writing",
+                description: "记录灵感并提供文章起草、润色和表达转换工作流。",
+                category: "ai",
+                type: "embedded-workflow",
+                entry: {
+                    targetSelector: "#ideas-workspace",
+                    navigationSelector: null,
+                    shortcutSelector: '[data-ai-feature="ideas-writing"]'
+                },
+                parentId: "ai-assistant",
+                status: "implemented",
+                dataOwnership: "own"
+            },
+            {
+                id: "daily-focus",
+                name: "Daily Focus",
+                description: "维护今日三个重点并只读查看按日期归档的历史记录。",
+                category: "productivity",
+                type: "standalone",
+                entry: {
+                    targetSelector: "#daily-focus-section",
+                    navigationSelector: '.site-nav a[href="#daily-focus-section"]',
+                    shortcutSelector: null
+                },
+                parentId: null,
+                status: "implemented",
+                dataOwnership: "own"
+            },
+            {
+                id: "task-manager",
+                name: "Task Manager",
+                description: "管理任务、优先级及完成状态。",
+                category: "productivity",
+                type: "standalone",
+                entry: {
+                    targetSelector: "#task-manager-section",
+                    navigationSelector: '.site-nav a[href="#task-manager-section"]',
+                    shortcutSelector: null
+                },
+                parentId: null,
+                status: "implemented",
+                dataOwnership: "own"
+            },
+            {
+                id: "quick-notes",
+                name: "Quick Notes",
+                description: "快速记录和管理个人笔记。",
+                category: "knowledge",
+                type: "standalone",
+                entry: {
+                    targetSelector: "#quick-notes-section",
+                    navigationSelector: '.site-nav a[href="#quick-notes-section"]',
+                    shortcutSelector: null
+                },
+                parentId: null,
+                status: "implemented",
+                dataOwnership: "own"
+            },
+            {
+                id: "data-center",
+                name: "Data Center",
+                description: "查看、导出、导入、恢复和安全清理受支持的本地业务数据。",
+                category: "system",
+                type: "system-management",
+                entry: {
+                    targetSelector: "#data-center-section",
+                    navigationSelector: '.site-nav a[href="#data-center-section"]',
+                    shortcutSelector: null
+                },
+                parentId: null,
+                status: "implemented",
+                dataOwnership: "none"
+            },
+            {
+                id: "module-management-center",
+                name: "Module Management Center",
+                description: "只读浏览模块注册信息、分类、实现状态及模块关系。",
+                category: "system",
+                type: "system-management",
+                entry: {
+                    targetSelector: "#module-management-center-section",
+                    navigationSelector: '.site-nav a[href="#module-management-center-section"]',
+                    shortcutSelector: null
+                },
+                parentId: null,
+                status: "implemented",
+                dataOwnership: "none"
+            }
+        ].map((module) => Object.freeze({
+            ...module,
+            entry: Object.freeze(module.entry)
+        })));
+        const emptyModuleQueryResult = Object.freeze([]);
+        function getAllModules() {
+            return moduleRegistry;
+        }
+        function getModuleById(id) {
+            if (typeof id !== "string") {
+                return null;
+            }
+            return moduleRegistry.find((module) => module.id === id) ?? null;
+        }
+        function getModulesByParentId(parentId) {
+            if (parentId !== null && typeof parentId !== "string") {
+                return emptyModuleQueryResult;
+            }
+            const matches = moduleRegistry.filter((module) => module.parentId === parentId);
+            return matches.length > 0 ? Object.freeze(matches) : emptyModuleQueryResult;
+        }
+        function getModulesByCategory(category) {
+            if (typeof category !== "string") {
+                return emptyModuleQueryResult;
+            }
+            const matches = moduleRegistry.filter((module) => module.category === category);
+            return matches.length > 0 ? Object.freeze(matches) : emptyModuleQueryResult;
+        }
+        function getModulesByStatus(status) {
+            if (typeof status !== "string") {
+                return emptyModuleQueryResult;
+            }
+            const matches = moduleRegistry.filter((module) => module.status === status);
+            return matches.length > 0 ? Object.freeze(matches) : emptyModuleQueryResult;
+        }
+        // Projects is static presentation content and is intentionally not a manageable module.
+        function validateModuleRegistry(modules = moduleRegistry) {
+            const errors = [];
+            if (!Array.isArray(modules)) {
+                console.error("Module Registry validation failed:", ["Registry must be an array."]);
+                return false;
+            }
+            const ids = new Set();
+            const modulesById = new Map();
+            const validCategories = new Set(["ai", "productivity", "knowledge", "system"]);
+            const validTypes = new Set(["standalone", "embedded-workflow", "system-management"]);
+            const validStatuses = new Set(["implemented", "partial", "planned"]);
+            const validDataOwnership = new Set(["own", "shared", "none"]);
+            const validModuleId = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+            modules.forEach((module, index) => {
+                const label = `Module Registry entry ${index + 1}`;
+                if (!module || typeof module !== "object") {
+                    errors.push(`${label} must be an object.`);
+                    return;
+                }
+
+                if (typeof module.id !== "string" || !validModuleId.test(module.id)) {
+                    errors.push(`${label} has an invalid kebab-case id: ${String(module.id)}.`);
+                } else if (ids.has(module.id)) {
+                    errors.push(`Duplicate module id "${module.id}".`);
+                } else {
+                    ids.add(module.id);
+                    modulesById.set(module.id, module);
+                }
+
+                if (!validCategories.has(module.category)) {
+                    errors.push(`Module "${module.id}" has an invalid category "${module.category}".`);
+                }
+                if (!validTypes.has(module.type)) {
+                    errors.push(`Module "${module.id}" has an invalid type "${module.type}".`);
+                }
+                if (module.type === "embedded-workflow" && module.parentId === null) {
+                    errors.push(`Embedded workflow "${module.id}" must declare a parent module.`);
+                }
+                if (!validStatuses.has(module.status)) {
+                    errors.push(`Module "${module.id}" has an invalid implementation status "${module.status}".`);
+                }
+                if (!validDataOwnership.has(module.dataOwnership)) {
+                    errors.push(`Module "${module.id}" has an invalid dataOwnership value "${module.dataOwnership}".`);
+                }
+                if (typeof module.name !== "string" || !module.name.trim() ||
+                    typeof module.description !== "string" || !module.description.trim()) {
+                    errors.push(`Module "${module.id}" must have a name and description.`);
+                }
+                if (!module.entry || typeof module.entry !== "object") {
+                    errors.push(`Module "${module.id}" must declare an entry.`);
+                }
+            });
+
+            modules.forEach((module) => {
+                if (!module || typeof module !== "object") {
+                    return;
+                }
+                if (module.parentId !== null) {
+                    if (module.parentId === module.id) {
+                        errors.push(`Module "${module.id}" cannot be its own parent.`);
+                    } else if (!modulesById.has(module.parentId)) {
+                        errors.push(`Module "${module.id}" references missing parent "${module.parentId}".`);
+                    }
+                }
+
+                const targetSelector = module.entry?.targetSelector;
+                if (typeof targetSelector !== "string" || !targetSelector) {
+                    errors.push(`Module "${module.id}" must declare an entry target selector.`);
+                } else {
+                    try {
+                        const targets = document.querySelectorAll(targetSelector);
+                        if (targets.length !== 1) {
+                            errors.push(
+                                `Module "${module.id}" target "${targetSelector}" matched ${targets.length} elements; expected exactly one.`
+                            );
+                        }
+                    } catch (error) {
+                        errors.push(`Module "${module.id}" has an invalid target selector: ${error.message}`);
+                    }
+                }
+
+                [
+                    ["navigationSelector", "navigation"],
+                    ["shortcutSelector", "shortcut"]
+                ].forEach(([selectorKey, entryLabel]) => {
+                    const selector = module.entry?.[selectorKey];
+                    if (selector === null) {
+                        return;
+                    }
+                    if (typeof selector !== "string" || !selector) {
+                        errors.push(`Module "${module.id}" has an invalid ${entryLabel} selector.`);
+                        return;
+                    }
+                    try {
+                        const entries = document.querySelectorAll(selector);
+                        if (entries.length !== 1) {
+                            errors.push(
+                                `Module "${module.id}" ${entryLabel} selector "${selector}" matched ${entries.length} elements; expected exactly one.`
+                            );
+                        } else if (selectorKey === "shortcutSelector" &&
+                            entries[0].getAttribute("data-ai-feature") !== module.id) {
+                            errors.push(
+                                `Module "${module.id}" shortcut selector "${selector}" does not match its module id.`
+                            );
+                        } else if (selectorKey === "navigationSelector" &&
+                            entries[0].getAttribute("href") !== targetSelector) {
+                            errors.push(
+                                `Module "${module.id}" navigation target does not match "${targetSelector}".`
+                            );
+                        }
+                    } catch (error) {
+                        errors.push(`Module "${module.id}" has an invalid ${entryLabel} selector: ${error.message}`);
+                    }
+                });
+            });
+
+            modules.forEach((module) => {
+                if (!module || typeof module.id !== "string" || !modulesById.has(module.id)) {
+                    return;
+                }
+                const visited = new Set([module.id]);
+                let current = module;
+                while (current.parentId !== null) {
+                    if (visited.has(current.parentId)) {
+                        errors.push(`Module parent relationship contains a cycle involving "${current.parentId}".`);
+                        break;
+                    }
+                    visited.add(current.parentId);
+                    current = modulesById.get(current.parentId);
+                    if (!current) {
+                        break;
+                    }
+                }
+            });
+
+            if (errors.length > 0) {
+                console.error("Module Registry validation failed:", errors);
+                return false;
+            }
+
+            console.info(`Module Registry validation passed (${modules.length} modules).`);
+            return true;
+        }
         const aiConversation = [];
         let aiRequestPending = false;
         const planningDate = document.getElementById("daily-planning-date");
@@ -3939,6 +4550,16 @@
         const dashboardCompletedTasks = document.getElementById("dashboard-completed-tasks");
         const dashboardFocusItems = document.getElementById("dashboard-focus-items");
         const dashboardSavedNotes = document.getElementById("dashboard-saved-notes");
+        const moduleManagementStats = document.getElementById("module-management-stats");
+        const moduleManagementCategoryList = document.getElementById("module-management-category-list");
+        const moduleManagementStatusFilter = document.getElementById("module-management-status-filter");
+        const moduleManagementContent = document.getElementById("module-management-content");
+        const moduleManagementList = document.getElementById("module-management-list");
+        const moduleManagementDetails = document.getElementById("module-management-details");
+        const moduleManagementDetailHeading = document.getElementById("module-management-detail-heading");
+        const moduleManagementDetailFields = document.getElementById("module-management-detail-fields");
+        const moduleManagementBackButton = document.getElementById("module-management-back");
+        let moduleManagementSelectedCategory = null;
         const dataCenterOverview = document.getElementById("data-center-overview");
         const dataCenterExportButton = document.getElementById("data-center-export");
         const dataCenterRefreshButton = document.getElementById("data-center-refresh");
@@ -4676,6 +5297,250 @@
             documentHistoryStatus.textContent = "资料总结历史已清空。";
             setDataCenterStatus(`五类 My Tech Lab 本地数据已清空。备份文件：${completedBackupFilename}。其他网站数据和应用代码未更改。`);
         }
+
+        function createModuleManagementStat(label, value) {
+            const card = document.createElement("article");
+            card.className = "module-management-stat";
+            const name = document.createElement("span");
+            name.className = "module-management-stat-label";
+            name.textContent = label;
+            const count = document.createElement("strong");
+            count.className = "module-management-stat-value";
+            count.textContent = String(value);
+            card.append(name, count);
+            return card;
+        }
+
+        function renderModuleManagementStats() {
+            const modules = getAllModules();
+            moduleManagementStats.replaceChildren(
+                createModuleManagementStat("模块总数", modules.length),
+                createModuleManagementStat("已实现", getModulesByStatus("implemented").length),
+                createModuleManagementStat("部分实现", getModulesByStatus("partial").length),
+                createModuleManagementStat("规划中", getModulesByStatus("planned").length)
+            );
+        }
+
+        function renderModuleManagementCategories() {
+            const categories = [...new Set(getAllModules().map((module) => module.category))]
+                .sort((left, right) => left.localeCompare(right));
+            moduleManagementCategoryList.replaceChildren();
+
+            const allButton = document.createElement("button");
+            allButton.className = "module-management-category";
+            allButton.type = "button";
+            allButton.dataset.moduleCategory = "";
+            allButton.setAttribute("aria-pressed", String(moduleManagementSelectedCategory === null));
+            allButton.textContent = "全部分类";
+            const allCount = document.createElement("span");
+            allCount.className = "module-management-category-count";
+            allCount.textContent = String(getAllModules().length);
+            allButton.append(allCount);
+            moduleManagementCategoryList.append(allButton);
+
+            categories.forEach((category) => {
+                const button = document.createElement("button");
+                button.className = "module-management-category";
+                button.type = "button";
+                button.dataset.moduleCategory = category;
+                button.setAttribute("aria-pressed", String(moduleManagementSelectedCategory === category));
+                button.append(document.createTextNode(category));
+                const count = document.createElement("span");
+                count.className = "module-management-category-count";
+                count.textContent = String(getModulesByCategory(category).length);
+                button.append(count);
+                moduleManagementCategoryList.append(button);
+            });
+        }
+
+        function createModuleManagementBadge(value) {
+            const badge = document.createElement("span");
+            badge.className = "module-management-badge";
+            badge.textContent = value;
+            return badge;
+        }
+
+        function renderModuleManagementList() {
+            const listModules = moduleManagementStatusFilter.value === "all"
+                ? getAllModules()
+                : getModulesByStatus(moduleManagementStatusFilter.value);
+            const visibleIds = new Set(listModules.map((module) => module.id));
+            const categories = [...new Set(getAllModules().map((module) => module.category))]
+                .sort((left, right) => left.localeCompare(right));
+            moduleManagementList.replaceChildren();
+            let visibleCount = 0;
+
+            categories.forEach((category) => {
+                const categoryModules = getModulesByCategory(category)
+                    .filter((module) => visibleIds.has(module.id));
+                if (categoryModules.length === 0 ||
+                    (moduleManagementSelectedCategory !== null && moduleManagementSelectedCategory !== category)) {
+                    return;
+                }
+
+                const group = document.createElement("section");
+                group.className = "module-management-category-group";
+                const heading = document.createElement("h3");
+                heading.className = "module-management-section-heading";
+                heading.textContent = `${category} · ${categoryModules.length}`;
+                const cards = document.createElement("div");
+                cards.className = "module-management-list";
+
+                categoryModules.forEach((module) => {
+                    const card = document.createElement("button");
+                    card.className = "module-management-card";
+                    card.type = "button";
+                    card.dataset.moduleId = module.id;
+                    card.setAttribute("aria-label", `查看 ${module.name} 模块详情`);
+
+                    const title = document.createElement("span");
+                    title.className = "module-management-card-title";
+                    title.textContent = module.name;
+                    const description = document.createElement("span");
+                    description.className = "module-management-card-description";
+                    description.textContent = module.description;
+                    const metadata = document.createElement("span");
+                    metadata.className = "module-management-card-meta";
+                    metadata.append(
+                        createModuleManagementBadge(module.category),
+                        createModuleManagementBadge(module.type),
+                        createModuleManagementBadge(module.status)
+                    );
+                    const relation = document.createElement("span");
+                    relation.className = "module-management-card-relation";
+                    if (module.parentId !== null) {
+                        const parent = getModuleById(module.parentId);
+                        relation.textContent = `所属模块：${parent ? parent.name : module.parentId}`;
+                    } else {
+                        const children = getModulesByParentId(module.id);
+                        relation.textContent = children.length > 0
+                            ? `包含子模块：${children.map((child) => child.name).join("、")}`
+                            : "独立模块";
+                    }
+                    card.append(title, description, metadata, relation);
+                    cards.append(card);
+                    visibleCount += 1;
+                });
+
+                group.append(heading, cards);
+                moduleManagementList.append(group);
+            });
+
+            if (visibleCount === 0) {
+                const empty = document.createElement("p");
+                empty.className = "module-management-empty";
+                empty.textContent = "当前筛选条件下没有模块。";
+                moduleManagementList.append(empty);
+            }
+        }
+
+        function createModuleManagementDetailField(label, value) {
+            const item = document.createElement("div");
+            item.className = "module-management-detail-item";
+            const term = document.createElement("dt");
+            term.textContent = label;
+            const description = document.createElement("dd");
+            if (value instanceof Node) {
+                description.append(value);
+            } else {
+                description.textContent = value;
+            }
+            item.append(term, description);
+            return item;
+        }
+
+        function showModuleManagementDetails(moduleId) {
+            const module = getModuleById(moduleId);
+            if (!module) {
+                return;
+            }
+
+            const parent = module.parentId === null ? null : getModuleById(module.parentId);
+            const children = getModulesByParentId(module.id);
+            const entry = document.createElement("div");
+            Object.entries(module.entry || {}).forEach(([key, value]) => {
+                const line = document.createElement("div");
+                const code = document.createElement("code");
+                code.textContent = `${key}: ${value === null || value === "" ? "未配置" : value}`;
+                line.append(code);
+                entry.append(line);
+            });
+            if (entry.childElementCount === 0) {
+                entry.textContent = "未配置";
+            }
+
+            moduleManagementDetailHeading.textContent = module.name;
+            moduleManagementDetailFields.replaceChildren(
+                createModuleManagementDetailField("ID", module.id),
+                createModuleManagementDetailField("名称", module.name),
+                createModuleManagementDetailField("说明", module.description),
+                createModuleManagementDetailField("分类", module.category || "未配置"),
+                createModuleManagementDetailField("类型", module.type || "未配置"),
+                createModuleManagementDetailField("入口", entry),
+                createModuleManagementDetailField(
+                    "父模块 ID",
+                    module.parentId === null ? "无（顶层模块）" : module.parentId
+                ),
+                createModuleManagementDetailField(
+                    "父模块",
+                    parent ? parent.name : (module.parentId === null ? "无" : "未找到对应父模块")
+                ),
+                createModuleManagementDetailField(
+                    "子模块",
+                    children.length > 0
+                        ? children.map((child) => `${child.name} (${child.id})`).join("、")
+                        : "无"
+                ),
+                createModuleManagementDetailField("实现状态", module.status || "未配置"),
+                createModuleManagementDetailField("数据归属", module.dataOwnership || "未配置")
+            );
+            moduleManagementContent.hidden = true;
+            moduleManagementDetails.hidden = false;
+            moduleManagementBackButton.focus();
+        }
+
+        function closeModuleManagementDetails() {
+            moduleManagementDetails.hidden = true;
+            moduleManagementContent.hidden = false;
+            moduleManagementCategoryList.querySelector("button")?.focus();
+        }
+
+        function renderModuleManagementCenter() {
+            const statuses = [
+                ["implemented", "已实现"],
+                ["partial", "部分实现"],
+                ["planned", "规划中"]
+            ];
+            statuses.forEach(([status, label]) => {
+                if (!moduleManagementStatusFilter.querySelector(`option[value="${status}"]`)) {
+                    const option = document.createElement("option");
+                    option.value = status;
+                    option.textContent = `${label} (${status})`;
+                    moduleManagementStatusFilter.append(option);
+                }
+            });
+            renderModuleManagementStats();
+            renderModuleManagementCategories();
+            renderModuleManagementList();
+        }
+
+        moduleManagementCategoryList.addEventListener("click", (event) => {
+            const button = event.target.closest("[data-module-category]");
+            if (!button) {
+                return;
+            }
+            moduleManagementSelectedCategory = button.dataset.moduleCategory || null;
+            renderModuleManagementCategories();
+            renderModuleManagementList();
+        });
+        moduleManagementStatusFilter.addEventListener("change", renderModuleManagementList);
+        moduleManagementList.addEventListener("click", (event) => {
+            const card = event.target.closest("[data-module-id]");
+            if (card) {
+                showModuleManagementDetails(card.dataset.moduleId);
+            }
+        });
+        moduleManagementBackButton.addEventListener("click", closeModuleManagementDetails);
 
         dataCenterExportButton.addEventListener("click", exportDataCenterBackup);
         dataCenterRefreshButton.addEventListener("click", () => {
@@ -7811,6 +8676,8 @@
         planningCopyButton.addEventListener("click", copyDailyPlanningResult);
         planningProposalForm.addEventListener("submit", confirmDailyPlan);
 
+        validateModuleRegistry();
+        renderModuleManagementCenter();
         loadDailyFocus();
         updateClock();
         window.setInterval(updateClock, 1000);
