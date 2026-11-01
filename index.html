@@ -2742,6 +2742,29 @@
             font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
         }
 
+        .module-management-category-copy {
+            display: grid;
+            gap: 3px;
+            min-width: 0;
+        }
+
+        .module-management-category-name {
+            overflow-wrap: anywhere;
+        }
+
+        .module-management-category-description,
+        .module-management-group-description {
+            color: var(--muted);
+            font-size: 10px;
+            line-height: 1.4;
+            overflow-wrap: anywhere;
+        }
+
+        .module-management-group-description {
+            margin: -6px 0 10px;
+            font-size: 11px;
+        }
+
         .module-management-filters {
             display: flex;
             flex-wrap: wrap;
@@ -2774,6 +2797,10 @@
 
         .module-management-category-group {
             min-width: 0;
+        }
+
+        .module-management-category-group .module-management-section-heading {
+            margin-bottom: 8px;
         }
 
         .module-management-category-group[hidden],
@@ -4080,12 +4107,36 @@
         const aiChatEmpty = document.getElementById("ai-chat-empty");
         const aiChatClearButton = document.getElementById("ai-chat-clear");
         const aiWorkerEndpoint = "https://my-tech-lab-api.rentao-life.workers.dev";
+        const moduleCategoryDefinitions = Object.freeze([
+            Object.freeze({
+                id: "work-knowledge",
+                name: "Work & Knowledge",
+                description: "工作与知识"
+            }),
+            Object.freeze({
+                id: "ai-intelligence",
+                name: "AI & Intelligence",
+                description: "AI 与智能"
+            }),
+            Object.freeze({
+                id: "system",
+                name: "System",
+                description: "系统管理"
+            })
+        ]);
+        function getModuleCategoryDefinition(category) {
+            return moduleCategoryDefinitions.find((definition) => definition.id === category) ?? {
+                id: category,
+                name: category,
+                description: "扩展分类"
+            };
+        }
         const moduleRegistry = Object.freeze([
             {
                 id: "ai-assistant",
                 name: "AI Assistant",
                 description: "个人 AI 对话入口及 AI 工作流承载区。",
-                category: "ai",
+                category: "ai-intelligence",
                 type: "standalone",
                 entry: {
                     targetSelector: ".ai-assistant-section",
@@ -4100,7 +4151,7 @@
                 id: "daily-planning",
                 name: "Daily Planning",
                 description: "根据现有任务和 Daily Focus 生成每日计划建议。",
-                category: "ai",
+                category: "ai-intelligence",
                 type: "embedded-workflow",
                 entry: {
                     targetSelector: ".daily-planning",
@@ -4115,7 +4166,7 @@
                 id: "task-organization",
                 name: "Task Organization",
                 description: "分析任务描述并在用户确认后添加至 Task Manager。",
-                category: "ai",
+                category: "ai-intelligence",
                 type: "embedded-workflow",
                 entry: {
                     targetSelector: "#task-organizer",
@@ -4130,7 +4181,7 @@
                 id: "document-summary",
                 name: "Document Summary",
                 description: "分析用户提供的资料，并管理已保存的总结历史。",
-                category: "ai",
+                category: "work-knowledge",
                 type: "embedded-workflow",
                 entry: {
                     targetSelector: "#document-summary-workspace",
@@ -4145,7 +4196,7 @@
                 id: "ideas-writing",
                 name: "Ideas & Writing",
                 description: "记录灵感并提供文章起草、润色和表达转换工作流。",
-                category: "ai",
+                category: "work-knowledge",
                 type: "embedded-workflow",
                 entry: {
                     targetSelector: "#ideas-workspace",
@@ -4160,7 +4211,7 @@
                 id: "daily-focus",
                 name: "Daily Focus",
                 description: "维护今日三个重点并只读查看按日期归档的历史记录。",
-                category: "productivity",
+                category: "work-knowledge",
                 type: "standalone",
                 entry: {
                     targetSelector: "#daily-focus-section",
@@ -4175,7 +4226,7 @@
                 id: "task-manager",
                 name: "Task Manager",
                 description: "管理任务、优先级及完成状态。",
-                category: "productivity",
+                category: "work-knowledge",
                 type: "standalone",
                 entry: {
                     targetSelector: "#task-manager-section",
@@ -4190,7 +4241,7 @@
                 id: "quick-notes",
                 name: "Quick Notes",
                 description: "快速记录和管理个人笔记。",
-                category: "knowledge",
+                category: "work-knowledge",
                 type: "standalone",
                 entry: {
                     targetSelector: "#quick-notes-section",
@@ -4275,7 +4326,6 @@
             }
             const ids = new Set();
             const modulesById = new Map();
-            const validCategories = new Set(["ai", "productivity", "knowledge", "system"]);
             const validTypes = new Set(["standalone", "embedded-workflow", "system-management"]);
             const validStatuses = new Set(["implemented", "partial", "planned"]);
             const validDataOwnership = new Set(["own", "shared", "none"]);
@@ -4297,7 +4347,8 @@
                     modulesById.set(module.id, module);
                 }
 
-                if (!validCategories.has(module.category)) {
+                if (typeof module.category !== "string" ||
+                    !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(module.category)) {
                     errors.push(`Module "${module.id}" has an invalid category "${module.category}".`);
                 }
                 if (!validTypes.has(module.type)) {
@@ -5321,9 +5372,18 @@
             );
         }
 
-        function renderModuleManagementCategories() {
-            const categories = [...new Set(getAllModules().map((module) => module.category))]
+        function getModuleManagementCategories(modules = getAllModules()) {
+            const categories = [...new Set(modules.map((module) => module.category))];
+            const knownCategories = moduleCategoryDefinitions
+                .map((definition) => definition.id)
+                .filter((category) => categories.includes(category));
+            const unknownCategories = categories
+                .filter((category) => !moduleCategoryDefinitions.some((definition) => definition.id === category))
                 .sort((left, right) => left.localeCompare(right));
+            return [...knownCategories, ...unknownCategories];
+        }
+
+        function renderModuleManagementCategories() {
             moduleManagementCategoryList.replaceChildren();
 
             const allButton = document.createElement("button");
@@ -5331,24 +5391,41 @@
             allButton.type = "button";
             allButton.dataset.moduleCategory = "";
             allButton.setAttribute("aria-pressed", String(moduleManagementSelectedCategory === null));
-            allButton.textContent = "全部分类";
+            const allCopy = document.createElement("span");
+            allCopy.className = "module-management-category-copy";
+            const allName = document.createElement("span");
+            allName.className = "module-management-category-name";
+            allName.textContent = "All Categories";
+            const allDescription = document.createElement("span");
+            allDescription.className = "module-management-category-description";
+            allDescription.textContent = "全部分类";
+            allCopy.append(allName, allDescription);
             const allCount = document.createElement("span");
             allCount.className = "module-management-category-count";
             allCount.textContent = String(getAllModules().length);
-            allButton.append(allCount);
+            allButton.append(allCopy, allCount);
             moduleManagementCategoryList.append(allButton);
 
-            categories.forEach((category) => {
+            getModuleManagementCategories().forEach((category) => {
+                const definition = getModuleCategoryDefinition(category);
                 const button = document.createElement("button");
                 button.className = "module-management-category";
                 button.type = "button";
                 button.dataset.moduleCategory = category;
                 button.setAttribute("aria-pressed", String(moduleManagementSelectedCategory === category));
-                button.append(document.createTextNode(category));
+                const copy = document.createElement("span");
+                copy.className = "module-management-category-copy";
+                const name = document.createElement("span");
+                name.className = "module-management-category-name";
+                name.textContent = definition.name;
+                const description = document.createElement("span");
+                description.className = "module-management-category-description";
+                description.textContent = definition.description;
+                copy.append(name, description);
                 const count = document.createElement("span");
                 count.className = "module-management-category-count";
                 count.textContent = String(getModulesByCategory(category).length);
-                button.append(count);
+                button.append(copy, count);
                 moduleManagementCategoryList.append(button);
             });
         }
@@ -5365,8 +5442,7 @@
                 ? getAllModules()
                 : getModulesByStatus(moduleManagementStatusFilter.value);
             const visibleIds = new Set(listModules.map((module) => module.id));
-            const categories = [...new Set(getAllModules().map((module) => module.category))]
-                .sort((left, right) => left.localeCompare(right));
+            const categories = getModuleManagementCategories();
             moduleManagementList.replaceChildren();
             let visibleCount = 0;
 
@@ -5382,7 +5458,11 @@
                 group.className = "module-management-category-group";
                 const heading = document.createElement("h3");
                 heading.className = "module-management-section-heading";
-                heading.textContent = `${category} · ${categoryModules.length}`;
+                const definition = getModuleCategoryDefinition(category);
+                heading.textContent = `${definition.name} · ${categoryModules.length}`;
+                const groupDescription = document.createElement("p");
+                groupDescription.className = "module-management-group-description";
+                groupDescription.textContent = definition.description;
                 const cards = document.createElement("div");
                 cards.className = "module-management-list";
 
@@ -5402,7 +5482,7 @@
                     const metadata = document.createElement("span");
                     metadata.className = "module-management-card-meta";
                     metadata.append(
-                        createModuleManagementBadge(module.category),
+                        createModuleManagementBadge(getModuleCategoryDefinition(module.category).name),
                         createModuleManagementBadge(module.type),
                         createModuleManagementBadge(module.status)
                     );
@@ -5422,7 +5502,7 @@
                     visibleCount += 1;
                 });
 
-                group.append(heading, cards);
+                group.append(heading, groupDescription, cards);
                 moduleManagementList.append(group);
             });
 
@@ -5474,7 +5554,12 @@
                 createModuleManagementDetailField("ID", module.id),
                 createModuleManagementDetailField("名称", module.name),
                 createModuleManagementDetailField("说明", module.description),
-                createModuleManagementDetailField("分类", module.category || "未配置"),
+                createModuleManagementDetailField(
+                    "分类",
+                    module.category
+                        ? `${getModuleCategoryDefinition(module.category).name} (${module.category}) — ${getModuleCategoryDefinition(module.category).description}`
+                        : "未配置"
+                ),
                 createModuleManagementDetailField("类型", module.type || "未配置"),
                 createModuleManagementDetailField("入口", entry),
                 createModuleManagementDetailField(

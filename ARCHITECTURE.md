@@ -72,19 +72,46 @@ My Tech Lab 以个人使用为起点，长期演进为由用户自主掌握数�
 
 ### 5.1 Module Registry
 
-**[未来规划 / 下一阶段重点]** 先设计并建立统一 Module Registry，作为功能模块元数据及入口关系的单一事实来源；完成注册机制定义和验证后，再基于该注册表开发 Module Management Center。建议每个注册项逐步包含：
+**[已实现]** `index.html` 中已有静态、只读的 Module Registry，作为当前功能模块元数据及入口关系的单一事实来源；当前登记 10 个模块，并由只读 Module Management Center 查询展示。注册项包含：
 
 - 稳定且唯一的模块 `id`；发布后不因显示名称或分类变化而改变。
 - 名称、说明、分类和模块类型。
 - 入口标识及父子模块关系。
-- 默认启用状态和用户可配置状态。
-- 显示顺序。
-- 版本来源和状态来源；状态必须可验证，不能伪装成远程服务健康检查。
-- 可选的数据归属引用，用于说明模块数据关系；不得据此改变现有数据键或格式。
+- 实现状态和数据归属说明；实现状态不代表远程服务健康状态。
 
-实施顺序为 **Module Registry → Module Management Center**。Registry 阶段负责盘点现有模块和入口、确定稳定 ID 与元数据契约；管理中心阶段消费注册表，提供启停、排序及状态管理。管理功能实现前应覆盖所有入口，包括顶部导航、快捷按钮、子工作流和工作区内链接，确保入口行为一致。
+**[已实现]** Registry 校验模块 ID、分类/类型/状态/数据归属枚举、父子关系和声明的 DOM 入口；Module Management Center 通过查询接口提供只读概览、分类/状态筛选和详情查看。**[未来规划]** 如需启停、排序或可配置状态，应另行定义运行时配置与数据边界，不能将这些能力描述为当前已有功能。
 
-### 5.2 模块类型
+### 5.2 功能模块分类与知识库内容分类
+
+**Module Category ≠ Knowledge Category。** 功能模块分类（Module Category）与知识库内容分类（Knowledge Taxonomy）是两套独立体系，不共用分类枚举、分类配置或存储结构。
+
+**[已实现]** Module Registry 当前使用以下三个一级功能模块分类，仅用于组织 My Tech Lab 的功能模块：
+
+| Category ID | 显示名称 | 用途 |
+|---|---|---|
+| `work-knowledge` | Work & Knowledge（工作与知识） | 工作、效率及知识相关功能模块 |
+| `ai-intelligence` | AI & Intelligence（AI 与智能） | AI 助手及其工作流模块 |
+| `system` | System（系统管理） | 模块管理和数据管理等系统功能 |
+
+例如，Task Manager、Daily Focus、Quick Notes、Document Summary 和 Ideas & Writing 属于 `work-knowledge`；AI Assistant、Daily Planning 和 Task Organization 属于 `ai-intelligence`；Module Management Center 和 Data Center 属于 `system`。Knowledge Base 是未来可能新增的功能模块示例，并非当前已实现模块。
+
+**[未来规划]** Knowledge Base 应拥有独立的数据模型和内容分类体系，至少为以下能力留出设计空间；这不代表现在已经创建了这些分类、数据库或知识库功能：
+
+1. 知识领域，例如医学、AI 技术、管理、个人成长和生活。
+2. 资料类型，例如文章、书籍、笔记、文献、网页和文件。
+3. 支持多标签的标签系统。
+4. 来源信息及资料之间的关联关系。
+5. 全文搜索、筛选及未来 AI 检索能力。
+
+两套体系的边界如下：
+
+- Module Category 组织功能模块，不管理知识内容；Knowledge Taxonomy 管理知识内容，不决定功能模块归属。
+- Knowledge Base 可以属于 `work-knowledge` 模块分类，但其领域、资料类型、标签和关系由自己的内容模型管理。
+- 未来知识库可以通过模块接口与 AI Assistant、Quick Notes、Document Summary 等功能协作；这种集成不要求共享分类枚举。
+- 知识库即使独立部署或迁移到其他平台，也不应依赖 My Tech Lab 的 Module Category。
+- 两套体系不得共用 localStorage 分类键、分类配置或分类枚举；任何持久化设计均应各自版本化并明确归属。
+
+### 5.3 模块类型
 
 **[未来规划]** 注册表应区分至少三种模块类型：
 
@@ -94,7 +121,7 @@ My Tech Lab 以个人使用为起点，长期演进为由用户自主掌握数�
 
 类型只表达信息架构和生命周期关系，不要求立即拆分 HTML 或 JavaScript。
 
-### 5.3 停用与数据边界
+### 5.4 停用与数据边界
 
 - 模块停用应控制入口和功能可用性，不是删除代码、卸载数据或重置配置。
 - 模块隐藏、排序或搬迁不能删除、覆盖或迁移用户业务数据。
@@ -251,11 +278,13 @@ AI Assistant 对话和部分尚未保存的分析、草稿、预览是临时页�
 
 1. **[已完成]** 发布 v1.2.0，包含 Daily Focus History View。
 2. **[已完成]** 形成 My Tech Lab 2.0 总体架构设计，并持续维护本文。
-3. **[下一阶段]** 设计并建立统一 Module Registry，盘点模块 ID、分类、类型、入口及父子关系，并验证注册契约。
-4. 基于已验证的 Module Registry 开发 Module Management Center，并定义启停状态和数据边界。
-5. 逐步统一导航与模块入口，覆盖所有可到达路径。
-6. 在注册表和导航关系稳定后，规划并实施 Dashboard 信息架构和响应式界面。
-7. 在功能稳定后，逐步拆分公共服务层及独立模块。
+3. **[已完成]** 建立静态 Module Registry，并实现注册信息和 DOM 入口校验。
+4. **[已完成（只读阶段）]** 基于 Registry 实现 Module Management Center 的概览、分类/状态筛选和模块详情展示。
+5. **[已实现]** 当前代码已将功能模块分类统一为 `work-knowledge`、`ai-intelligence` 和 `system`，并明确与未来 Knowledge Taxonomy 独立；对应代码改动仍待提交。
+6. **[未来规划]** 根据实际需要定义模块运行时启停、排序及配置的数据边界；此类管理能力不能删除或重置业务数据。
+7. 逐步统一导航与模块入口，覆盖所有可到达路径。
+8. 在注册表和导航关系稳定后，规划并实施 Dashboard 信息架构和响应式界面。
+9. 在功能稳定后，逐步拆分公共服务层及独立模块。
 
 顺序可根据实际风险和验证结果调整；每阶段都应优先保持现有功能和数据兼容。
 
