@@ -260,6 +260,147 @@
             text-align: center;
         }
 
+        .ai-assistant-section {
+            margin: 0 0 42px;
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            clip-path: inset(50%);
+        }
+
+        .ai-assistant-panel {
+            padding: clamp(22px, 3vw, 36px);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background:
+                radial-gradient(ellipse at 12% 0, rgba(157, 232, 212, 0.07), transparent 42%),
+                linear-gradient(145deg, rgba(20, 27, 38, 0.94), rgba(13, 18, 26, 0.94));
+        }
+
+        .ai-assistant-title-row {
+            display: flex;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 10px 14px;
+        }
+
+        .ai-assistant-title {
+            margin: 0;
+            color: var(--text);
+            font-size: clamp(21px, 2.6vw, 28px);
+            font-weight: 620;
+            letter-spacing: -0.045em;
+        }
+
+        .ai-assistant-subtitle {
+            color: var(--accent);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .ai-assistant-question {
+            margin: 24px 0 8px;
+            color: var(--text);
+            font-size: clamp(19px, 2.4vw, 24px);
+            font-weight: 560;
+            letter-spacing: -0.035em;
+        }
+
+        .ai-assistant-description {
+            margin: 0;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .ai-composer {
+            display: grid;
+            gap: 12px;
+            margin-top: 22px;
+        }
+
+        .ai-prompt {
+            min-height: 112px;
+        }
+
+        .ai-composer-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .ai-assistant-status {
+            min-height: 1.4em;
+            margin: 0;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .ai-shortcuts {
+            margin-top: 28px;
+        }
+
+        .ai-shortcuts-label {
+            margin: 0 0 12px;
+            color: #aeb9c7;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .ai-shortcut-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .ai-shortcut {
+            display: flex;
+            min-width: 0;
+            min-height: 72px;
+            flex-direction: column;
+            justify-content: center;
+            gap: 6px;
+            padding: 13px 15px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: rgba(7, 10, 15, 0.32);
+            color: var(--text);
+            font: inherit;
+            text-align: left;
+            cursor: pointer;
+            transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+        }
+
+        .ai-shortcut:hover,
+        .ai-shortcut:focus-visible {
+            border-color: rgba(157, 232, 212, 0.4);
+            background: rgba(157, 232, 212, 0.08);
+        }
+
+        .ai-shortcut:active {
+            transform: translateY(1px);
+        }
+
+        .ai-shortcut-title {
+            font-size: 13px;
+            font-weight: 550;
+            line-height: 1.3;
+        }
+
+        .ai-shortcut-subtitle {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.3;
+        }
+
         .daily-focus-section {
             grid-column: 1 / -1;
             margin: 0 0 62px;
@@ -883,6 +1024,10 @@
             .task-add {
                 grid-column: 1 / -1;
             }
+
+            .ai-shortcut-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
         }
 
         @media (min-width: 1280px) {
@@ -950,6 +1095,27 @@
             .notes-panel,
             .tasks-panel {
                 padding: 18px;
+            }
+
+            .ai-assistant-section {
+                margin-bottom: 34px;
+            }
+
+            .ai-assistant-panel {
+                padding: 20px 18px;
+            }
+
+            .ai-assistant-question {
+                margin-top: 20px;
+            }
+
+            .ai-composer-footer {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .ai-send-button {
+                width: 100%;
             }
 
             .daily-focus-panel {
@@ -1131,6 +1297,48 @@
         </header>
 
         <main>
+            <section class="ai-assistant-section" aria-labelledby="ai-assistant-title">
+                <div class="ai-assistant-panel">
+                    <div class="ai-assistant-title-row">
+                        <h2 class="ai-assistant-title" id="ai-assistant-title">AI Assistant</h2>
+                        <span class="ai-assistant-subtitle">个人智能助理</span>
+                    </div>
+                    <h3 class="ai-assistant-question">今天有什么需要处理？</h3>
+                    <p class="ai-assistant-description">与你的 AI 助理交流，或选择一项工作。</p>
+
+                    <form class="ai-composer" id="ai-assistant-form">
+                        <label class="sr-only" for="ai-assistant-prompt">输入你想讨论的问题</label>
+                        <textarea class="notes-input ai-prompt" id="ai-assistant-prompt" name="prompt" placeholder="输入你想讨论的问题……"></textarea>
+                        <div class="ai-composer-footer">
+                            <p class="ai-assistant-status" id="ai-assistant-status" role="status" aria-live="polite"></p>
+                            <button class="notes-save ai-send-button" type="submit">发送</button>
+                        </div>
+                    </form>
+
+                    <div class="ai-shortcuts">
+                        <p class="ai-shortcuts-label">快捷入口</p>
+                        <div class="ai-shortcut-grid">
+                            <button class="ai-shortcut" type="button" data-ai-feature="daily-planning">
+                                <span class="ai-shortcut-title">Daily Planning</span>
+                                <span class="ai-shortcut-subtitle">每日计划</span>
+                            </button>
+                            <button class="ai-shortcut" type="button" data-ai-feature="task-organization">
+                                <span class="ai-shortcut-title">Task Organization</span>
+                                <span class="ai-shortcut-subtitle">任务整理</span>
+                            </button>
+                            <button class="ai-shortcut" type="button" data-ai-feature="document-summary">
+                                <span class="ai-shortcut-title">Document Summary</span>
+                                <span class="ai-shortcut-subtitle">资料总结</span>
+                            </button>
+                            <button class="ai-shortcut" type="button" data-ai-feature="ideas-writing">
+                                <span class="ai-shortcut-title">Ideas &amp; Writing</span>
+                                <span class="ai-shortcut-subtitle">灵感创作</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <section class="intro" aria-labelledby="page-title">
                 <p class="eyebrow">A personal workspace</p>
                 <h1 id="page-title">Ideas in progress.</h1>
@@ -1308,6 +1516,14 @@
             second: "2-digit",
             hourCycle: "h23"
         });
+        const aiAssistantForm = document.getElementById("ai-assistant-form");
+        const aiAssistantStatus = document.getElementById("ai-assistant-status");
+        const aiShortcutMessages = {
+            "daily-planning": "“每日计划”暂未接入 AI 服务，目前不会生成计划。",
+            "task-organization": "“任务整理”暂未接入 AI 服务，目前不会生成整理结果。",
+            "document-summary": "“资料总结”暂未接入 AI 服务，目前不会生成总结。",
+            "ideas-writing": "“灵感创作”暂未接入 AI 服务，目前不会生成内容。"
+        };
         const noteTimestampFormatter = new Intl.DateTimeFormat(undefined, {
             dateStyle: "medium",
             timeStyle: "short"
@@ -1739,6 +1955,20 @@
                 taskPriority.value = "medium";
                 taskInput.focus();
             }
+        });
+
+        aiAssistantForm.addEventListener("submit", (event) => {
+            event.preventDefault();
+            aiAssistantStatus.textContent = "AI 服务尚未接入，消息未发送，也不会生成模拟回复。";
+        });
+
+        document.querySelectorAll(".ai-shortcut").forEach((button) => {
+            button.addEventListener("click", () => {
+                const message = aiShortcutMessages[button.dataset.aiFeature];
+                if (message) {
+                    aiAssistantStatus.textContent = message;
+                }
+            });
         });
 
         loadDailyFocus();
