@@ -567,6 +567,260 @@
             margin-top: 13px;
         }
 
+        .ideas-workspace {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            border-radius: 11px;
+            background: rgba(7, 10, 15, 0.3);
+        }
+
+        .ideas-workspace-header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px 14px;
+        }
+
+        .ideas-workspace-heading {
+            margin: 0;
+            color: var(--text);
+            font-size: 15px;
+            font-weight: 560;
+        }
+
+        .ideas-local-label {
+            color: var(--accent);
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 10px;
+        }
+
+        .ideas-workspace-description,
+        .ideas-status,
+        .idea-empty,
+        .ideas-hint {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.55;
+        }
+
+        .ideas-workspace-description {
+            margin: 7px 0 16px;
+        }
+
+        .ideas-tabs {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+            margin-bottom: 18px;
+        }
+
+        .ideas-tab {
+            min-width: 0;
+            min-height: 40px;
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: rgba(7, 10, 15, 0.32);
+            color: #aeb9c7;
+            font: inherit;
+            font-size: 11px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .ideas-tab[aria-selected="true"],
+        .ideas-tab:hover,
+        .ideas-tab:focus-visible {
+            border-color: rgba(157, 232, 212, 0.38);
+            background: var(--accent-soft);
+            color: var(--accent);
+        }
+
+        .ideas-tool {
+            min-width: 0;
+        }
+
+        .ideas-tool-heading {
+            margin: 0 0 12px;
+            color: #c5cfdb;
+            font-size: 13px;
+            font-weight: 550;
+        }
+
+        .ideas-form {
+            display: grid;
+            gap: 11px;
+        }
+
+        .ideas-field {
+            display: grid;
+            min-width: 0;
+            gap: 7px;
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .ideas-title-input,
+        .ideas-select {
+            width: 100%;
+            min-width: 0;
+            min-height: 40px;
+            padding: 0 11px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            outline: none;
+            background: rgba(7, 10, 15, 0.55);
+            color: var(--text);
+            font: inherit;
+            font-size: 13px;
+        }
+
+        .ideas-title-input:focus-visible,
+        .ideas-select:focus-visible,
+        .ideas-output:focus-visible {
+            border-color: rgba(157, 232, 212, 0.55);
+            box-shadow: 0 0 0 3px rgba(157, 232, 212, 0.08);
+        }
+
+        .ideas-actions {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .ideas-action {
+            min-height: 38px;
+            padding: 0 13px;
+            border: 1px solid rgba(157, 232, 212, 0.22);
+            border-radius: 8px;
+            background: var(--accent-soft);
+            color: var(--accent);
+            font: inherit;
+            font-size: 12px;
+            font-weight: 550;
+            cursor: pointer;
+        }
+
+        .ideas-action:hover,
+        .ideas-action:focus-visible {
+            border-color: rgba(157, 232, 212, 0.5);
+            background: rgba(157, 232, 212, 0.16);
+        }
+
+        .ideas-action:disabled {
+            cursor: not-allowed;
+            opacity: 0.55;
+        }
+
+        .ideas-action-secondary {
+            border-color: var(--border);
+            background: transparent;
+            color: #aab5c3;
+        }
+
+        .ideas-status {
+            min-height: 1.4em;
+            margin: 0;
+        }
+
+        .idea-list {
+            display: grid;
+            gap: 9px;
+            margin: 14px 0 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .idea-item {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: start;
+            gap: 8px 14px;
+            padding: 13px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            background: rgba(20, 27, 38, 0.48);
+        }
+
+        .idea-item-title {
+            margin: 0;
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 550;
+            overflow-wrap: anywhere;
+        }
+
+        .idea-item-content {
+            grid-column: 1;
+            margin: 0;
+            color: #b6c1cf;
+            font-size: 12px;
+            line-height: 1.55;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .idea-item-actions {
+            display: flex;
+            grid-column: 2;
+            grid-row: 1 / span 2;
+            gap: 6px;
+        }
+
+        .idea-item-action {
+            min-height: 32px;
+            padding: 0 9px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: transparent;
+            color: #aab5c3;
+            font: inherit;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        .idea-item-action:hover,
+        .idea-item-action:focus-visible {
+            border-color: rgba(157, 232, 212, 0.4);
+            color: var(--accent);
+        }
+
+        .ideas-output {
+            width: 100%;
+            min-height: 150px;
+            padding: 13px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            outline: none;
+            background: rgba(7, 10, 15, 0.55);
+            color: var(--text);
+            font: inherit;
+            font-size: 13px;
+            line-height: 1.6;
+            resize: vertical;
+        }
+
+        .ideas-output[readonly] {
+            color: #c5cfdb;
+        }
+
+        .ideas-suggestions {
+            display: grid;
+            gap: 6px;
+            margin: 12px 0 0;
+            padding-left: 19px;
+            color: #b6c1cf;
+            font-size: 12px;
+            line-height: 1.55;
+        }
+
+        .ideas-hint {
+            margin: 8px 0 0;
+        }
+
         .daily-planning {
             margin-top: 30px;
             padding: 22px;
@@ -1526,6 +1780,14 @@
                 padding: 16px 13px;
             }
 
+            .ideas-workspace {
+                padding: 16px 13px;
+            }
+
+            .ideas-tabs {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
             .task-preview-item {
                 grid-template-columns: minmax(0, 1fr) 120px;
                 align-items: end;
@@ -1653,6 +1915,25 @@
             .task-add {
                 grid-column: auto;
                 width: 100%;
+            }
+
+            .ideas-actions {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .ideas-action {
+                width: 100%;
+            }
+
+            .idea-item {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .idea-item-actions,
+            .idea-item-content {
+                grid-column: 1;
+                grid-row: auto;
             }
 
             .task-item {
@@ -1844,6 +2125,126 @@
                                 <p class="planning-status" id="planning-status" role="status" aria-live="polite"></p>
                             </div>
                         </form>
+                    </section>
+
+                    <section class="ideas-workspace" id="ideas-workspace" aria-labelledby="ideas-workspace-heading" hidden>
+                        <div class="ideas-workspace-header">
+                            <h3 class="ideas-workspace-heading" id="ideas-workspace-heading">Ideas &amp; Writing｜灵感创作</h3>
+                            <span class="ideas-local-label">LOCAL TOOLS · NO AI SERVICE</span>
+                        </div>
+                        <p class="ideas-workspace-description">使用本地模板和文本规则辅助记录与写作；不会调用外部 AI 服务。</p>
+
+                        <div class="ideas-tabs" role="tablist" aria-label="灵感创作工具">
+                            <button class="ideas-tab" id="ideas-tab-capture" type="button" role="tab" aria-selected="true" aria-controls="ideas-panel-capture" tabindex="0" data-ideas-tool="capture">Idea Capture｜灵感记录</button>
+                            <button class="ideas-tab" id="ideas-tab-draft" type="button" role="tab" aria-selected="false" aria-controls="ideas-panel-draft" tabindex="-1" data-ideas-tool="draft">Draft Writing｜文章起草</button>
+                            <button class="ideas-tab" id="ideas-tab-polish" type="button" role="tab" aria-selected="false" aria-controls="ideas-panel-polish" tabindex="-1" data-ideas-tool="polish">Text Polishing｜文字润色</button>
+                            <button class="ideas-tab" id="ideas-tab-convert" type="button" role="tab" aria-selected="false" aria-controls="ideas-panel-convert" tabindex="-1" data-ideas-tool="convert">Format Conversion｜表达转换</button>
+                        </div>
+
+                        <section class="ideas-tool" id="ideas-panel-capture" role="tabpanel" aria-labelledby="ideas-tab-capture">
+                            <h4 class="ideas-tool-heading">Idea Capture｜灵感记录</h4>
+                            <form class="ideas-form" id="idea-form">
+                                <label class="ideas-field" for="idea-title">标题
+                                    <input class="ideas-title-input" id="idea-title" type="text" maxlength="120" placeholder="给这条灵感起个标题" required>
+                                </label>
+                                <label class="ideas-field" for="idea-content">内容
+                                    <textarea class="notes-input" id="idea-content" maxlength="5000" placeholder="记录你的想法、片段或待探索的问题……" required></textarea>
+                                </label>
+                                <div class="ideas-actions">
+                                    <button class="ideas-action" id="idea-save" type="submit">保存灵感</button>
+                                    <button class="ideas-action ideas-action-secondary" id="idea-cancel-edit" type="button" hidden>取消编辑</button>
+                                    <p class="ideas-status" id="idea-status" role="status" aria-live="polite"></p>
+                                </div>
+                            </form>
+                            <p class="idea-empty" id="idea-empty">还没有保存的灵感。记录的内容只保存在此浏览器。</p>
+                            <ul class="idea-list" id="idea-list" aria-label="已保存的灵感"></ul>
+                        </section>
+
+                        <section class="ideas-tool" id="ideas-panel-draft" role="tabpanel" aria-labelledby="ideas-tab-draft" hidden>
+                            <h4 class="ideas-tool-heading">Draft Writing｜文章起草</h4>
+                            <p class="ideas-hint">根据主题和类型生成可编辑的本地框架与起草模板，不会代替你补写事实或论据。</p>
+                            <form class="ideas-form" id="draft-form">
+                                <label class="ideas-field" for="draft-topic">写作主题
+                                    <input class="ideas-title-input" id="draft-topic" type="text" maxlength="180" placeholder="例如：如何建立可持续的阅读习惯" required>
+                                </label>
+                                <label class="ideas-field" for="draft-type">写作类型
+                                    <select class="ideas-select" id="draft-type">
+                                        <option value="article">文章 / 专栏</option>
+                                        <option value="blog">博客 / 随笔</option>
+                                        <option value="email">邮件</option>
+                                        <option value="social">社交媒体短文</option>
+                                    </select>
+                                </label>
+                                <div class="ideas-actions">
+                                    <button class="ideas-action" type="submit">生成本地框架</button>
+                                    <p class="ideas-status" id="draft-status" role="status" aria-live="polite"></p>
+                                </div>
+                            </form>
+                            <div id="draft-result" hidden>
+                                <label class="ideas-field" for="draft-output">可编辑框架与初稿模板
+                                    <textarea class="ideas-output" id="draft-output" placeholder="生成的本地框架会显示在这里。"></textarea>
+                                </label>
+                            </div>
+                        </section>
+
+                        <section class="ideas-tool" id="ideas-panel-polish" role="tabpanel" aria-labelledby="ideas-tab-polish" hidden>
+                            <h4 class="ideas-tool-heading">Text Polishing｜文字润色</h4>
+                            <p class="ideas-hint">本地只做空白与标点整理，并提供所选风格的修改方向；请自行检查语气和原意。</p>
+                            <form class="ideas-form" id="polish-form">
+                                <label class="ideas-field" for="polish-input">原文
+                                    <textarea class="notes-input" id="polish-input" placeholder="粘贴需要润色的文字……" required></textarea>
+                                </label>
+                                <label class="ideas-field" for="polish-style">目标风格
+                                    <select class="ideas-select" id="polish-style">
+                                        <option value="professional">正式专业</option>
+                                        <option value="concise">简洁明了</option>
+                                        <option value="natural">自然口语</option>
+                                        <option value="warm">温暖亲切</option>
+                                    </select>
+                                </label>
+                                <div class="ideas-actions">
+                                    <button class="ideas-action" type="submit">生成修改建议</button>
+                                    <p class="ideas-status" id="polish-status" role="status" aria-live="polite"></p>
+                                </div>
+                            </form>
+                            <div id="polish-result" hidden>
+                                <label class="ideas-field" for="polish-output">本地整理后的文字（可编辑）
+                                    <textarea class="ideas-output" id="polish-output"></textarea>
+                                </label>
+                                <ul class="ideas-suggestions" id="polish-suggestions"></ul>
+                            </div>
+                        </section>
+
+                        <section class="ideas-tool" id="ideas-panel-convert" role="tabpanel" aria-labelledby="ideas-tab-convert" hidden>
+                            <h4 class="ideas-tool-heading">Format Conversion｜表达转换</h4>
+                            <p class="ideas-hint">转换使用本地格式规则；摘要会提取首句，清单会按句子或换行拆分。</p>
+                            <form class="ideas-form" id="convert-form">
+                                <label class="ideas-field" for="convert-input">输入内容
+                                    <textarea class="notes-input" id="convert-input" placeholder="输入要整理或转换的内容……" required></textarea>
+                                </label>
+                                <label class="ideas-field" for="convert-format">输出形式
+                                    <select class="ideas-select" id="convert-format">
+                                        <option value="formal">正式文字</option>
+                                        <option value="conversational">口语表达</option>
+                                        <option value="summary">简短摘要（提取首句）</option>
+                                        <option value="bullets">条目清单</option>
+                                    </select>
+                                </label>
+                                <div class="ideas-actions">
+                                    <button class="ideas-action" type="submit">整理表达</button>
+                                    <p class="ideas-status" id="convert-status" role="status" aria-live="polite"></p>
+                                </div>
+                            </form>
+                            <div id="convert-result" hidden>
+                                <label class="ideas-field" for="convert-output">可编辑结果
+                                    <textarea class="ideas-output" id="convert-output"></textarea>
+                                </label>
+                                <div class="ideas-actions">
+                                    <button class="ideas-action ideas-action-secondary" id="convert-copy" type="button">复制结果</button>
+                                    <p class="ideas-status" id="convert-copy-status" role="status" aria-live="polite"></p>
+                                </div>
+                            </div>
+                        </section>
                     </section>
                 </div>
             </section>
@@ -2057,8 +2458,7 @@
         const aiShortcutMessages = {
             "daily-planning": "“每日计划”暂未接入 AI 服务，目前不会生成计划。",
             "task-organization": "“任务整理”暂未接入 AI 服务，目前不会生成整理结果。",
-            "document-summary": "“资料总结”暂未接入 AI 服务，目前不会生成总结。",
-            "ideas-writing": "“灵感创作”暂未接入 AI 服务，目前不会生成内容。"
+            "document-summary": "“资料总结”暂未接入 AI 服务，目前不会生成总结。"
         };
         const noteTimestampFormatter = new Intl.DateTimeFormat(undefined, {
             dateStyle: "medium",
@@ -2073,6 +2473,20 @@
         const notesStatus = document.getElementById("notes-status");
         let notes = [];
         let notesStorageReady = false;
+        const ideasStorageKey = "my-tech-lab-ideas";
+        const ideasWorkspace = document.getElementById("ideas-workspace");
+        const ideasTabs = [...document.querySelectorAll(".ideas-tab")];
+        const ideaForm = document.getElementById("idea-form");
+        const ideaTitleInput = document.getElementById("idea-title");
+        const ideaContentInput = document.getElementById("idea-content");
+        const ideaSaveButton = document.getElementById("idea-save");
+        const ideaCancelEditButton = document.getElementById("idea-cancel-edit");
+        const ideaStatus = document.getElementById("idea-status");
+        const ideaEmpty = document.getElementById("idea-empty");
+        const ideaList = document.getElementById("idea-list");
+        let ideas = [];
+        let ideasStorageReady = false;
+        let editingIdeaId = null;
         const tasksStorageKey = "my-tech-lab-tasks";
         const taskForm = document.getElementById("task-form");
         const taskInput = document.getElementById("task-input");
@@ -3091,6 +3505,339 @@
             }
         });
 
+        function renderIdeas() {
+            ideaList.replaceChildren();
+            ideaEmpty.hidden = ideas.length > 0;
+            ideas.forEach((idea) => {
+                const item = document.createElement("li");
+                item.className = "idea-item";
+
+                const title = document.createElement("h5");
+                title.className = "idea-item-title";
+                title.textContent = idea.title;
+
+                const content = document.createElement("p");
+                content.className = "idea-item-content";
+                content.textContent = idea.content;
+
+                const actions = document.createElement("div");
+                actions.className = "idea-item-actions";
+
+                const editButton = document.createElement("button");
+                editButton.className = "idea-item-action";
+                editButton.type = "button";
+                editButton.textContent = "编辑";
+                editButton.setAttribute("aria-label", `编辑灵感：${idea.title}`);
+                editButton.addEventListener("click", () => {
+                    editingIdeaId = idea.id;
+                    ideaTitleInput.value = idea.title;
+                    ideaContentInput.value = idea.content;
+                    ideaSaveButton.textContent = "保存修改";
+                    ideaCancelEditButton.hidden = false;
+                    ideaStatus.textContent = "正在编辑这条已保存的灵感。";
+                    ideaTitleInput.focus();
+                });
+
+                const deleteButton = document.createElement("button");
+                deleteButton.className = "idea-item-action";
+                deleteButton.type = "button";
+                deleteButton.textContent = "删除";
+                deleteButton.setAttribute("aria-label", `删除灵感：${idea.title}`);
+                deleteButton.addEventListener("click", () => deleteIdea(idea.id));
+
+                actions.append(editButton, deleteButton);
+                item.append(title, content, actions);
+                ideaList.append(item);
+            });
+        }
+
+        function persistIdeas(nextIdeas) {
+            try {
+                localStorage.setItem(ideasStorageKey, JSON.stringify(nextIdeas));
+                ideas = nextIdeas;
+                renderIdeas();
+                ideaStatus.setAttribute("role", "status");
+                return true;
+            } catch (error) {
+                ideaStatus.textContent = "灵感保存失败，请检查浏览器存储设置后重试。";
+                ideaStatus.setAttribute("role", "alert");
+                console.error("Ideas & Writing could not save ideas:", error);
+                return false;
+            }
+        }
+
+        function loadIdeas() {
+            try {
+                const savedIdeas = localStorage.getItem(ideasStorageKey);
+                if (savedIdeas !== null) {
+                    const parsedIdeas = JSON.parse(savedIdeas);
+                    if (!Array.isArray(parsedIdeas) || parsedIdeas.some((idea) =>
+                        !idea ||
+                        typeof idea.id !== "string" ||
+                        typeof idea.title !== "string" ||
+                        typeof idea.content !== "string" ||
+                        typeof idea.createdAt !== "string" ||
+                        Number.isNaN(Date.parse(idea.createdAt)) ||
+                        typeof idea.updatedAt !== "string" ||
+                        Number.isNaN(Date.parse(idea.updatedAt))
+                    )) {
+                        throw new Error("Stored ideas have an invalid format.");
+                    }
+                    ideas = parsedIdeas;
+                }
+                ideasStorageReady = true;
+                renderIdeas();
+                ideaStatus.textContent = "灵感保存在此浏览器中。";
+            } catch (error) {
+                ideaStatus.textContent = "无法读取已保存的灵感；浏览器存储可能不可用或数据格式异常。";
+                ideaStatus.setAttribute("role", "alert");
+                ideaTitleInput.disabled = true;
+                ideaContentInput.disabled = true;
+                ideaSaveButton.disabled = true;
+                console.error("Ideas & Writing could not load ideas:", error);
+            }
+        }
+
+        function resetIdeaForm() {
+            editingIdeaId = null;
+            ideaForm.reset();
+            ideaSaveButton.textContent = "保存灵感";
+            ideaCancelEditButton.hidden = true;
+        }
+
+        function deleteIdea(ideaId) {
+            if (!ideasStorageReady) {
+                return;
+            }
+            const deletedIdea = ideas.find((idea) => idea.id === ideaId);
+            if (!deletedIdea) {
+                return;
+            }
+            if (persistIdeas(ideas.filter((idea) => idea.id !== ideaId))) {
+                if (editingIdeaId === ideaId) {
+                    resetIdeaForm();
+                }
+                ideaStatus.textContent = `已删除灵感“${deletedIdea.title}”。`;
+            }
+        }
+
+        function normalizeIdeaText(text) {
+            return text
+                .replace(/\r\n?/g, "\n")
+                .split("\n")
+                .map((line) => line.replace(/[ \t]+/g, " ").trim())
+                .join("\n")
+                .replace(/\n{3,}/g, "\n\n")
+                .replace(/[ \t]+([，。！？；：,.!?;:])/g, "$1")
+                .trim();
+        }
+
+        function setIdeasTab(tab, focus = false) {
+            ideasTabs.forEach((candidate) => {
+                const selected = candidate === tab;
+                candidate.setAttribute("aria-selected", String(selected));
+                candidate.tabIndex = selected ? 0 : -1;
+                document.getElementById(candidate.getAttribute("aria-controls")).hidden = !selected;
+            });
+            if (focus) {
+                tab.focus();
+            }
+        }
+
+        ideaForm.addEventListener("submit", (event) => {
+            event.preventDefault();
+            const title = ideaTitleInput.value.trim();
+            const content = ideaContentInput.value.trim();
+            if (!title || !content) {
+                ideaStatus.textContent = "请填写灵感标题和内容。";
+                return;
+            }
+            if (!ideasStorageReady) {
+                ideaStatus.textContent = "灵感存储尚未就绪，暂时无法保存。";
+                ideaStatus.setAttribute("role", "alert");
+                return;
+            }
+
+            const now = new Date().toISOString();
+            const existing = ideas.find((idea) => idea.id === editingIdeaId);
+            const nextIdea = {
+                id: existing?.id ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+                title,
+                content,
+                createdAt: existing?.createdAt ?? now,
+                updatedAt: now
+            };
+            const nextIdeas = existing
+                ? ideas.map((idea) => idea.id === editingIdeaId ? nextIdea : idea)
+                : [nextIdea, ...ideas];
+            if (persistIdeas(nextIdeas)) {
+                resetIdeaForm();
+                ideaStatus.textContent = existing ? "灵感已更新。" : "灵感已保存到此浏览器。";
+            }
+        });
+
+        ideaCancelEditButton.addEventListener("click", () => {
+            resetIdeaForm();
+            ideaStatus.textContent = "已取消编辑。";
+            ideaTitleInput.focus();
+        });
+
+        ideasTabs.forEach((tab, index) => {
+            tab.addEventListener("click", () => setIdeasTab(tab));
+            tab.addEventListener("keydown", (event) => {
+                let nextIndex;
+                if (event.key === "ArrowRight") {
+                    nextIndex = (index + 1) % ideasTabs.length;
+                } else if (event.key === "ArrowLeft") {
+                    nextIndex = (index - 1 + ideasTabs.length) % ideasTabs.length;
+                } else if (event.key === "Home") {
+                    nextIndex = 0;
+                } else if (event.key === "End") {
+                    nextIndex = ideasTabs.length - 1;
+                } else {
+                    return;
+                }
+                event.preventDefault();
+                setIdeasTab(ideasTabs[nextIndex], true);
+            });
+        });
+
+        document.getElementById("draft-form").addEventListener("submit", (event) => {
+            event.preventDefault();
+            const topic = document.getElementById("draft-topic").value.trim();
+            const type = document.getElementById("draft-type").value;
+            if (!topic) {
+                return;
+            }
+
+            const structures = {
+                article: `# ${topic}\n\n## 开篇\n从什么真实场景或问题切入？\n\n## 核心观点\n用一句话写下文章最想表达的观点。\n\n## 主要内容\n1. 论点一：补充事实、例子或来源。\n2. 论点二：补充事实、例子或来源。\n3. 论点三：补充事实、例子或来源。\n\n## 结尾\n回扣核心观点，并写下读者可以采取的下一步。`,
+                blog: `# ${topic}\n\n## 一个具体的起点\n记录这件事是如何开始的。\n\n## 过程与观察\n写下经历、转折和真实细节。\n\n## 我的收获\n整理值得分享的想法或经验。\n\n## 留给读者的问题\n用一个开放问题结束。`,
+                email: `主题：${topic}\n\n你好，\n\n写信是想和你沟通：\n\n背景 / 目的：\n[补充必要背景]\n\n具体内容：\n[写下需要说明或请求的事项]\n\n期待回复或下一步：\n[写明时间或行动]\n\n谢谢！`,
+                social: `${topic}\n\n开场：用一句话说明为什么值得关注。\n重点：写下一个清晰、有依据的观点。\n补充：加入一个具体例子或个人观察。\n结尾：提出一个问题或邀请交流。`
+            };
+            const output = document.getElementById("draft-output");
+            output.value = structures[type];
+            document.getElementById("draft-result").hidden = false;
+            document.getElementById("draft-status").textContent = "已生成本地模板，请编辑占位内容并核实事实。";
+        });
+
+        document.getElementById("polish-form").addEventListener("submit", (event) => {
+            event.preventDefault();
+            const original = document.getElementById("polish-input").value.trim();
+            if (!original) {
+                return;
+            }
+            const styleTips = {
+                professional: [
+                    "优先使用完整句和清晰的主谓关系。",
+                    "用具体事实、来源或时间范围支撑结论，避免含糊表述。"
+                ],
+                concise: [
+                    "删除重复背景，让每句话只承载一个重点。",
+                    "优先使用主动句和具体动词，保留必要信息。"
+                ],
+                natural: [
+                    "把过长的句子拆短，减少生硬的书面连接词。",
+                    "保留自然语气，同时确保指代和上下文清楚。"
+                ],
+                warm: [
+                    "在合适处加入礼貌称呼、感谢或积极回应。",
+                    "表达请求时说明缘由，并保持具体、真诚。"
+                ]
+            };
+            const normalized = normalizeIdeaText(original);
+            const suggestions = [...styleTips[document.getElementById("polish-style").value]];
+            if (normalized !== original) {
+                suggestions.unshift("已整理多余空格、空行和标点前空格；请检查排版是否符合预期。");
+            }
+            if (/[！!]{2,}|\.{3,}|…{2,}/.test(original)) {
+                suggestions.push("检测到重复感叹号或省略号，可酌情精简标点。");
+            }
+            document.getElementById("polish-output").value = normalized;
+            document.getElementById("polish-suggestions").replaceChildren(
+                ...suggestions.map((suggestion) => {
+                    const item = document.createElement("li");
+                    item.textContent = suggestion;
+                    return item;
+                })
+            );
+            document.getElementById("polish-result").hidden = false;
+            document.getElementById("polish-status").textContent = "已生成本地排版结果与风格建议；请自行检查和修改。";
+        });
+
+        document.getElementById("convert-form").addEventListener("submit", (event) => {
+            event.preventDefault();
+            const source = normalizeIdeaText(document.getElementById("convert-input").value);
+            if (!source) {
+                return;
+            }
+            const format = document.getElementById("convert-format").value;
+            let result;
+            if (format === "formal") {
+                result = source.replace(/咱们/g, "我们").replace(/搞定/g, "完成");
+            } else if (format === "conversational") {
+                result = source
+                    .replace(/因此/g, "所以")
+                    .replace(/此外/g, "另外")
+                    .replace(/进行沟通/g, "沟通一下")
+                    .replace(/请您/g, "麻烦你");
+            } else {
+                const sentences = source.match(/[^。！？!?；;\n]+[。！？!?；;]?/g) || [];
+                const items = sentences.map((sentence) => sentence.trim()).filter(Boolean);
+                if (format === "summary") {
+                    const firstSentence = items[0] || source;
+                    const characters = Array.from(firstSentence);
+                    result = characters.length > 120
+                        ? `${characters.slice(0, 120).join("")}…`
+                        : firstSentence;
+                } else {
+                    result = items.map((item) => `• ${item}`).join("\n");
+                }
+            }
+            document.getElementById("convert-output").value = result;
+            document.getElementById("convert-result").hidden = false;
+            document.getElementById("convert-status").textContent =
+                format === "summary"
+                    ? "摘要草稿仅提取首句（超长时截短），不代表语义总结；请检查后编辑。"
+                    : "已按本地格式规则整理，可继续编辑。";
+        });
+
+        document.getElementById("convert-copy").addEventListener("click", async () => {
+            const output = document.getElementById("convert-output");
+            if (!output.value) {
+                document.getElementById("convert-copy-status").textContent = "没有可复制的结果。";
+                return;
+            }
+            const status = document.getElementById("convert-copy-status");
+            let copyError;
+            try {
+                if (navigator.clipboard?.writeText) {
+                    await navigator.clipboard.writeText(output.value);
+                } else {
+                    throw new Error("Clipboard API is unavailable.");
+                }
+            } catch (error) {
+                copyError = error;
+            }
+            if (copyError) {
+                let fallbackCopied = false;
+                try {
+                    output.focus();
+                    output.select();
+                    fallbackCopied = document.execCommand("copy");
+                } catch (error) {
+                    copyError = error;
+                }
+                if (!fallbackCopied) {
+                    status.textContent = "无法自动复制，请选中结果后手动复制。";
+                    console.error("Ideas & Writing could not copy converted text:", copyError);
+                    return;
+                }
+            }
+            status.textContent = "结果已复制。";
+        });
+
         aiAssistantForm.addEventListener("submit", (event) => {
             event.preventDefault();
             aiAssistantStatus.textContent = "AI 服务尚未接入，消息未发送，也不会生成模拟回复。";
@@ -3098,6 +3845,14 @@
 
         document.querySelectorAll(".ai-shortcut").forEach((button) => {
             button.addEventListener("click", () => {
+                if (button.dataset.aiFeature === "ideas-writing") {
+                    ideasWorkspace.hidden = false;
+                    setIdeasTab(ideasTabs[0]);
+                    aiAssistantStatus.textContent = "灵感创作工作区已启用。功能使用本地模板与规则，不会调用 AI 服务。";
+                    ideasWorkspace.scrollIntoView({ behavior: "smooth", block: "nearest" });
+                    ideasTabs[0].focus({ preventScroll: true });
+                    return;
+                }
                 if (button.dataset.aiFeature === "task-organization") {
                     taskOrganizerPanel.hidden = false;
                     taskOrganizerStatus.textContent = "使用本地文本规则整理；请预览并确认后再导入。";
@@ -3123,6 +3878,7 @@
         updateClock();
         window.setInterval(updateClock, 1000);
         loadNotes();
+        loadIdeas();
         loadTasks();
         refreshDailyPlanning(false);
     </script>
