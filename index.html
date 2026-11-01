@@ -401,6 +401,172 @@
             line-height: 1.3;
         }
 
+        .task-organizer {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            border-radius: 11px;
+            background: rgba(7, 10, 15, 0.3);
+        }
+
+        .task-organizer-heading {
+            margin: 0;
+            color: var(--text);
+            font-size: 15px;
+            font-weight: 560;
+        }
+
+        .task-organizer-description {
+            margin: 7px 0 0;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.55;
+        }
+
+        .task-organizer-input {
+            min-height: 120px;
+            margin-top: 14px;
+        }
+
+        .task-organizer-actions {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .task-organize-button,
+        .task-import-button,
+        .task-preview-remove {
+            min-height: 38px;
+            padding: 0 13px;
+            border: 1px solid rgba(157, 232, 212, 0.22);
+            border-radius: 8px;
+            background: var(--accent-soft);
+            color: var(--accent);
+            font: inherit;
+            font-size: 12px;
+            font-weight: 550;
+            cursor: pointer;
+            transition: background 160ms ease, border-color 160ms ease;
+        }
+
+        .task-organize-button:hover,
+        .task-organize-button:focus-visible,
+        .task-import-button:hover,
+        .task-import-button:focus-visible {
+            border-color: rgba(157, 232, 212, 0.5);
+            background: rgba(157, 232, 212, 0.16);
+        }
+
+        .task-organize-button:disabled,
+        .task-import-button:disabled,
+        .task-preview-remove:disabled {
+            cursor: not-allowed;
+            opacity: 0.55;
+        }
+
+        .task-organizer-status {
+            flex: 1 1 220px;
+            min-height: 1.4em;
+            margin: 0;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .task-preview {
+            margin-top: 20px;
+            padding-top: 18px;
+            border-top: 1px solid var(--border);
+        }
+
+        .task-preview-heading {
+            margin: 0;
+            color: #b6c1cf;
+            font-size: 12px;
+            font-weight: 550;
+        }
+
+        .task-preview-list {
+            display: grid;
+            gap: 10px;
+            margin: 12px 0 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .task-preview-item {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 120px minmax(150px, 190px) auto;
+            align-items: end;
+            gap: 10px;
+            padding: 13px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            background: rgba(20, 27, 38, 0.55);
+        }
+
+        .task-preview-field {
+            display: grid;
+            min-width: 0;
+            gap: 7px;
+            color: var(--muted);
+            font-size: 10px;
+        }
+
+        .task-preview-name,
+        .task-preview-priority,
+        .task-preview-date {
+            width: 100%;
+            min-width: 0;
+            min-height: 38px;
+            padding: 0 9px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            outline: none;
+            background: rgba(7, 10, 15, 0.55);
+            color: var(--text);
+            font: inherit;
+            font-size: 12px;
+        }
+
+        .task-preview-name:focus-visible,
+        .task-preview-priority:focus-visible,
+        .task-preview-date:focus-visible {
+            border-color: rgba(157, 232, 212, 0.55);
+            box-shadow: 0 0 0 3px rgba(157, 232, 212, 0.08);
+        }
+
+        .task-preview-priority {
+            cursor: pointer;
+        }
+
+        .task-preview-date-group {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 86px;
+            gap: 6px;
+        }
+
+        .task-preview-remove {
+            border-color: var(--border);
+            background: transparent;
+            color: #aab5c3;
+            font-weight: 400;
+        }
+
+        .task-preview-remove:hover,
+        .task-preview-remove:focus-visible {
+            border-color: rgba(239, 133, 133, 0.4);
+            background: rgba(239, 133, 133, 0.08);
+            color: #f0a2a2;
+        }
+
+        .task-import-button {
+            margin-top: 13px;
+        }
+
         .daily-planning {
             margin-top: 30px;
             padding: 22px;
@@ -1356,6 +1522,29 @@
                 grid-template-columns: minmax(0, 1fr);
             }
 
+            .task-organizer {
+                padding: 16px 13px;
+            }
+
+            .task-preview-item {
+                grid-template-columns: minmax(0, 1fr) 120px;
+                align-items: end;
+            }
+
+            .task-preview-date-field,
+            .task-preview-note {
+                grid-column: 1 / -1;
+            }
+
+            .task-preview-remove {
+                grid-column: 2;
+                justify-self: end;
+            }
+
+            .task-import-button {
+                width: 100%;
+            }
+
             .daily-focus-panel {
                 padding: 18px;
             }
@@ -1574,6 +1763,25 @@
                             </button>
                         </div>
                     </div>
+
+                    <section class="task-organizer" id="task-organizer" aria-labelledby="task-organizer-title" hidden>
+                        <h3 class="task-organizer-heading" id="task-organizer-title">Task Organization｜任务整理</h3>
+                        <p class="task-organizer-description">本地规则会按换行、列表项和常见句末标点拆分任务，并识别明确的优先级与日期。结果仅供预览，不会自动保存。</p>
+                        <form id="task-organizer-form">
+                            <label class="sr-only" for="task-organizer-input">描述需要整理的任务</label>
+                            <textarea class="notes-input task-organizer-input" id="task-organizer-input" placeholder="例如：明天下午3点前提交报告，优先级高&#10;周五完成设计评审；下周整理项目资料"></textarea>
+                            <div class="task-organizer-actions">
+                                <button class="task-organize-button" type="submit">整理任务</button>
+                                <p class="task-organizer-status" id="task-organizer-status" role="status" aria-live="polite"></p>
+                            </div>
+                        </form>
+                        <section class="task-preview" id="task-organizer-preview" aria-labelledby="task-preview-heading" hidden>
+                            <h4 class="task-preview-heading" id="task-preview-heading">任务预览</h4>
+                            <p class="task-organizer-description">请检查或编辑任务。未识别优先级时使用现有默认值“中”；截止日期和时间会附加在任务名称中保存。</p>
+                            <ol class="task-preview-list" id="task-preview-list"></ol>
+                            <button class="task-import-button" id="task-import-button" type="button" disabled>确认并添加到 Task Manager</button>
+                        </section>
+                    </section>
 
                     <section class="daily-planning" aria-labelledby="daily-planning-title">
                         <div class="daily-planning-header">
@@ -1833,6 +2041,17 @@
         const planningRefreshButton = document.getElementById("planning-refresh");
         const planningConfirmButton = document.getElementById("planning-confirm");
         const planningStatus = document.getElementById("planning-status");
+        const taskOrganizerPanel = document.getElementById("task-organizer");
+        const taskOrganizerForm = document.getElementById("task-organizer-form");
+        const taskOrganizerInput = document.getElementById("task-organizer-input");
+        const taskOrganizerStatus = document.getElementById("task-organizer-status");
+        const taskOrganizerPreview = document.getElementById("task-organizer-preview");
+        const taskPreviewList = document.getElementById("task-preview-list");
+        const taskImportButton = document.getElementById("task-import-button");
+        let taskOrganizerPreviewVersion = 0;
+        let taskOrganizerImportedVersion = 0;
+        const taskOrganizerImportedSources = new Set();
+        let taskOrganizerSubmitting = false;
         let dailyPlanningReady = false;
         let dailyPlanningSourceSignature = "";
         const aiShortcutMessages = {
@@ -1915,6 +2134,419 @@
                 String(date.getMonth() + 1).padStart(2, "0"),
                 String(date.getDate()).padStart(2, "0")
             ].join("-");
+        }
+
+        function parseTaskDateToken(text) {
+            const absoluteDate = text.match(/(\d{4})\s*[-/.年]\s*(\d{1,2})\s*[-/.月]\s*(\d{1,2})\s*日?/);
+            if (absoluteDate) {
+                const year = Number(absoluteDate[1]);
+                const month = Number(absoluteDate[2]);
+                const day = Number(absoluteDate[3]);
+                const date = new Date(year, month - 1, day);
+                const valid = date.getFullYear() === year &&
+                    date.getMonth() === month - 1 &&
+                    date.getDate() === day;
+                return {
+                    token: absoluteDate[0],
+                    value: valid ? getLocalDateKey(date) : "",
+                    needsReview: !valid
+                };
+            }
+
+            const relativeDate = text.match(/今天|今日|明天|明日|后天|today|tomorrow/i);
+            if (relativeDate) {
+                const offset = /明天|明日|tomorrow/i.test(relativeDate[0]) ? 1 :
+                    /后天/i.test(relativeDate[0]) ? 2 : 0;
+                const date = new Date();
+                date.setHours(12, 0, 0, 0);
+                date.setDate(date.getDate() + offset);
+                return { token: relativeDate[0], value: getLocalDateKey(date), needsReview: false };
+            }
+
+            const hasUnresolvedDate = /下周|本周|这周|周[一二三四五六日天]|星期[一二三四五六日天]|next week|this week|monday|tuesday|wednesday|thursday|friday|saturday|sunday/i.test(text);
+            return { token: "", value: "", needsReview: hasUnresolvedDate };
+        }
+
+        function parseTaskTimeToken(text) {
+            const meridianTime = text.match(/(上午|下午|am|pm)\s*(\d{1,2})(?::([0-5]\d)|点(?:(半)|([0-5]?\d)分?)?)?/i);
+            const clockTime = meridianTime ? null : text.match(/(\d{1,2}):([0-5]\d)/);
+            const chineseTime = meridianTime || clockTime ? null : text.match(/(\d{1,2})点(?:(半)|([0-5]?\d)分?)?/);
+            const match = meridianTime || clockTime || chineseTime;
+            if (!match) {
+                return { token: "", value: "", needsReview: false };
+            }
+
+            let hour;
+            let minute;
+            let hasMeridian = false;
+            if (meridianTime) {
+                const meridian = meridianTime[1].toLowerCase();
+                hour = Number(meridianTime[2]);
+                minute = meridianTime[3] ? Number(meridianTime[3]) :
+                    meridianTime[4] ? 30 :
+                    meridianTime[5] ? Number(meridianTime[5]) : 0;
+                hasMeridian = true;
+                if (hour < 1 || hour > 12) {
+                    return { token: "", value: "", needsReview: true };
+                }
+                if (meridian === "下午" || meridian === "pm") {
+                    hour = hour === 12 ? 12 : hour + 12;
+                } else {
+                    hour = hour === 12 ? 0 : hour;
+                }
+            } else if (clockTime) {
+                hour = Number(clockTime[1]);
+                minute = Number(clockTime[2]);
+                if (hour > 23) {
+                    return { token: "", value: "", needsReview: true };
+                }
+            } else {
+                hour = Number(chineseTime[1]);
+                minute = chineseTime[2] ? 30 : chineseTime[3] ? Number(chineseTime[3]) : 0;
+                if (hour > 23) {
+                    return { token: "", value: "", needsReview: true };
+                }
+            }
+
+            const ambiguous = !hasMeridian && !clockTime && hour > 0 && hour <= 12;
+            return {
+                token: ambiguous ? "" : match[0],
+                value: ambiguous ? "" : `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`,
+                needsReview: ambiguous
+            };
+        }
+
+        function isTaskMetadataOnly(segment) {
+            let remaining = segment;
+            const metadataPatterns = [
+                /(?:标记|设为|标为)\s*高优先级|高优先级|优先级\s*[:：]?\s*高|紧急|(?:mark|set)(?:\s+this)?(?:\s+as)?\s+high\s+priority|high priority|priority\s*(?:is|[:=])?\s*high|urgent/i,
+                /(?:标记|设为|标为)\s*中优先级|中优先级|优先级\s*[:：]?\s*中|一般优先级|(?:mark|set)(?:\s+this)?(?:\s+as)?\s+medium\s+priority|medium priority|priority\s*(?:is|[:=])?\s*medium/i,
+                /(?:标记|设为|标为)\s*低优先级|低优先级|优先级\s*[:：]?\s*低|(?:mark|set)(?:\s+this)?(?:\s+as)?\s+low\s+priority|low priority|priority\s*(?:is|[:=])?\s*low/i
+            ];
+            for (const pattern of metadataPatterns) {
+                remaining = remaining.replace(pattern, " ");
+            }
+            const deadline = parseTaskDateToken(remaining);
+            if (deadline.token) {
+                remaining = remaining.replace(deadline.token, " ");
+            }
+            const time = parseTaskTimeToken(remaining);
+            if (time.token) {
+                remaining = remaining.replace(time.token, " ");
+            } else if (time.needsReview) {
+                remaining = remaining.replace(/\d{1,2}点(?:(?:半)|(?:\d{1,2})分?)?/g, " ");
+            }
+            remaining = remaining
+                .replace(/下周|本周|这周|周[一二三四五六日天]|星期[一二三四五六日天]|next week|this week|monday|tuesday|wednesday|thursday|friday|saturday|sunday/gi, " ")
+                .replace(/(?:截止日期|截止|截至|due(?:\s+on)?|before|by|于|在|at|time|priority|mark|set|this|as|please)\s*/gi, " ")
+                .replace(/^[\s:：,，、-]+|[\s:：,，、-]+$/g, "")
+                .trim();
+            return remaining.length === 0;
+        }
+
+        function parseTaskDescription(description) {
+            const rawSegments = description
+                .split(/\r?\n/)
+                .flatMap((line) => line.split(/[。！？；;，,]+|(?<!\d)\.(?=\s+[A-Z])/))
+                .map((segment) => segment.replace(/^\s*(?:(?:[-*•])\s*|\d+[.)、]\s*|[（(]\d+[)）]\s*)/, "").trim())
+                .filter(Boolean);
+            const segments = [];
+            let pendingMetadata = [];
+            for (const segment of rawSegments) {
+                if (isTaskMetadataOnly(segment)) {
+                    if (segments.length) {
+                        segments[segments.length - 1] += ` ${segment}`;
+                    } else {
+                        pendingMetadata.push(segment);
+                    }
+                    continue;
+                }
+                segments.push([...pendingMetadata, segment].join(" "));
+                pendingMetadata = [];
+            }
+            if (pendingMetadata.length && segments.length) {
+                segments[segments.length - 1] += ` ${pendingMetadata.join(" ")}`;
+            }
+
+            return segments.flatMap((segment) => {
+                let taskText = segment;
+                let priority = "medium";
+                let priorityWasDefaulted = true;
+                const priorityPatterns = [
+                    { value: "high", pattern: /(?:标记|设为|标为)\s*高优先级|高优先级|优先级\s*[:：]?\s*高|紧急|(?:mark|set)(?:\s+this)?(?:\s+as)?\s+high\s+priority|high priority|priority\s*(?:is|[:=])?\s*high|urgent/i },
+                    { value: "low", pattern: /(?:标记|设为|标为)\s*低优先级|低优先级|优先级\s*[:：]?\s*低|(?:mark|set)(?:\s+this)?(?:\s+as)?\s+low\s+priority|low priority|priority\s*(?:is|[:=])?\s*low/i },
+                    { value: "medium", pattern: /(?:标记|设为|标为)\s*中优先级|中优先级|优先级\s*[:：]?\s*中|一般优先级|(?:mark|set)(?:\s+this)?(?:\s+as)?\s+medium\s+priority|medium priority|priority\s*(?:is|[:=])?\s*medium/i }
+                ];
+                const matchedPriorities = priorityPatterns
+                    .map((candidate) => ({ ...candidate, match: taskText.match(candidate.pattern) }))
+                    .filter((candidate) => candidate.match);
+                const priorityNeedsReview = new Set(matchedPriorities.map((candidate) => candidate.value)).size > 1;
+                if (matchedPriorities.length === 1) {
+                    priority = matchedPriorities[0].value;
+                    priorityWasDefaulted = false;
+                }
+                for (const candidate of matchedPriorities) {
+                    taskText = taskText.replace(candidate.match[0], " ");
+                }
+
+                const deadline = parseTaskDateToken(taskText);
+                const time = parseTaskTimeToken(taskText);
+                if (deadline.token && deadline.value) {
+                    taskText = taskText.replace(deadline.token, " ");
+                }
+                if (time.token) {
+                    taskText = taskText.replace(time.token, " ");
+                }
+                taskText = taskText
+                    .replace(/^\s*(?:截止日期|截止|截至|due(?:\s+on)?|before|by|于|在)\s*/i, " ")
+                    .replace(/(?:(?:due(?:\s+on)?|before|by)\s*(?:at)?|截止日期|截止|截至|于|在|at)\s*$/i, " ")
+                    .replace(/^\s*(?:前|之前|at)\s*/i, " ")
+                    .replace(/(?:前|之前)\s*$/i, " ")
+                    .replace(/^\s*(?:待办|任务)\s*[:：]\s*/, "")
+                    .replace(/^[\s:：,，、-]+|[\s:：,，、-]+$/g, "")
+                    .trim();
+
+                if (!taskText) {
+                    return [];
+                }
+                return [{
+                    text: taskText,
+                    priority,
+                    priorityWasDefaulted,
+                    priorityNeedsReview,
+                    date: deadline.value,
+                    time: time.value,
+                    dateNeedsReview: deadline.needsReview,
+                    timeNeedsReview: time.needsReview
+                }];
+            });
+        }
+
+        function createTaskPreviewItem(task, index) {
+            const item = document.createElement("li");
+            item.className = "task-preview-item";
+            item.dataset.previewIndex = String(index);
+
+            const nameLabel = document.createElement("label");
+            nameLabel.className = "task-preview-field";
+            nameLabel.textContent = "任务名称";
+            const nameInput = document.createElement("input");
+            nameInput.className = "task-preview-name";
+            nameInput.type = "text";
+            nameInput.maxLength = 240;
+            nameInput.required = true;
+            nameInput.value = task.text;
+            nameInput.setAttribute("aria-label", `任务 ${index + 1} 名称`);
+            nameLabel.append(nameInput);
+
+            const priorityLabel = document.createElement("label");
+            priorityLabel.className = "task-preview-field";
+            priorityLabel.textContent = "优先级";
+            const prioritySelect = document.createElement("select");
+            prioritySelect.className = "task-preview-priority";
+            prioritySelect.setAttribute("aria-label", `任务 ${index + 1} 优先级`);
+            [
+                ["high", "高"],
+                ["medium", "中"],
+                ["low", "低"]
+            ].forEach(([value, label]) => {
+                const option = document.createElement("option");
+                option.value = value;
+                option.textContent = label;
+                prioritySelect.append(option);
+            });
+            prioritySelect.value = task.priority;
+            priorityLabel.append(prioritySelect);
+
+            const dateLabel = document.createElement("label");
+            dateLabel.className = "task-preview-field task-preview-date-field";
+            dateLabel.append(document.createTextNode("截止日期 / 时间"));
+            const dateGroup = document.createElement("span");
+            dateGroup.className = "task-preview-date-group";
+            const dateInput = document.createElement("input");
+            dateInput.className = "task-preview-date";
+            dateInput.type = "date";
+            dateInput.value = task.date;
+            dateInput.setAttribute("aria-label", `任务 ${index + 1} 截止日期`);
+            const timeInput = document.createElement("input");
+            timeInput.className = "task-preview-date";
+            timeInput.type = "time";
+            timeInput.value = task.time;
+            timeInput.setAttribute("aria-label", `任务 ${index + 1} 截止时间`);
+            dateGroup.append(dateInput, timeInput);
+            dateLabel.append(dateGroup);
+
+            const note = document.createElement("p");
+            note.className = "task-organizer-description task-preview-note";
+            const priorityWasDefaulted = task.priorityWasDefaulted;
+            const updateNote = () => {
+                const priorityNote = task.priorityNeedsReview
+                    ? "检测到互相冲突的优先级，当前使用默认中，请确认。"
+                    : priorityWasDefaulted
+                    ? prioritySelect.value === "medium" ? "未注明优先级，默认中。" : "原文未注明优先级，已手动选择。"
+                    : "已识别优先级，可修改。";
+                const dateNote = dateInput.value
+                    ? "截止日期已填写。"
+                    : task.dateNeedsReview ? "检测到日期表达但未能确定日期，请确认。" : "未识别截止日期，可手动填写。";
+                const timeNote = timeInput.value
+                    ? "时间已填写。"
+                    : task.timeNeedsReview ? "检测到时间表达但无法确定时段，请确认。" : "";
+                note.textContent = [priorityNote, dateNote, timeNote].filter(Boolean).join(" ");
+            };
+            prioritySelect.addEventListener("change", updateNote);
+            dateInput.addEventListener("input", updateNote);
+            timeInput.addEventListener("input", updateNote);
+            updateNote();
+
+            const removeButton = document.createElement("button");
+            removeButton.className = "task-preview-remove";
+            removeButton.type = "button";
+            removeButton.textContent = "删除";
+            removeButton.setAttribute("aria-label", `删除预览任务 ${index + 1}`);
+            removeButton.addEventListener("click", () => {
+                item.remove();
+                if (!taskPreviewList.children.length) {
+                    taskImportButton.disabled = true;
+                    taskOrganizerStatus.textContent = "预览已清空。";
+                }
+            });
+
+            item.append(nameLabel, priorityLabel, dateLabel, removeButton, note);
+            return item;
+        }
+
+        function renderTaskOrganizationPreview(parsedTasks) {
+            taskPreviewList.replaceChildren();
+            parsedTasks.forEach((task, index) => {
+                taskPreviewList.append(createTaskPreviewItem(task, index));
+            });
+            taskOrganizerPreview.hidden = parsedTasks.length === 0;
+            taskImportButton.disabled = parsedTasks.length === 0 || !tasksStorageReady;
+            taskImportButton.textContent = "确认并添加到 Task Manager";
+        }
+
+        function organizeTasks(event) {
+            event.preventDefault();
+            const source = taskOrganizerInput.value.trim();
+            if (!source) {
+                taskOrganizerStatus.textContent = "请先输入需要整理的任务。";
+                taskOrganizerInput.focus();
+                return;
+            }
+            if (!tasksStorageReady) {
+                taskOrganizerStatus.textContent = "Task Manager 数据尚未就绪，暂时无法整理或保存任务。";
+                return;
+            }
+            if (taskOrganizerImportedSources.has(source)) {
+                taskOrganizerStatus.textContent = "这段内容已导入过。修改输入后再整理，以避免重复添加同一批任务。";
+                return;
+            }
+
+            const parsedTasks = parseTaskDescription(source);
+            if (!parsedTasks.length) {
+                taskPreviewList.replaceChildren();
+                taskOrganizerPreview.hidden = true;
+                taskImportButton.disabled = true;
+                taskImportButton.textContent = "确认并添加到 Task Manager";
+                taskOrganizerStatus.textContent = "没有识别到任务。请用换行、列表项或标点分隔任务，并保留任务名称。";
+                return;
+            }
+
+            taskOrganizerPreviewVersion += 1;
+            renderTaskOrganizationPreview(parsedTasks);
+            taskOrganizerStatus.textContent = `已识别 ${parsedTasks.length} 项任务。此结果由本地文本规则生成，请检查后再导入。`;
+        }
+
+        function getTasksForOrganizationImport() {
+            const storedTasks = localStorage.getItem(tasksStorageKey);
+            const latestTasks = storedTasks === null ? [] : JSON.parse(storedTasks);
+            if (!Array.isArray(latestTasks) || latestTasks.some((task) =>
+                !task ||
+                typeof task.id !== "string" ||
+                typeof task.text !== "string" ||
+                !["high", "medium", "low"].includes(task.priority) ||
+                typeof task.completed !== "boolean" ||
+                typeof task.createdAt !== "string" ||
+                Number.isNaN(Date.parse(task.createdAt))
+            )) {
+                throw new Error("Stored tasks have an invalid format.");
+            }
+            return latestTasks;
+        }
+
+        function importOrganizedTasks() {
+            if (taskOrganizerSubmitting || !taskOrganizerPreviewVersion ||
+                taskOrganizerImportedVersion === taskOrganizerPreviewVersion) {
+                return;
+            }
+            if (!tasksStorageReady) {
+                taskOrganizerStatus.textContent = "Task Manager 存储不可用，无法添加任务。";
+                taskOrganizerStatus.setAttribute("role", "alert");
+                return;
+            }
+
+            const previewItems = [...taskPreviewList.querySelectorAll(".task-preview-item")];
+            if (!previewItems.length) {
+                taskOrganizerStatus.textContent = "预览中没有可添加的任务。";
+                return;
+            }
+            const importedAt = new Date().toISOString();
+            const additions = [];
+            for (const item of previewItems) {
+                const text = item.querySelector(".task-preview-name").value.trim();
+                const priority = item.querySelector(".task-preview-priority").value;
+                const date = item.querySelector('input[type="date"]').value;
+                const time = item.querySelector('input[type="time"]').value;
+                if (!text || !["high", "medium", "low"].includes(priority)) {
+                    taskOrganizerStatus.textContent = "请为每条预览任务填写名称并确认优先级。";
+                    taskOrganizerStatus.setAttribute("role", "alert");
+                    return;
+                }
+                const dueSuffix = date
+                    ? `（截止: ${date}${time ? ` ${time}` : ""}）`
+                    : time ? `（时间: ${time}，日期待确认）` : "";
+                if (text.length + dueSuffix.length > 240) {
+                    taskOrganizerStatus.textContent = "任务名称加截止时间不能超过 240 个字符，请缩短名称后再添加。";
+                    taskOrganizerStatus.setAttribute("role", "alert");
+                    return;
+                }
+                additions.push({
+                    id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+                    text: `${text}${dueSuffix}`,
+                    priority,
+                    completed: false,
+                    createdAt: importedAt
+                });
+            }
+
+            taskOrganizerSubmitting = true;
+            taskImportButton.disabled = true;
+            taskOrganizerPanel.setAttribute("aria-busy", "true");
+            try {
+                const latestTasks = getTasksForOrganizationImport();
+                if (persistTasks([...latestTasks, ...additions])) {
+                    taskOrganizerImportedVersion = taskOrganizerPreviewVersion;
+                    taskOrganizerImportedSources.add(taskOrganizerInput.value.trim());
+                    taskOrganizerStatus.textContent = `已成功添加 ${additions.length} 项任务到 Task Manager。`;
+                    taskOrganizerStatus.setAttribute("role", "status");
+                    taskPreviewList.querySelectorAll("input, select, button").forEach((control) => {
+                        control.disabled = true;
+                    });
+                    taskImportButton.textContent = "已添加";
+                } else {
+                    taskOrganizerStatus.textContent = "保存失败，任务未确认添加。请检查浏览器存储设置后重试。";
+                    taskOrganizerStatus.setAttribute("role", "alert");
+                    taskImportButton.disabled = false;
+                }
+            } catch (error) {
+                taskOrganizerStatus.textContent = "无法安全读取现有任务，未添加任何任务。";
+                taskOrganizerStatus.setAttribute("role", "alert");
+                taskImportButton.disabled = false;
+                console.error("Task Organization could not load tasks for import:", error);
+            } finally {
+                taskOrganizerSubmitting = false;
+                taskOrganizerPanel.removeAttribute("aria-busy");
+            }
         }
 
         function readDailyPlanningData() {
@@ -2466,6 +3098,13 @@
 
         document.querySelectorAll(".ai-shortcut").forEach((button) => {
             button.addEventListener("click", () => {
+                if (button.dataset.aiFeature === "task-organization") {
+                    taskOrganizerPanel.hidden = false;
+                    taskOrganizerStatus.textContent = "使用本地文本规则整理；请预览并确认后再导入。";
+                    aiAssistantStatus.textContent = "任务整理已启用。整理结果仅供预览，不会自动添加任务。";
+                    taskOrganizerInput.focus();
+                    return;
+                }
                 const message = aiShortcutMessages[button.dataset.aiFeature];
                 if (message) {
                     aiAssistantStatus.textContent = message;
@@ -2473,6 +3112,8 @@
             });
         });
 
+        taskOrganizerForm.addEventListener("submit", organizeTasks);
+        taskImportButton.addEventListener("click", importOrganizedTasks);
         planningRefreshButton.addEventListener("click", () => {
             refreshDailyPlanning(true);
         });
