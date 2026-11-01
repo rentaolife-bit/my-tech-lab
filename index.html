@@ -821,6 +821,304 @@
             margin: 8px 0 0;
         }
 
+        .document-workspace {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            border-radius: 11px;
+            background: rgba(7, 10, 15, 0.3);
+        }
+
+        .document-workspace-header,
+        .document-actions,
+        .document-section-header,
+        .document-history-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 9px 14px;
+        }
+
+        .document-workspace-heading {
+            margin: 0;
+            color: var(--text);
+            font-size: 15px;
+            font-weight: 560;
+        }
+
+        .document-workspace-description,
+        .document-source-meta,
+        .document-history-empty,
+        .document-summary-note,
+        .document-history-date {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.55;
+        }
+
+        .document-workspace-description {
+            margin: 7px 0 16px;
+        }
+
+        .document-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1.35fr) minmax(230px, 0.75fr);
+            gap: 22px;
+        }
+
+        .document-input-panel,
+        .document-history-panel {
+            min-width: 0;
+        }
+
+        .document-history-panel {
+            padding-left: 20px;
+            border-left: 1px solid var(--border);
+        }
+
+        .document-panel-heading {
+            margin: 0 0 12px;
+            color: #c5cfdb;
+            font-size: 13px;
+            font-weight: 550;
+        }
+
+        .document-form,
+        .document-editor-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .document-field {
+            display: grid;
+            min-width: 0;
+            gap: 7px;
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .document-title-input,
+        .document-textarea,
+        .document-editor {
+            width: 100%;
+            min-width: 0;
+            padding: 11px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            outline: none;
+            background: rgba(7, 10, 15, 0.55);
+            color: var(--text);
+            font: inherit;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .document-title-input {
+            min-height: 40px;
+        }
+
+        .document-textarea {
+            min-height: 240px;
+            resize: vertical;
+        }
+
+        .document-editor {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .document-title-input:focus-visible,
+        .document-textarea:focus-visible,
+        .document-editor:focus-visible {
+            border-color: rgba(157, 232, 212, 0.55);
+            box-shadow: 0 0 0 3px rgba(157, 232, 212, 0.08);
+        }
+
+        .document-actions {
+            justify-content: flex-start;
+        }
+
+        .document-action,
+        .document-history-action {
+            min-height: 36px;
+            padding: 0 11px;
+            border: 1px solid rgba(157, 232, 212, 0.22);
+            border-radius: 8px;
+            background: var(--accent-soft);
+            color: var(--accent);
+            font: inherit;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        .document-action:hover,
+        .document-action:focus-visible,
+        .document-history-action:hover,
+        .document-history-action:focus-visible {
+            border-color: rgba(157, 232, 212, 0.5);
+            background: rgba(157, 232, 212, 0.16);
+        }
+
+        .document-action-secondary,
+        .document-history-action {
+            border-color: var(--border);
+            background: transparent;
+            color: #aab5c3;
+        }
+
+        .document-action:disabled,
+        .document-history-action:disabled {
+            cursor: not-allowed;
+            opacity: 0.55;
+        }
+
+        .document-status {
+            flex: 1 1 200px;
+            min-height: 1.4em;
+            margin: 0;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .document-history-list {
+            display: grid;
+            gap: 8px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .document-history-item {
+            align-items: flex-start;
+            padding: 11px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: rgba(20, 27, 38, 0.45);
+        }
+
+        .document-history-main {
+            min-width: 0;
+            flex: 1 1 120px;
+        }
+
+        .document-history-open {
+            max-width: 100%;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: var(--text);
+            font: inherit;
+            font-size: 12px;
+            font-weight: 550;
+            text-align: left;
+            overflow-wrap: anywhere;
+            cursor: pointer;
+        }
+
+        .document-history-open:hover,
+        .document-history-open:focus-visible {
+            color: var(--accent);
+        }
+
+        .document-history-date {
+            display: block;
+            margin-top: 4px;
+            font-size: 10px;
+        }
+
+        .document-history-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .document-history-action {
+            min-height: 30px;
+            padding: 0 8px;
+            font-size: 10px;
+        }
+
+        .document-history-delete:hover,
+        .document-history-delete:focus-visible {
+            border-color: rgba(239, 133, 133, 0.4);
+            background: rgba(239, 133, 133, 0.08);
+            color: #f0a2a2;
+        }
+
+        .document-results {
+            margin-top: 22px;
+            padding-top: 18px;
+            border-top: 1px solid var(--border);
+        }
+
+        .document-results-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px 18px;
+            margin-bottom: 14px;
+        }
+
+        .document-results-heading {
+            margin: 0;
+            color: #c5cfdb;
+            font-size: 13px;
+            font-weight: 550;
+        }
+
+        .document-source-meta,
+        .document-summary-note {
+            margin: 6px 0 0;
+        }
+
+        .document-results-header .document-actions {
+            margin-left: auto;
+        }
+
+        .document-editor-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .document-result-section {
+            min-width: 0;
+            padding: 13px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            background: rgba(20, 27, 38, 0.38);
+        }
+
+        .document-section-heading {
+            margin: 0;
+            color: #b6c1cf;
+            font-size: 11px;
+            font-weight: 550;
+        }
+
+        .document-copy-button {
+            min-height: 29px;
+            padding: 0 8px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: transparent;
+            color: #aab5c3;
+            font: inherit;
+            font-size: 10px;
+            cursor: pointer;
+        }
+
+        .document-copy-button:hover,
+        .document-copy-button:focus-visible {
+            border-color: rgba(157, 232, 212, 0.4);
+            color: var(--accent);
+        }
+
+        .document-result-section .document-editor {
+            margin-top: 9px;
+        }
+
         .daily-planning {
             margin-top: 30px;
             padding: 22px;
@@ -1788,6 +2086,25 @@
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
 
+            .document-workspace {
+                padding: 16px 13px;
+            }
+
+            .document-layout,
+            .document-editor-grid {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .document-history-panel {
+                padding: 16px 0 0;
+                border-top: 1px solid var(--border);
+                border-left: 0;
+            }
+
+            .document-results-header .document-actions {
+                margin-left: 0;
+            }
+
             .task-preview-item {
                 grid-template-columns: minmax(0, 1fr) 120px;
                 align-items: end;
@@ -1923,6 +2240,15 @@
             }
 
             .ideas-action {
+                width: 100%;
+            }
+
+            .document-actions {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .document-action {
                 width: 100%;
             }
 
@@ -2246,6 +2572,90 @@
                             </div>
                         </section>
                     </section>
+
+                    <section class="document-workspace" id="document-summary-workspace" aria-labelledby="document-workspace-heading" hidden>
+                        <div class="document-workspace-header">
+                            <h3 class="document-workspace-heading" id="document-workspace-heading">Document Summary｜资料总结</h3>
+                            <button class="document-action document-action-secondary" id="document-return-home" type="button">返回首页</button>
+                        </div>
+                        <p class="document-workspace-description">本地规则只抽取原文片段、明显格式信息和行动词线索，不进行 AI 语义理解。请核对整理结果；原始资料会单独保留。</p>
+
+                        <div class="document-layout">
+                            <section class="document-input-panel" aria-labelledby="document-input-heading">
+                                <h4 class="document-panel-heading" id="document-input-heading">Document Input｜资料输入</h4>
+                                <form class="document-form" id="document-input-form">
+                                    <label class="document-field" for="document-title">资料标题
+                                        <input class="document-title-input" id="document-title" type="text" maxlength="180" placeholder="为资料添加标题（可选）">
+                                    </label>
+                                    <label class="document-field" for="document-source">原始资料
+                                        <textarea class="document-textarea" id="document-source" maxlength="100000" placeholder="粘贴或输入需要整理的文字……"></textarea>
+                                    </label>
+                                    <div class="document-actions">
+                                        <button class="document-action document-action-secondary" id="document-clear" type="button">清空输入</button>
+                                        <button class="document-action" type="submit">开始整理</button>
+                                        <p class="document-status" id="document-input-status" role="status" aria-live="polite"></p>
+                                    </div>
+                                </form>
+                            </section>
+
+                            <aside class="document-history-panel" aria-labelledby="document-history-heading">
+                                <h4 class="document-panel-heading" id="document-history-heading">History｜历史资料</h4>
+                                <p class="document-history-empty" id="document-history-empty">保存的资料和总结会显示在这里。</p>
+                                <ul class="document-history-list" id="document-history-list" aria-label="已保存的资料历史"></ul>
+                                <p class="document-status" id="document-history-status" role="status" aria-live="polite"></p>
+                            </aside>
+                        </div>
+
+                        <section class="document-results" id="document-results" aria-labelledby="document-results-heading" hidden>
+                            <div class="document-results-header">
+                                <div>
+                                    <h4 class="document-results-heading" id="document-results-heading">Summary Editor｜总结编辑</h4>
+                                    <p class="document-source-meta" id="document-source-meta"></p>
+                                    <p class="document-summary-note">结果均为原文摘录或规则线索，不代表事实核验或语义总结；可以直接编辑后保存。</p>
+                                </div>
+                                <div class="document-actions">
+                                    <button class="document-action document-action-secondary" id="document-reorganize" type="button">重新整理</button>
+                                    <button class="document-action document-action-secondary" id="document-copy-all" type="button">复制完整总结</button>
+                                    <button class="document-action" id="document-save" type="button" disabled>保存到历史</button>
+                                </div>
+                            </div>
+                            <div class="document-editor-grid">
+                                <section class="document-result-section">
+                                    <div class="document-section-header">
+                                        <h5 class="document-section-heading">Executive Summary｜核心摘要</h5>
+                                        <button class="document-copy-button" type="button" data-document-copy="executive">复制</button>
+                                    </div>
+                                    <label class="sr-only" for="document-executive">核心摘要</label>
+                                    <textarea class="document-editor" id="document-executive" data-document-result="executive"></textarea>
+                                </section>
+                                <section class="document-result-section">
+                                    <div class="document-section-header">
+                                        <h5 class="document-section-heading">Key Points｜关键要点</h5>
+                                        <button class="document-copy-button" type="button" data-document-copy="keyPoints">复制</button>
+                                    </div>
+                                    <label class="sr-only" for="document-key-points">关键要点</label>
+                                    <textarea class="document-editor" id="document-key-points" data-document-result="keyPoints"></textarea>
+                                </section>
+                                <section class="document-result-section">
+                                    <div class="document-section-header">
+                                        <h5 class="document-section-heading">Important Information｜重要信息</h5>
+                                        <button class="document-copy-button" type="button" data-document-copy="important">复制</button>
+                                    </div>
+                                    <label class="sr-only" for="document-important">重要信息</label>
+                                    <textarea class="document-editor" id="document-important" data-document-result="important"></textarea>
+                                </section>
+                                <section class="document-result-section">
+                                    <div class="document-section-header">
+                                        <h5 class="document-section-heading">Action Items｜待办事项</h5>
+                                        <button class="document-copy-button" type="button" data-document-copy="actions">复制</button>
+                                    </div>
+                                    <label class="sr-only" for="document-actions-result">待办事项</label>
+                                    <textarea class="document-editor" id="document-actions-result" data-document-result="actions"></textarea>
+                                </section>
+                            </div>
+                            <p class="document-status" id="document-results-status" role="status" aria-live="polite"></p>
+                        </section>
+                    </section>
                 </div>
             </section>
 
@@ -2457,8 +2867,7 @@
         let dailyPlanningSourceSignature = "";
         const aiShortcutMessages = {
             "daily-planning": "“每日计划”暂未接入 AI 服务，目前不会生成计划。",
-            "task-organization": "“任务整理”暂未接入 AI 服务，目前不会生成整理结果。",
-            "document-summary": "“资料总结”暂未接入 AI 服务，目前不会生成总结。"
+            "task-organization": "“任务整理”暂未接入 AI 服务，目前不会生成整理结果。"
         };
         const noteTimestampFormatter = new Intl.DateTimeFormat(undefined, {
             dateStyle: "medium",
@@ -2487,6 +2896,28 @@
         let ideas = [];
         let ideasStorageReady = false;
         let editingIdeaId = null;
+        const documentStorageKey = "my-tech-lab-document-summaries";
+        const documentWorkspace = document.getElementById("document-summary-workspace");
+        const documentTitleInput = document.getElementById("document-title");
+        const documentSourceInput = document.getElementById("document-source");
+        const documentInputStatus = document.getElementById("document-input-status");
+        const documentResults = document.getElementById("document-results");
+        const documentResultsStatus = document.getElementById("document-results-status");
+        const documentSaveButton = document.getElementById("document-save");
+        const documentHistoryList = document.getElementById("document-history-list");
+        const documentHistoryEmpty = document.getElementById("document-history-empty");
+        const documentHistoryStatus = document.getElementById("document-history-status");
+        const documentResultInputs = {
+            executive: document.getElementById("document-executive"),
+            keyPoints: document.getElementById("document-key-points"),
+            important: document.getElementById("document-important"),
+            actions: document.getElementById("document-actions-result")
+        };
+        let documentHistory = [];
+        let documentStorageReady = false;
+        let currentDocumentId = null;
+        let hasDocumentSummary = false;
+        let summarizedDocumentSource = "";
         const tasksStorageKey = "my-tech-lab-tasks";
         const taskForm = document.getElementById("task-form");
         const taskInput = document.getElementById("task-input");
@@ -3505,6 +3936,389 @@
             }
         });
 
+        function splitDocumentSentences(text) {
+            return text
+                .replace(/\r\n?/g, "\n")
+                .match(/[^。！？!?；;\n]+[。！？!?；;]?/g)
+                ?.map((sentence) => sentence.trim())
+                .filter(Boolean) ?? [];
+        }
+
+        function getDocumentExcerpt(text, maxLength = 420) {
+            const characters = Array.from(text);
+            return characters.length > maxLength
+                ? `${characters.slice(0, maxLength).join("")}…（节选）`
+                : text;
+        }
+
+        function collectDocumentMatches(text, pattern) {
+            return [...text.matchAll(pattern)]
+                .map((match) => match[0].trim())
+                .filter((match, index, matches) => match && matches.indexOf(match) === index);
+        }
+
+        function organizeDocumentText(source) {
+            const sentences = splitDocumentSentences(source);
+            const keyTerms = /(?:重点|核心|主要|关键|结论|因此|导致|结果|建议|计划|目标|风险|问题|原因|措施|要求|important|key|must|should|therefore|result|plan|recommend|risk|conclusion)/i;
+            const rankedSentences = sentences
+                .map((sentence, index) => ({
+                    sentence,
+                    index,
+                    score: (sentence.match(new RegExp(keyTerms.source, "gi")) || []).length
+                }))
+                .sort((left, right) => right.score - left.score || left.index - right.index);
+            const executiveExcerpts = rankedSentences
+                .slice(0, 2)
+                .sort((left, right) => left.index - right.index);
+            const executive = executiveExcerpts.length
+                ? `本地规则：按提示词与原文顺序摘取最多 2 句，不改写，不代表语义概括。\n${executiveExcerpts
+                    .map(({ sentence }) => getDocumentExcerpt(sentence, 360))
+                    .join("\n")}`
+                : "没有可整理的原文。";
+            const keyPointExcerpts = rankedSentences
+                .slice(0, 5)
+                .sort((left, right) => left.index - right.index);
+            const keyPoints = keyPointExcerpts.length
+                ? `本地规则：按提示词与原文顺序选取句子，内容未改写，请核对。\n${keyPointExcerpts
+                    .map(({ sentence }) => `• ${getDocumentExcerpt(sentence, 320)}`)
+                    .join("\n")}`
+                : "未找到可提取的原文句子。";
+
+            const dateMatches = collectDocumentMatches(
+                source,
+                /\b\d{4}[./-]\d{1,2}[./-]\d{1,2}(?:\s+\d{1,2}[:：]\d{2})?\b|\d{4}年\d{1,2}月\d{1,2}日?(?:\s*\d{1,2}[:：]\d{2})?|\d{1,2}\s*月\s*\d{1,2}\s*日?|(?:今天|明天|后天|下周[一二三四五六日天末]?|本周[一二三四五六日天末]?)/g
+            );
+            const numberMatches = collectDocumentMatches(
+                source,
+                /[￥¥$]\s*\d[\d,，]*(?:\.\d+)?|\d[\d,，]*(?:\.\d+)?\s*(?:%|％|元|万元|万|亿|人|个|项|天|年|月|小时|分钟|GB|MB|美元)?/gi
+            ).filter((value) => !dateMatches.some((date) => date.includes(value)));
+            const labelMatches = [...source.matchAll(
+                /(?:联系人|负责人|作者|发言人|人物|机构|公司|组织|单位|部门|团队|person|contact|owner|author|organization|company|team)\s*[:：]\s*([^，。；;\n]{1,60})/gi
+            )].map((match) => `${match[0].slice(0, match[0].lastIndexOf(match[1])).replace(/[:：\s]+$/, "")}：${match[1].trim()}`);
+            const importantLines = [
+                ...dateMatches.map((value) => `• 日期/时间（原文）：${value}`),
+                ...numberMatches.slice(0, 20).map((value) => `• 数字/数值（原文）：${value}`),
+                ...labelMatches.slice(0, 20).map((value) => `• 标签信息（原文）：${value}`)
+            ];
+            const important = importantLines.length
+                ? `本地规则匹配到的原文信息，请核对上下文：\n${importantLines.join("\n")}`
+                : "未按本地规则识别到明确日期、数字或带标签的人物/机构信息；不代表原文中不存在。";
+
+            const actionPattern = /(?:请|需要|应当|必须|建议|计划|负责(?:于|在)|完成|提交|联系|安排|确认|准备|跟进|处理|发送|创建|更新|检查|整理|行动项|待办|to[- ]?do|action item|please|must|should|need to|complete|submit|contact|schedule|confirm|prepare|follow up|send|create|update|review)/i;
+            const actionSentences = sentences.filter((sentence) => actionPattern.test(sentence)).slice(0, 20);
+            const actions = actionSentences.length
+                ? `本地规则命中的行动表达候选（不判断责任人或完成状态，请核对）：\n${actionSentences
+                    .map((sentence) => `• ${getDocumentExcerpt(sentence, 320)}`)
+                    .join("\n")}`
+                : "未检测到明显的任务或行动表达；不代表资料中没有待办事项。";
+
+            return { executive, keyPoints, important, actions };
+        }
+
+        function getDocumentSummaryValues() {
+            return Object.fromEntries(
+                Object.entries(documentResultInputs).map(([key, input]) => [key, input.value])
+            );
+        }
+
+        function setDocumentSummaryValues(summary) {
+            Object.entries(documentResultInputs).forEach(([key, input]) => {
+                input.value = summary[key];
+            });
+        }
+
+        function showDocumentSummary(summary, recordId = null) {
+            setDocumentSummaryValues(summary);
+            currentDocumentId = recordId;
+            hasDocumentSummary = true;
+            summarizedDocumentSource = documentSourceInput.value;
+            documentResults.hidden = false;
+            const sourceLength = Array.from(documentSourceInput.value).length;
+            document.getElementById("document-source-meta").textContent =
+                `当前对应资料：“${documentTitleInput.value.trim() || "未命名资料"}” · 原文 ${sourceLength.toLocaleString()} 字符`;
+            documentSaveButton.disabled = !documentStorageReady;
+        }
+
+        function updateDocumentSourceState() {
+            if (!hasDocumentSummary) {
+                return;
+            }
+            const sourceChanged = documentSourceInput.value !== summarizedDocumentSource;
+            documentSaveButton.disabled = !documentStorageReady || sourceChanged;
+            if (sourceChanged) {
+                documentInputStatus.textContent = "原文已修改；请重新整理后再保存，确保总结仍对应当前资料。";
+            } else if (documentInputStatus.textContent.startsWith("原文已修改")) {
+                documentInputStatus.textContent = "原文已恢复为当前总结对应的内容。";
+            }
+        }
+
+        function organizeCurrentDocument() {
+            const source = documentSourceInput.value;
+            if (!source.trim()) {
+                documentInputStatus.textContent = "请先粘贴或输入需要整理的资料。";
+                documentSourceInput.focus();
+                return false;
+            }
+            const summary = organizeDocumentText(source);
+            showDocumentSummary(summary, currentDocumentId);
+            documentInputStatus.textContent = "已按本地规则完成初步整理；原始资料未被修改。";
+            documentResultsStatus.textContent = "结果已生成，可编辑、复制或保存到历史。";
+            return true;
+        }
+
+        function copyDocumentText(text, statusElement, successMessage) {
+            if (!text.trim()) {
+                statusElement.textContent = "没有可复制的内容。";
+                return;
+            }
+
+            const fallbackCopy = (error) => {
+                const temporaryInput = document.createElement("textarea");
+                temporaryInput.value = text;
+                temporaryInput.setAttribute("readonly", "");
+                temporaryInput.style.position = "fixed";
+                temporaryInput.style.opacity = "0";
+                document.body.append(temporaryInput);
+                temporaryInput.select();
+                let copied = false;
+                try {
+                    copied = document.execCommand("copy");
+                } catch (fallbackError) {
+                    console.error("Document Summary clipboard fallback failed:", fallbackError);
+                } finally {
+                    temporaryInput.remove();
+                }
+                if (copied) {
+                    statusElement.textContent = successMessage;
+                } else {
+                    statusElement.textContent = "无法自动复制，请选中内容后手动复制。";
+                    if (error) {
+                        console.error("Document Summary could not copy text:", error);
+                    }
+                }
+            };
+
+            if (navigator.clipboard?.writeText) {
+                navigator.clipboard.writeText(text).then(
+                    () => { statusElement.textContent = successMessage; },
+                    (error) => fallbackCopy(error)
+                );
+            } else {
+                fallbackCopy();
+            }
+        }
+
+        function renderDocumentHistory() {
+            documentHistoryList.replaceChildren();
+            documentHistoryEmpty.hidden = documentHistory.length > 0;
+            documentHistory.forEach((record) => {
+                const item = document.createElement("li");
+                item.className = "document-history-item";
+
+                const main = document.createElement("div");
+                main.className = "document-history-main";
+                const openButton = document.createElement("button");
+                openButton.className = "document-history-open";
+                openButton.type = "button";
+                openButton.textContent = record.title;
+                openButton.addEventListener("click", () => openDocumentRecord(record.id));
+                const date = document.createElement("time");
+                date.className = "document-history-date";
+                date.dateTime = record.updatedAt;
+                date.textContent = noteTimestampFormatter.format(new Date(record.updatedAt));
+                main.append(openButton, date);
+
+                const actions = document.createElement("div");
+                actions.className = "document-history-actions";
+                const editButton = document.createElement("button");
+                editButton.className = "document-history-action";
+                editButton.type = "button";
+                editButton.textContent = "编辑";
+                editButton.setAttribute("aria-label", `重新打开并编辑：${record.title}`);
+                editButton.addEventListener("click", () => openDocumentRecord(record.id));
+                const deleteButton = document.createElement("button");
+                deleteButton.className = "document-history-action document-history-delete";
+                deleteButton.type = "button";
+                deleteButton.textContent = "删除";
+                deleteButton.setAttribute("aria-label", `删除资料：${record.title}`);
+                deleteButton.addEventListener("click", () => deleteDocumentRecord(record.id));
+                actions.append(editButton, deleteButton);
+
+                item.append(main, actions);
+                documentHistoryList.append(item);
+            });
+        }
+
+        function persistDocumentHistory(nextHistory) {
+            try {
+                localStorage.setItem(documentStorageKey, JSON.stringify(nextHistory));
+                documentHistory = nextHistory;
+                renderDocumentHistory();
+                documentHistoryStatus.textContent = "资料历史已保存在此浏览器。";
+                documentHistoryStatus.setAttribute("role", "status");
+                return true;
+            } catch (error) {
+                documentHistoryStatus.textContent = "保存历史失败，请检查浏览器存储空间和设置后重试。";
+                documentHistoryStatus.setAttribute("role", "alert");
+                console.error("Document Summary history could not be saved:", error);
+                return false;
+            }
+        }
+
+        function loadDocumentHistory() {
+            try {
+                const savedHistory = localStorage.getItem(documentStorageKey);
+                if (savedHistory !== null) {
+                    const parsedHistory = JSON.parse(savedHistory);
+                    const validRecord = (record) =>
+                        record &&
+                        typeof record.id === "string" &&
+                        typeof record.title === "string" &&
+                        typeof record.sourceText === "string" &&
+                        record.summary &&
+                        Object.keys(documentResultInputs).every((key) => typeof record.summary[key] === "string") &&
+                        typeof record.createdAt === "string" &&
+                        !Number.isNaN(Date.parse(record.createdAt)) &&
+                        typeof record.updatedAt === "string" &&
+                        !Number.isNaN(Date.parse(record.updatedAt));
+                    if (!Array.isArray(parsedHistory) || parsedHistory.some((record) => !validRecord(record))) {
+                        throw new Error("Stored document summaries have an invalid format.");
+                    }
+                    documentHistory = parsedHistory;
+                }
+                documentStorageReady = true;
+                renderDocumentHistory();
+                documentHistoryStatus.textContent = "历史资料仅保存在此浏览器。";
+            } catch (error) {
+                documentHistoryStatus.textContent = "无法读取资料历史；浏览器存储可能不可用或数据格式异常。";
+                documentHistoryStatus.setAttribute("role", "alert");
+                document.getElementById("document-save").disabled = true;
+                console.error("Document Summary history could not be loaded:", error);
+            }
+        }
+
+        function openDocumentRecord(recordId) {
+            const record = documentHistory.find((item) => item.id === recordId);
+            if (!record) {
+                documentHistoryStatus.textContent = "找不到这条历史资料，可能已被删除。";
+                return;
+            }
+            documentTitleInput.value = record.title;
+            documentSourceInput.value = record.sourceText;
+            showDocumentSummary(record.summary, record.id);
+            documentInputStatus.textContent = "已从历史打开资料和对应总结，可继续编辑。";
+            documentResultsStatus.textContent = "编辑原文或总结后，点击“保存到历史”更新这条记录。";
+            documentWorkspace.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+
+        function deleteDocumentRecord(recordId) {
+            const record = documentHistory.find((item) => item.id === recordId);
+            if (!record || !documentStorageReady) {
+                return;
+            }
+            if (!window.confirm(`确定删除“${record.title}”及其原始资料和总结吗？此操作无法撤销。`)) {
+                return;
+            }
+            if (persistDocumentHistory(documentHistory.filter((item) => item.id !== recordId))) {
+                if (currentDocumentId === recordId) {
+                    currentDocumentId = null;
+                }
+                documentHistoryStatus.textContent = `已删除“${record.title}”。`;
+            }
+        }
+
+        function clearDocumentInput() {
+            document.getElementById("document-input-form").reset();
+            Object.values(documentResultInputs).forEach((input) => { input.value = ""; });
+            documentResults.hidden = true;
+            currentDocumentId = null;
+            hasDocumentSummary = false;
+            summarizedDocumentSource = "";
+            documentSaveButton.disabled = true;
+            documentInputStatus.textContent = "输入已清空；已保存的历史资料不会删除。";
+            documentResultsStatus.textContent = "";
+        }
+
+        documentSourceInput.addEventListener("input", updateDocumentSourceState);
+        documentTitleInput.addEventListener("input", () => {
+            if (hasDocumentSummary) {
+                const sourceLength = Array.from(documentSourceInput.value).length;
+                document.getElementById("document-source-meta").textContent =
+                    `当前对应资料：“${documentTitleInput.value.trim() || "未命名资料"}” · 原文 ${sourceLength.toLocaleString()} 字符`;
+            }
+        });
+
+        document.getElementById("document-input-form").addEventListener("submit", (event) => {
+            event.preventDefault();
+            organizeCurrentDocument();
+        });
+
+        document.getElementById("document-clear").addEventListener("click", clearDocumentInput);
+
+        document.getElementById("document-reorganize").addEventListener("click", organizeCurrentDocument);
+
+        document.getElementById("document-save").addEventListener("click", () => {
+            if (!documentStorageReady) {
+                documentHistoryStatus.textContent = "资料历史存储不可用，无法保存。";
+                documentHistoryStatus.setAttribute("role", "alert");
+                return;
+            }
+            const sourceText = documentSourceInput.value;
+            if (!hasDocumentSummary || !sourceText.trim()) {
+                documentResultsStatus.textContent = "请先输入资料并开始整理，再保存到历史。";
+                return;
+            }
+            if (sourceText !== summarizedDocumentSource) {
+                documentInputStatus.textContent = "原文已修改；请先重新整理，再保存到历史。";
+                return;
+            }
+
+            const existing = documentHistory.find((record) => record.id === currentDocumentId);
+            const now = new Date().toISOString();
+            const nextRecord = {
+                id: existing?.id ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+                title: documentTitleInput.value.trim() || "未命名资料",
+                sourceText,
+                summary: getDocumentSummaryValues(),
+                createdAt: existing?.createdAt ?? now,
+                updatedAt: now
+            };
+            const nextHistory = existing
+                ? documentHistory.map((record) => record.id === existing.id ? nextRecord : record)
+                : [nextRecord, ...documentHistory];
+            if (persistDocumentHistory(nextHistory)) {
+                currentDocumentId = nextRecord.id;
+                documentResultsStatus.textContent = existing ? "资料、原文和总结已更新。" : "资料、原文和总结已保存到历史。";
+            }
+        });
+
+        document.querySelectorAll("[data-document-copy]").forEach((button) => {
+            button.addEventListener("click", () => {
+                const input = documentResultInputs[button.dataset.documentCopy];
+                copyDocumentText(input.value, documentResultsStatus, "该项内容已复制。");
+            });
+        });
+
+        document.getElementById("document-copy-all").addEventListener("click", () => {
+            const sections = [
+                ["Executive Summary｜核心摘要", documentResultInputs.executive.value],
+                ["Key Points｜关键要点", documentResultInputs.keyPoints.value],
+                ["Important Information｜重要信息", documentResultInputs.important.value],
+                ["Action Items｜待办事项", documentResultInputs.actions.value]
+            ];
+            copyDocumentText(
+                sections.map(([heading, content]) => `${heading}\n${content}`).join("\n\n"),
+                documentResultsStatus,
+                "完整总结已复制。"
+            );
+        });
+
+        document.getElementById("document-return-home").addEventListener("click", () => {
+            documentWorkspace.hidden = true;
+            document.getElementById("ai-assistant-title").scrollIntoView({ behavior: "smooth", block: "start" });
+            document.querySelector('[data-ai-feature="document-summary"]').focus({ preventScroll: true });
+        });
+
         function renderIdeas() {
             ideaList.replaceChildren();
             ideaEmpty.hidden = ideas.length > 0;
@@ -3845,6 +4659,13 @@
 
         document.querySelectorAll(".ai-shortcut").forEach((button) => {
             button.addEventListener("click", () => {
+                if (button.dataset.aiFeature === "document-summary") {
+                    documentWorkspace.hidden = false;
+                    aiAssistantStatus.textContent = "资料总结工作区已启用。结果来自本地规则抽取，不是 AI 语义总结。";
+                    documentWorkspace.scrollIntoView({ behavior: "smooth", block: "nearest" });
+                    documentTitleInput.focus({ preventScroll: true });
+                    return;
+                }
                 if (button.dataset.aiFeature === "ideas-writing") {
                     ideasWorkspace.hidden = false;
                     setIdeasTab(ideasTabs[0]);
@@ -3879,6 +4700,7 @@
         window.setInterval(updateClock, 1000);
         loadNotes();
         loadIdeas();
+        loadDocumentHistory();
         loadTasks();
         refreshDailyPlanning(false);
     </script>
