@@ -1661,6 +1661,144 @@
             margin: 0 0 62px;
         }
 
+        .daily-focus-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 18px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .daily-focus-tab {
+            min-height: 38px;
+            padding: 0 12px;
+            border: 0;
+            border-bottom: 2px solid transparent;
+            background: transparent;
+            color: var(--muted);
+            font: inherit;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .daily-focus-tab[aria-selected="true"] {
+            border-bottom-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .daily-focus-tab:focus-visible,
+        .daily-focus-history-date:focus-visible {
+            outline: 2px solid rgba(157, 232, 212, 0.65);
+            outline-offset: 3px;
+        }
+
+        .daily-focus-history {
+            display: grid;
+            gap: 10px;
+        }
+
+        .daily-focus-history-empty {
+            margin: 0;
+            padding: 18px;
+            border: 1px dashed var(--border);
+            border-radius: 9px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .daily-focus-history-list {
+            display: grid;
+            gap: 8px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .daily-focus-history-item {
+            min-width: 0;
+        }
+
+        .daily-focus-history-date {
+            display: flex;
+            width: 100%;
+            min-height: 42px;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 8px 11px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: rgba(7, 10, 15, 0.28);
+            color: var(--text);
+            font: inherit;
+            font-size: 12px;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .daily-focus-history-date:hover,
+        .daily-focus-history-date[aria-pressed="true"] {
+            border-color: rgba(157, 232, 212, 0.45);
+            background: rgba(157, 232, 212, 0.07);
+        }
+
+        .daily-focus-history-completeness {
+            flex: 0 0 auto;
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .daily-focus-history-details {
+            margin-top: 12px;
+            padding: 14px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            background: rgba(7, 10, 15, 0.2);
+        }
+
+        .daily-focus-history-details-heading {
+            margin: 0 0 10px;
+            color: #c5cfdb;
+            font-size: 12px;
+            font-weight: 550;
+        }
+
+        .daily-focus-history-priorities {
+            display: grid;
+            gap: 8px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .daily-focus-history-priority {
+            display: grid;
+            grid-template-columns: 30px minmax(0, 1fr);
+            align-items: start;
+            gap: 10px;
+            min-width: 0;
+            color: var(--text);
+            font-size: 13px;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+
+        .daily-focus-history-priority-empty {
+            color: var(--muted);
+            font-style: italic;
+        }
+
+        .daily-focus-history-readonly {
+            margin: 10px 0 0;
+            color: var(--muted);
+            font-size: 10px;
+        }
+
+        .daily-focus-tabpanel[hidden],
+        .daily-focus-history-empty[hidden],
+        .daily-focus-history-details[hidden] {
+            display: none;
+        }
+
         .workspace-grid {
             display: grid;
             grid-template-columns: minmax(0, 1fr);
@@ -3512,28 +3650,44 @@
             <section class="daily-focus-section" id="daily-focus-section" aria-labelledby="daily-focus-title">
                 <h2 class="projects-heading" id="daily-focus-title">Daily Focus</h2>
                 <div class="daily-focus-panel">
-                    <div class="daily-focus-header">
-                        <span class="clock-label">Three priorities for</span>
-                        <time class="daily-focus-date" id="daily-focus-date"></time>
+                    <div class="daily-focus-tabs" role="tablist" aria-label="Daily Focus views">
+                        <button class="daily-focus-tab" id="daily-focus-today-tab" type="button" role="tab" aria-selected="true" aria-controls="daily-focus-today-panel" tabindex="0">今日重点</button>
+                        <button class="daily-focus-tab" id="daily-focus-history-tab" type="button" role="tab" aria-selected="false" aria-controls="daily-focus-history-panel" tabindex="-1">历史记录</button>
                     </div>
-                    <ol class="daily-focus-list" id="daily-focus-list">
-                        <li class="daily-focus-item">
-                            <span class="daily-focus-number" aria-hidden="true">01</span>
-                            <input class="daily-focus-input" type="text" maxlength="160" placeholder="First priority" aria-label="Daily priority 1">
-                            <button class="daily-focus-clear" type="button" aria-label="Clear priority 1">Clear</button>
-                        </li>
-                        <li class="daily-focus-item">
-                            <span class="daily-focus-number" aria-hidden="true">02</span>
-                            <input class="daily-focus-input" type="text" maxlength="160" placeholder="Second priority" aria-label="Daily priority 2">
-                            <button class="daily-focus-clear" type="button" aria-label="Clear priority 2">Clear</button>
-                        </li>
-                        <li class="daily-focus-item">
-                            <span class="daily-focus-number" aria-hidden="true">03</span>
-                            <input class="daily-focus-input" type="text" maxlength="160" placeholder="Third priority" aria-label="Daily priority 3">
-                            <button class="daily-focus-clear" type="button" aria-label="Clear priority 3">Clear</button>
-                        </li>
-                    </ol>
-                    <p class="daily-focus-status" id="daily-focus-status" role="status" aria-live="polite"></p>
+                    <section class="daily-focus-tabpanel" id="daily-focus-today-panel" role="tabpanel" aria-labelledby="daily-focus-today-tab">
+                        <div class="daily-focus-header">
+                            <span class="clock-label">Three priorities for</span>
+                            <time class="daily-focus-date" id="daily-focus-date"></time>
+                        </div>
+                        <ol class="daily-focus-list" id="daily-focus-list">
+                            <li class="daily-focus-item">
+                                <span class="daily-focus-number" aria-hidden="true">01</span>
+                                <input class="daily-focus-input" type="text" maxlength="160" placeholder="First priority" aria-label="Daily priority 1">
+                                <button class="daily-focus-clear" type="button" aria-label="Clear priority 1">Clear</button>
+                            </li>
+                            <li class="daily-focus-item">
+                                <span class="daily-focus-number" aria-hidden="true">02</span>
+                                <input class="daily-focus-input" type="text" maxlength="160" placeholder="Second priority" aria-label="Daily priority 2">
+                                <button class="daily-focus-clear" type="button" aria-label="Clear priority 2">Clear</button>
+                            </li>
+                            <li class="daily-focus-item">
+                                <span class="daily-focus-number" aria-hidden="true">03</span>
+                                <input class="daily-focus-input" type="text" maxlength="160" placeholder="Third priority" aria-label="Daily priority 3">
+                                <button class="daily-focus-clear" type="button" aria-label="Clear priority 3">Clear</button>
+                            </li>
+                        </ol>
+                        <p class="daily-focus-status" id="daily-focus-status" role="status" aria-live="polite"></p>
+                    </section>
+                    <section class="daily-focus-tabpanel daily-focus-history" id="daily-focus-history-panel" role="tabpanel" aria-labelledby="daily-focus-history-tab" hidden>
+                        <p class="daily-focus-history-empty" id="daily-focus-history-empty" hidden>还没有历史重点。日期切换后，已保存的每日重点会显示在这里。</p>
+                        <ol class="daily-focus-history-list" id="daily-focus-history-list" aria-label="Daily Focus history by date"></ol>
+                        <section class="daily-focus-history-details" id="daily-focus-history-details" aria-live="polite" hidden>
+                            <h3 class="daily-focus-history-details-heading" id="daily-focus-history-details-heading"></h3>
+                            <ol class="daily-focus-history-priorities" id="daily-focus-history-priorities"></ol>
+                            <p class="daily-focus-history-readonly">历史记录为只读，不会修改当天重点。</p>
+                        </section>
+                        <p class="daily-focus-history-status" id="daily-focus-history-status" role="status" aria-live="polite"></p>
+                    </section>
                 </div>
             </section>
             </div>
@@ -3767,8 +3921,20 @@
         const dailyFocusInputs = [...document.querySelectorAll(".daily-focus-input")];
         const dailyFocusClearButtons = [...document.querySelectorAll(".daily-focus-clear")];
         const dailyFocusStatus = document.getElementById("daily-focus-status");
+        const dailyFocusTodayTab = document.getElementById("daily-focus-today-tab");
+        const dailyFocusHistoryTab = document.getElementById("daily-focus-history-tab");
+        const dailyFocusTodayPanel = document.getElementById("daily-focus-today-panel");
+        const dailyFocusHistoryPanel = document.getElementById("daily-focus-history-panel");
+        const dailyFocusHistoryList = document.getElementById("daily-focus-history-list");
+        const dailyFocusHistoryEmpty = document.getElementById("daily-focus-history-empty");
+        const dailyFocusHistoryDetails = document.getElementById("daily-focus-history-details");
+        const dailyFocusHistoryDetailsHeading = document.getElementById("daily-focus-history-details-heading");
+        const dailyFocusHistoryPriorities = document.getElementById("daily-focus-history-priorities");
+        const dailyFocusHistoryStatus = document.getElementById("daily-focus-history-status");
         let dailyFocus = { date: "", priorities: ["", "", ""] };
         let dailyFocusStorageReady = false;
+        let dailyFocusHistorySelectedDate = "";
+        const dailyFocusSchemaVersion = 1;
         const dashboardPendingTasks = document.getElementById("dashboard-pending-tasks");
         const dashboardCompletedTasks = document.getElementById("dashboard-completed-tasks");
         const dashboardFocusItems = document.getElementById("dashboard-focus-items");
@@ -3831,16 +3997,10 @@
                 id: "daily-focus",
                 name: "Daily Focus",
                 key: dailyFocusStorageKey,
-                emptyValue: () => ({ date: "", priorities: ["", "", ""] }),
-                validate: (data) => Boolean(
-                    data &&
-                    typeof data.date === "string" &&
-                    Array.isArray(data.priorities) &&
-                    data.priorities.length === 3 &&
-                    data.priorities.every((priority) => typeof priority === "string")
-                ),
-                count: (data) => data.priorities.filter((priority) => priority.trim()).length,
-                latest: (data) => data.date || ""
+                emptyValue: () => createEmptyDataCenterDailyFocusArchive(),
+                validate: (data) => isDataCenterDailyFocusData(data),
+                count: (data) => getDataCenterDailyFocusStatistics(data).todayCount,
+                latest: (data) => getDataCenterDailyFocusStatistics(data).latestDate
             },
             {
                 id: "ideas-writing",
@@ -3902,6 +4062,70 @@
                 .sort((left, right) => Date.parse(right) - Date.parse(left))[0] || "";
         }
 
+        function createEmptyDataCenterDailyFocusArchive(activeDate = getLocalDateKey(new Date())) {
+            return {
+                schemaVersion: dailyFocusSchemaVersion,
+                activeDate,
+                records: {}
+            };
+        }
+
+        function isLegacyDataCenterDailyFocus(data) {
+            return Boolean(
+                data &&
+                typeof data === "object" &&
+                !("schemaVersion" in data) &&
+                !("records" in data) &&
+                typeof data.date === "string" &&
+                (data.date === "" || isDailyFocusDateKey(data.date)) &&
+                isDailyFocusPriorities(data.priorities) &&
+                (data.date !== "" || data.priorities.every((priority) => priority === ""))
+            );
+        }
+
+        function normalizeDataCenterDailyFocus(data) {
+            if (isLegacyDataCenterDailyFocus(data)) {
+                const activeDate = data.date || getLocalDateKey(new Date());
+                return {
+                    schemaVersion: dailyFocusSchemaVersion,
+                    activeDate,
+                    records: data.date
+                        ? { [data.date]: { priorities: [...data.priorities] } }
+                        : {}
+                };
+            }
+            return cloneDailyFocusArchive(validateDailyFocusArchive(data));
+        }
+
+        function isDataCenterDailyFocusData(data) {
+            try {
+                if (isLegacyDataCenterDailyFocus(data)) {
+                    return true;
+                }
+                validateDailyFocusArchive(data);
+                return true;
+            } catch {
+                return false;
+            }
+        }
+
+        function getDataCenterDailyFocusStatistics(data) {
+            const archive = normalizeDataCenterDailyFocus(data);
+            const today = getLocalDateKey(new Date());
+            const todayPriorities = archive.records[today]?.priorities || [];
+            const historicalEntries = Object.entries(archive.records)
+                .filter(([dateKey]) => dateKey < today);
+            return {
+                todayCount: todayPriorities.filter((priority) => priority.trim()).length,
+                historicalDays: historicalEntries.length,
+                historicalPriorityCount: historicalEntries.reduce(
+                    (total, [, record]) => total + record.priorities.filter((priority) => priority.trim()).length,
+                    0
+                ),
+                latestDate: latestDataCenterDate(Object.keys(archive.records))
+            };
+        }
+
         function readDataCenterModule(module) {
             const raw = localStorage.getItem(module.key);
             const data = raw === null ? module.emptyValue() : JSON.parse(raw);
@@ -3937,11 +4161,20 @@
                 try {
                     const { data } = readDataCenterModule(module);
                     const total = module.count(data);
-                    count.textContent = String(total);
-                    const dateLabel = module.id === "daily-focus"
-                        ? "日期"
-                        : ["quick-notes", "task-manager"].includes(module.id) ? "最近记录" : "最近更新";
-                    meta.textContent = `${total > 0 ? "有数据" : "暂无数据"} · 支持备份 · ${dateLabel}：${formatDataCenterDate(module.latest(data))}`;
+                    if (module.id === "daily-focus") {
+                        const statistics = getDataCenterDailyFocusStatistics(data);
+                        const recordCount = Object.keys(normalizeDataCenterDailyFocus(data).records).length;
+                        count.textContent = `今日 ${statistics.todayCount}`;
+                        meta.textContent =
+                            `${recordCount > 0 ? "有数据" : "暂无数据"} · 支持备份 · ` +
+                            `${statistics.historicalDays} 天历史归档 · ` +
+                            `${statistics.historicalPriorityCount} 条历史重点 · ` +
+                            `最近日期：${formatDataCenterDate(statistics.latestDate)}`;
+                    } else {
+                        count.textContent = String(total);
+                        const dateLabel = ["quick-notes", "task-manager"].includes(module.id) ? "最近记录" : "最近更新";
+                        meta.textContent = `${total > 0 ? "有数据" : "暂无数据"} · 支持备份 · ${dateLabel}：${formatDataCenterDate(module.latest(data))}`;
+                    }
                     card.dataset.valid = "true";
                 } catch (error) {
                     hasInvalidData = true;
@@ -3970,12 +4203,17 @@
                 format: dataCenterFormat,
                 version: dataCenterVersion,
                 exportedAt: new Date().toISOString(),
-                modules: dataCenterModules.map((module) => ({
-                    id: module.id,
-                    name: module.name,
-                    key: module.key,
-                    data: readDataCenterModule(module).data
-                }))
+                modules: dataCenterModules.map((module) => {
+                    const { data } = readDataCenterModule(module);
+                    return {
+                        id: module.id,
+                        name: module.name,
+                        key: module.key,
+                        data: module.id === "daily-focus"
+                            ? normalizeDataCenterDailyFocus(data)
+                            : data
+                    };
+                })
             };
         }
 
@@ -3987,6 +4225,9 @@
                     try {
                         data = JSON.parse(raw);
                         if (!definition.validate(data)) hasInvalidData = true;
+                        if (definition.id === "daily-focus" && !hasInvalidData) {
+                            data = normalizeDataCenterDailyFocus(data);
+                        }
                     } catch {
                         hasInvalidData = true;
                     }
@@ -4081,7 +4322,16 @@
                 if (!entry || entry.name !== module.name || entry.key !== module.key || !module.validate(entry.data)) {
                     throw new Error(`备份中的 ${module.name} 缺失、键名不匹配或数据格式无效。`);
                 }
-                return { definition: module, data: entry.data };
+                const legacyDailyFocus = module.id === "daily-focus" &&
+                    isLegacyDataCenterDailyFocus(entry.data);
+                return {
+                    definition: module,
+                    data: module.id === "daily-focus"
+                        ? normalizeDataCenterDailyFocus(entry.data)
+                        : entry.data,
+                    legacyDailyFocus,
+                    legacyDailyFocusDate: legacyDailyFocus ? entry.data.date : ""
+                };
             });
         }
 
@@ -4097,15 +4347,33 @@
             try {
                 const backup = JSON.parse(await file.text());
                 const modules = validateDataCenterBackup(backup);
-                modules.forEach(({ definition, data }) => {
+                modules.forEach(({ definition, data, legacyDailyFocus, legacyDailyFocusDate }) => {
                     const item = document.createElement("li");
-                    item.textContent = `${definition.name}：将恢复 ${definition.count(data)} 条${definition.count(data) === 0 ? "（空数据将替换该模块当前内容）" : ""}`;
+                    if (definition.id === "daily-focus" && legacyDailyFocus) {
+                        const focusCount = data.records[legacyDailyFocusDate]?.priorities
+                            .filter((priority) => priority.trim()).length || 0;
+                        item.textContent = `${definition.name}：旧版单日备份（${legacyDailyFocusDate || "无日期"}，${focusCount} 个重点）；导入时合并该日期并保留已有历史归档`;
+                    } else if (definition.id === "daily-focus") {
+                        const statistics = getDataCenterDailyFocusStatistics(data);
+                        const recordCount = Object.keys(data.records).length;
+                        item.textContent =
+                            `${definition.name}：今日 ${statistics.todayCount} 个重点，` +
+                            `${statistics.historicalDays} 天历史归档、` +
+                            `${statistics.historicalPriorityCount} 个历史重点（共 ${recordCount} 天）`;
+                    } else {
+                        const count = definition.count(data);
+                        item.textContent = `${definition.name}：将恢复 ${count} 条${count === 0 ? "（空数据将替换该模块当前内容）" : ""}`;
+                    }
                     dataCenterPreviewList.append(item);
                 });
                 dataCenterPendingBackup = backup;
                 dataCenterPreview.hidden = false;
                 dataCenterConfirmImportButton.disabled = false;
-                setDataCenterStatus("备份校验通过。请核对各模块条数；确认后会覆盖对应模块。");
+                setDataCenterStatus(
+                    modules.some(({ legacyDailyFocus }) => legacyDailyFocus)
+                        ? "备份校验通过。旧版 Daily Focus 只包含单日数据；确认后会合并该日期并保留其他历史归档。其他模块按备份覆盖。"
+                        : "备份校验通过。请核对各模块条数；确认后会覆盖对应模块。"
+                );
             } catch (error) {
                 dataCenterPendingBackup = null;
                 setDataCenterStatus(error instanceof SyntaxError
@@ -4118,7 +4386,11 @@
             const imported = new Map(modules.map(({ definition, data }) => [definition.id, data]));
             notes = imported.get("quick-notes");
             tasks = imported.get("task-manager");
-            dailyFocus = imported.get("daily-focus");
+            const dailyFocusArchive = normalizeDataCenterDailyFocus(imported.get("daily-focus"));
+            dailyFocus = {
+                date: dailyFocusArchive.activeDate,
+                priorities: [...(dailyFocusArchive.records[dailyFocusArchive.activeDate]?.priorities || ["", "", ""])]
+            };
             ideas = imported.get("ideas-writing");
             documentHistory = imported.get("document-summaries").map((record) => ({
                 ...record,
@@ -4135,16 +4407,11 @@
             tasksStorageReady = true;
             ideasStorageReady = true;
             documentStorageReady = true;
-            dailyFocusInputs.forEach((input, index) => {
-                input.value = dailyFocus.priorities[index];
-            });
-            dailyFocusDate.textContent = dailyFocus.date ? dateFormatter.format(new Date(`${dailyFocus.date}T12:00:00`)) : "暂无";
-            dailyFocusDate.dateTime = dailyFocus.date;
+            renderActiveDailyFocus();
             renderNotes();
             renderTasks();
             renderIdeas();
             renderDocumentHistory();
-            updateDashboardStats();
             refreshDailyPlanning(false);
         }
 
@@ -4162,15 +4429,16 @@
                 setDataCenterStatus(error.message || "备份文件校验失败，未修改任何数据。", true);
                 return;
             }
-            const willRestoreOldFocus = modules.some(({ definition, data }) =>
-                definition.id === "daily-focus" &&
-                data.date &&
-                data.date !== getLocalDateKey(new Date())
-            );
-            const warning = willRestoreOldFocus
-                ? "\n\n备份中的 Daily Focus 属于其他日期。按模块的每日语义，恢复后将把原有三个重点用于今天。"
-                : "";
-            if (!window.confirm(`即将覆盖五个模块的本地数据。导入前会自动下载当前数据备份；请确认已理解覆盖风险。${warning}\n\n继续导入？`)) {
+            const focusImport = modules.find(({ definition }) => definition.id === "daily-focus");
+            const warning = focusImport?.legacyDailyFocus
+                ? `\n\n此为旧版单日 Daily Focus 备份（日期：${focusImport.legacyDailyFocusDate || "无日期"}）。导入时会合并该日期；若与现有日期重合，该日内容将由备份替换，其他日期历史会保留。`
+                : focusImport && focusImport.data.activeDate !== getLocalDateKey(new Date())
+                    ? `\n\nDaily Focus 备份的当前日期为 ${focusImport.data.activeDate}。所有日期记录将按备份原样恢复，不会改成今天。`
+                    : "";
+            const importImpact = focusImport?.legacyDailyFocus
+                ? "其他四个模块将按备份覆盖；Daily Focus 将合并旧版单日记录，不删除其他日期历史。"
+                : "五个模块的本地数据将按备份覆盖。";
+            if (!window.confirm(`${importImpact} 导入前会自动下载当前数据备份；请确认已理解覆盖风险。${warning}\n\n继续导入？`)) {
                 setDataCenterStatus("已取消导入，当前数据未更改。");
                 return;
             }
@@ -4192,19 +4460,34 @@
                 return;
             }
 
-            const restoreModules = modules.map(({ definition, data }) => {
-                if (definition.id !== "daily-focus" || !data.date ||
-                    data.date === getLocalDateKey(new Date())) {
-                    return { definition, data };
-                }
-                return {
-                    definition,
-                    data: { ...data, date: getLocalDateKey(new Date()) }
-                };
-            });
             try {
+                const originalById = new Map(original.map((entry) => [entry.definition.id, entry]));
+                const restoreModules = modules.map(({ definition, data, legacyDailyFocus }) => {
+                    if (definition.id !== "daily-focus" || !legacyDailyFocus) {
+                        return { definition, data };
+                    }
+
+                    const current = originalById.get(definition.id);
+                    let mergedArchive = createEmptyDataCenterDailyFocusArchive(data.activeDate);
+                    if (current?.present) {
+                        const currentData = JSON.parse(current.raw);
+                        if (!definition.validate(currentData)) {
+                            throw new Error("现有 Daily Focus 数据异常，无法安全合并旧版备份；原数据未更改。");
+                        }
+                        mergedArchive = normalizeDataCenterDailyFocus(currentData);
+                    }
+                    Object.entries(data.records).forEach(([dateKey, record]) => {
+                        mergedArchive.records[dateKey] = { priorities: [...record.priorities] };
+                    });
+                    return { definition, data: mergedArchive };
+                });
+
                 restoreModules.forEach(({ definition, data }) => {
-                    localStorage.setItem(definition.key, JSON.stringify(data));
+                    const serialized = JSON.stringify(data);
+                    localStorage.setItem(definition.key, serialized);
+                    if (localStorage.getItem(definition.key) !== serialized) {
+                        throw new Error(`${definition.name} 写入后校验失败。`);
+                    }
                 });
                 applyDataCenterData(restoreModules);
                 dataCenterPreview.hidden = true;
@@ -4222,10 +4505,32 @@
                         } else {
                             localStorage.removeItem(definition.key);
                         }
+                        if (localStorage.getItem(definition.key) !== (present ? raw : null)) {
+                            throw new Error("回滚后数据校验失败。");
+                        }
                     } catch (rollbackError) {
                         rollbackErrors.push(`${definition.name}: ${rollbackError.message}`);
                     }
                 });
+                if (rollbackErrors.length === 0) {
+                    try {
+                        const restoredModules = original.map(({ definition, raw, present }) => {
+                            const data = present ? JSON.parse(raw) : definition.emptyValue();
+                            if (!definition.validate(data)) {
+                                throw new Error(`${definition.name} 原始数据格式无效。`);
+                            }
+                            return {
+                                definition,
+                                data: definition.id === "daily-focus"
+                                    ? normalizeDataCenterDailyFocus(data)
+                                    : data
+                            };
+                        });
+                        applyDataCenterData(restoredModules);
+                    } catch (runtimeRollbackError) {
+                        rollbackErrors.push(`页面状态：${runtimeRollbackError.message}`);
+                    }
+                }
                 const rollbackMessage = rollbackErrors.length
                     ? `自动回滚未能完整完成（${rollbackErrors.join("；")}）。请勿关闭页面，保留导出的导入前备份。`
                     : "已尝试恢复导入前的本地数据。";
@@ -4310,6 +4615,11 @@
                     original.push({ definition: module, raw, present: raw !== null });
                 });
                 dataCenterModules.forEach((module) => localStorage.removeItem(module.key));
+                dataCenterModules.forEach((module) => {
+                    if (localStorage.getItem(module.key) !== null) {
+                        throw new Error(`${module.name} 未能清空。`);
+                    }
+                });
             } catch (error) {
                 const rollbackErrors = [];
                 original.forEach(({ definition, raw, present }) => {
@@ -4318,6 +4628,9 @@
                             localStorage.setItem(definition.key, raw);
                         } else {
                             localStorage.removeItem(definition.key);
+                        }
+                        if (localStorage.getItem(definition.key) !== (present ? raw : null)) {
+                            throw new Error("恢复后数据校验失败。");
                         }
                     } catch (rollbackError) {
                         rollbackErrors.push(`${definition.name}: ${rollbackError.message}`);
@@ -4339,9 +4652,7 @@
 
             const emptyModules = dataCenterModules.map((definition) => ({
                 definition,
-                data: definition.id === "daily-focus"
-                    ? { date: getLocalDateKey(new Date()), priorities: ["", "", ""] }
-                    : definition.emptyValue()
+                data: definition.emptyValue()
             }));
             const completedBackupFilename = dataCenterClearBackupFilename;
             applyDataCenterData(emptyModules);
@@ -4401,8 +4712,10 @@
             if (dailyFocusStorageReady && dailyFocus.date !== today) {
                 startDailyFocus(today);
             }
-            dailyFocusDate.textContent = dateFormatter.format(now);
-            dailyFocusDate.dateTime = today;
+            dailyFocusDate.textContent = dailyFocus.date
+                ? dateFormatter.format(new Date(`${dailyFocus.date}T12:00:00`))
+                : dateFormatter.format(now);
+            dailyFocusDate.dateTime = dailyFocus.date || today;
         }
 
         function getLocalDateKey(date) {
@@ -5168,23 +5481,7 @@
                 throw new Error("Stored tasks have an invalid format.");
             }
 
-            const savedFocus = localStorage.getItem(dailyFocusStorageKey);
-            let priorities = ["", "", ""];
-            if (savedFocus !== null) {
-                const parsedFocus = JSON.parse(savedFocus);
-                if (
-                    !parsedFocus ||
-                    typeof parsedFocus.date !== "string" ||
-                    !Array.isArray(parsedFocus.priorities) ||
-                    parsedFocus.priorities.length !== 3 ||
-                    parsedFocus.priorities.some((priority) => typeof priority !== "string")
-                ) {
-                    throw new Error("Stored daily priorities have an invalid format.");
-                }
-                if (parsedFocus.date === today) {
-                    priorities = parsedFocus.priorities;
-                }
-            }
+            const priorities = readDailyFocusPriorities(today);
 
             return { today, tasks: latestTasks, priorities };
         }
@@ -5657,64 +5954,334 @@
             }
         }
 
-        function persistDailyFocus(nextFocus = dailyFocus) {
+        function isDailyFocusDateKey(value) {
+            if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+                return false;
+            }
+            const parsed = new Date(`${value}T00:00:00Z`);
+            return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+        }
+
+        function isDailyFocusPriorities(value) {
+            return Array.isArray(value) &&
+                value.length === 3 &&
+                value.every((priority) => typeof priority === "string");
+        }
+
+        function createDailyFocusArchive(dateKey, priorities = ["", "", ""]) {
+            return {
+                schemaVersion: dailyFocusSchemaVersion,
+                activeDate: dateKey,
+                records: {
+                    [dateKey]: { priorities: [...priorities] }
+                }
+            };
+        }
+
+        function validateDailyFocusArchive(value) {
+            if (!value || typeof value !== "object" ||
+                value.schemaVersion !== dailyFocusSchemaVersion ||
+                !isDailyFocusDateKey(value.activeDate) ||
+                !value.records ||
+                typeof value.records !== "object" ||
+                Array.isArray(value.records)) {
+                throw new Error("Stored Daily Focus archive has an invalid format.");
+            }
+            for (const [dateKey, record] of Object.entries(value.records)) {
+                if (!isDailyFocusDateKey(dateKey) ||
+                    !record ||
+                    typeof record !== "object" ||
+                    !isDailyFocusPriorities(record.priorities)) {
+                    throw new Error(`Stored Daily Focus record for ${dateKey} has an invalid format.`);
+                }
+            }
+            return value;
+        }
+
+        function readDailyFocusArchive(rawValue = localStorage.getItem(dailyFocusStorageKey)) {
+            if (rawValue === null) {
+                return { archive: null, rawValue, needsMigration: false };
+            }
+
+            const stored = JSON.parse(rawValue);
+            if (stored && stored.schemaVersion === dailyFocusSchemaVersion) {
+                return {
+                    archive: validateDailyFocusArchive(stored),
+                    rawValue,
+                    needsMigration: false
+                };
+            }
+
+            if (!stored ||
+                typeof stored !== "object" ||
+                !isDailyFocusDateKey(stored.date) ||
+                !isDailyFocusPriorities(stored.priorities)) {
+                throw new Error("Stored Daily Focus data has an invalid legacy or archive format.");
+            }
+
+            return {
+                archive: createDailyFocusArchive(stored.date, stored.priorities),
+                rawValue,
+                needsMigration: true
+            };
+        }
+
+        function cloneDailyFocusArchive(archive) {
+            return {
+                schemaVersion: dailyFocusSchemaVersion,
+                activeDate: archive.activeDate,
+                records: Object.fromEntries(
+                    Object.entries(archive.records).map(([dateKey, record]) => [
+                        dateKey,
+                        { priorities: [...record.priorities] }
+                    ])
+                )
+            };
+        }
+
+        function writeDailyFocusArchive(nextArchive, expectedRawValue) {
+            validateDailyFocusArchive(nextArchive);
+            const serialized = JSON.stringify(nextArchive);
+            if (localStorage.getItem(dailyFocusStorageKey) !== expectedRawValue) {
+                throw new Error("Daily Focus changed in another tab. Reload the latest data before saving.");
+            }
+
             try {
-                localStorage.setItem(dailyFocusStorageKey, JSON.stringify(nextFocus));
-                dailyFocus = nextFocus;
+                localStorage.setItem(dailyFocusStorageKey, serialized);
+                if (localStorage.getItem(dailyFocusStorageKey) !== serialized) {
+                    throw new Error("Daily Focus archive could not be verified after saving.");
+                }
+            } catch (error) {
+                try {
+                    const currentRawValue = localStorage.getItem(dailyFocusStorageKey);
+                    if (currentRawValue === serialized) {
+                        if (expectedRawValue === null) {
+                            localStorage.removeItem(dailyFocusStorageKey);
+                        } else {
+                            localStorage.setItem(dailyFocusStorageKey, expectedRawValue);
+                        }
+                    } else if (currentRawValue !== expectedRawValue) {
+                        throw new Error("Daily Focus changed in another tab; the latest value was left untouched.");
+                    }
+                    if (localStorage.getItem(dailyFocusStorageKey) !== expectedRawValue) {
+                        throw new Error("Original Daily Focus data could not be verified after rollback.");
+                    }
+                } catch (rollbackError) {
+                    throw new Error(
+                        `Daily Focus save failed and the original value could not be verified: ${rollbackError.message || "rollback failed"}`
+                    );
+                }
+                throw error;
+            }
+            return serialized;
+        }
+
+        function readDailyFocusPriorities(dateKey) {
+            if (!isDailyFocusDateKey(dateKey)) {
+                throw new Error("Daily Focus date must use YYYY-MM-DD.");
+            }
+            const { archive } = readDailyFocusArchive();
+            return archive?.records[dateKey]
+                ? [...archive.records[dateKey].priorities]
+                : ["", "", ""];
+        }
+
+        function renderActiveDailyFocus() {
+            dailyFocusInputs.forEach((input, index) => {
+                input.value = dailyFocus.priorities[index];
+            });
+            dailyFocusDate.textContent = dateFormatter.format(new Date(`${dailyFocus.date}T12:00:00`));
+            dailyFocusDate.dateTime = dailyFocus.date;
+            updateDashboardStats();
+            renderDailyFocusHistory();
+        }
+
+        function formatDailyFocusHistoryDate(dateKey) {
+            return dateFormatter.format(new Date(`${dateKey}T12:00:00`));
+        }
+
+        function renderDailyFocusHistoryDetails(dateKey, priorities) {
+            dailyFocusHistoryDetailsHeading.textContent = formatDailyFocusHistoryDate(dateKey);
+            dailyFocusHistoryPriorities.replaceChildren();
+            priorities.forEach((priority, index) => {
+                const item = document.createElement("li");
+                item.className = "daily-focus-history-priority";
+                const number = document.createElement("span");
+                number.className = "daily-focus-number";
+                number.textContent = String(index + 1).padStart(2, "0");
+                const content = document.createElement("span");
+                content.textContent = priority.trim() ? priority : "未填写";
+                if (!priority.trim()) {
+                    content.className = "daily-focus-history-priority-empty";
+                }
+                item.append(number, content);
+                dailyFocusHistoryPriorities.append(item);
+            });
+            dailyFocusHistoryDetails.hidden = false;
+        }
+
+        function renderDailyFocusHistory() {
+            const today = getLocalDateKey(new Date());
+            const { archive } = readDailyFocusArchive();
+            dailyFocusHistoryStatus.textContent = "";
+            dailyFocusHistoryStatus.setAttribute("role", "status");
+            const history = Object.entries(archive?.records || {})
+                .filter(([dateKey]) => dateKey < today)
+                .sort(([left], [right]) => right.localeCompare(left));
+            dailyFocusHistoryList.replaceChildren();
+            dailyFocusHistoryEmpty.hidden = history.length > 0;
+            dailyFocusHistoryDetails.hidden = history.length === 0;
+
+            if (!history.length) {
+                dailyFocusHistorySelectedDate = "";
+                return;
+            }
+
+            if (!history.some(([dateKey]) => dateKey === dailyFocusHistorySelectedDate)) {
+                dailyFocusHistorySelectedDate = history[0][0];
+            }
+
+            history.forEach(([dateKey, record]) => {
+                const item = document.createElement("li");
+                item.className = "daily-focus-history-item";
+                const dateButton = document.createElement("button");
+                dateButton.className = "daily-focus-history-date";
+                dateButton.type = "button";
+                dateButton.textContent = formatDailyFocusHistoryDate(dateKey);
+                dateButton.setAttribute("aria-pressed", String(dateKey === dailyFocusHistorySelectedDate));
+                const completeness = document.createElement("span");
+                completeness.className = "daily-focus-history-completeness";
+                completeness.textContent =
+                    `已填写 ${record.priorities.filter((priority) => priority.trim()).length}/3 项`;
+                dateButton.append(completeness);
+                dateButton.addEventListener("click", () => {
+                    dailyFocusHistorySelectedDate = dateKey;
+                    renderDailyFocusHistory();
+                });
+                item.append(dateButton);
+                dailyFocusHistoryList.append(item);
+            });
+
+            const selectedRecord = archive.records[dailyFocusHistorySelectedDate];
+            if (selectedRecord) {
+                renderDailyFocusHistoryDetails(dailyFocusHistorySelectedDate, selectedRecord.priorities);
+            }
+        }
+
+        function setDailyFocusView(view, moveFocus = false) {
+            const showHistory = view === "history";
+            dailyFocusTodayTab.setAttribute("aria-selected", String(!showHistory));
+            dailyFocusTodayTab.tabIndex = showHistory ? -1 : 0;
+            dailyFocusHistoryTab.setAttribute("aria-selected", String(showHistory));
+            dailyFocusHistoryTab.tabIndex = showHistory ? 0 : -1;
+            dailyFocusTodayPanel.hidden = showHistory;
+            dailyFocusHistoryPanel.hidden = !showHistory;
+            if (showHistory) {
+                try {
+                    renderDailyFocusHistory();
+                } catch (error) {
+                    dailyFocusHistoryStatus.textContent = "无法读取历史重点；现有数据未被修改。";
+                    dailyFocusHistoryStatus.setAttribute("role", "alert");
+                    console.error("Daily Focus history could not be read:", error);
+                }
+            }
+            if (moveFocus) {
+                (showHistory ? dailyFocusHistoryTab : dailyFocusTodayTab).focus();
+            }
+        }
+
+        function persistDailyFocus(nextFocus = dailyFocus) {
+            if (!nextFocus ||
+                !isDailyFocusDateKey(nextFocus.date) ||
+                !isDailyFocusPriorities(nextFocus.priorities)) {
+                dailyFocusStatus.textContent = "Unable to save priorities: invalid date or priority format.";
+                dailyFocusStatus.setAttribute("role", "alert");
+                return false;
+            }
+
+            try {
+                const { archive: savedArchive, rawValue } = readDailyFocusArchive();
+                const archive = savedArchive
+                    ? cloneDailyFocusArchive(savedArchive)
+                    : createDailyFocusArchive(nextFocus.date);
+                archive.records[nextFocus.date] = { priorities: [...nextFocus.priorities] };
+                archive.activeDate = nextFocus.date;
+                writeDailyFocusArchive(archive, rawValue);
+                dailyFocus = { date: nextFocus.date, priorities: [...nextFocus.priorities] };
                 dailyFocusStatus.textContent = "Saved automatically in this browser.";
                 dailyFocusStatus.setAttribute("role", "status");
+                renderActiveDailyFocus();
                 if (tasksStorageReady && dailyFocusStorageReady) {
                     refreshDailyPlanning(false);
                 }
                 return true;
             } catch (error) {
-                dailyFocusStatus.textContent = "Unable to save priorities. Check browser storage settings and try again.";
+                dailyFocusStatus.textContent = "Unable to save priorities. Existing data was preserved; check browser storage and try again.";
+                dailyFocusStatus.setAttribute("role", "alert");
                 console.error("Daily Focus could not save priorities:", error);
                 return false;
             }
         }
 
         function startDailyFocus(dateKey) {
-            dailyFocus = { date: dateKey, priorities: ["", "", ""] };
-            dailyFocusInputs.forEach((input) => { input.value = ""; });
-            persistDailyFocus();
-            dailyFocusStatus.textContent = "A fresh list is ready for today.";
-            updateDashboardStats();
+            if (!isDailyFocusDateKey(dateKey)) {
+                setDailyFocusUnavailable("Unable to switch Daily Focus: invalid date.");
+                return false;
+            }
+            try {
+                const { archive: savedArchive, rawValue, needsMigration } = readDailyFocusArchive();
+                const archive = savedArchive
+                    ? cloneDailyFocusArchive(savedArchive)
+                    : createDailyFocusArchive(dateKey);
+                const previousActiveDate = archive.activeDate;
+                if (previousActiveDate && !archive.records[previousActiveDate]) {
+                    archive.records[previousActiveDate] = {
+                        priorities: dailyFocus.date === previousActiveDate
+                            ? [...dailyFocus.priorities]
+                            : ["", "", ""]
+                    };
+                }
+                if (!archive.records[dateKey]) {
+                    archive.records[dateKey] = { priorities: ["", "", ""] };
+                }
+                archive.activeDate = dateKey;
+
+                if (rawValue === null || needsMigration || previousActiveDate !== dateKey ||
+                    !savedArchive?.records[dateKey]) {
+                    writeDailyFocusArchive(archive, rawValue);
+                }
+
+                dailyFocus = {
+                    date: dateKey,
+                    priorities: [...archive.records[dateKey].priorities]
+                };
+                dailyFocusStorageReady = true;
+                renderActiveDailyFocus();
+                dailyFocusStatus.textContent = previousActiveDate && previousActiveDate !== dateKey
+                    ? "The previous day's priorities were preserved. Today's saved priorities are ready."
+                    : needsMigration
+                        ? "Existing priorities were migrated and saved."
+                        : "Saved automatically in this browser.";
+                dailyFocusStatus.setAttribute("role", "status");
+                if (tasksStorageReady) {
+                    refreshDailyPlanning(false);
+                }
+                return true;
+            } catch (error) {
+                setDailyFocusUnavailable(
+                    "Unable to load or switch Daily Focus. Existing saved priorities were preserved.",
+                    error
+                );
+                return false;
+            }
         }
 
         function loadDailyFocus() {
-            try {
-                const today = getLocalDateKey(new Date());
-                const savedFocus = localStorage.getItem(dailyFocusStorageKey);
-                if (savedFocus !== null) {
-                    const parsedFocus = JSON.parse(savedFocus);
-                    if (
-                        !parsedFocus ||
-                        typeof parsedFocus.date !== "string" ||
-                        !Array.isArray(parsedFocus.priorities) ||
-                        parsedFocus.priorities.length !== 3 ||
-                        parsedFocus.priorities.some((priority) => typeof priority !== "string")
-                    ) {
-                        throw new Error("Stored daily priorities have an invalid format.");
-                    }
-                    dailyFocus = parsedFocus;
-                }
-
-                dailyFocusStorageReady = true;
-                if (dailyFocus.date !== today) {
-                    startDailyFocus(today);
-                } else {
-                    dailyFocusInputs.forEach((input, index) => {
-                        input.value = dailyFocus.priorities[index];
-                    });
-                    dailyFocusStatus.textContent = "Saved automatically in this browser.";
-                }
-                dailyFocusDate.textContent = dateFormatter.format(new Date());
-                dailyFocusDate.dateTime = today;
-                updateDashboardStats();
-            } catch (error) {
-                setDailyFocusUnavailable("Unable to load daily priorities. Browser storage may be unavailable or corrupted.", error);
+            const today = getLocalDateKey(new Date());
+            if (!startDailyFocus(today)) {
+                return;
             }
+            dailyFocusStorageReady = true;
         }
 
         dailyFocusInputs.forEach((input, index) => {
@@ -5722,15 +6289,19 @@
                 if (!dailyFocusStorageReady) {
                     return;
                 }
-                const value = input.value;
+                const enteredValue = input.value;
                 const today = getLocalDateKey(new Date());
                 if (dailyFocus.date !== today) {
-                    startDailyFocus(today);
-                    input.value = value;
+                    if (!startDailyFocus(today)) {
+                        return;
+                    }
+                    dailyFocusInputs[index].value = enteredValue;
                 }
-                dailyFocus.priorities[index] = value;
-                persistDailyFocus();
-                updateDashboardStats();
+                const nextFocus = {
+                    date: dailyFocus.date,
+                    priorities: dailyFocusInputs.map((priorityInput) => priorityInput.value)
+                };
+                persistDailyFocus(nextFocus);
             });
         });
 
@@ -5740,16 +6311,30 @@
                     return;
                 }
                 const today = getLocalDateKey(new Date());
-                if (dailyFocus.date !== today) {
-                    startDailyFocus(today);
+                if (dailyFocus.date !== today && !startDailyFocus(today)) {
                     return;
                 }
-                dailyFocus.priorities[index] = "";
-                dailyFocusInputs[index].value = "";
-                persistDailyFocus();
-                dailyFocusStatus.textContent = `Priority ${index + 1} cleared.`;
-                updateDashboardStats();
-                dailyFocusInputs[index].focus();
+                const priorities = [...dailyFocus.priorities];
+                priorities[index] = "";
+                if (persistDailyFocus({ date: dailyFocus.date, priorities })) {
+                    dailyFocusStatus.textContent = `Priority ${index + 1} cleared.`;
+                    dailyFocusInputs[index].focus();
+                }
+            });
+        });
+
+        dailyFocusTodayTab.addEventListener("click", () => setDailyFocusView("today"));
+        dailyFocusHistoryTab.addEventListener("click", () => setDailyFocusView("history"));
+        [dailyFocusTodayTab, dailyFocusHistoryTab].forEach((tab) => {
+            tab.addEventListener("keydown", (event) => {
+                if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
+                    return;
+                }
+                event.preventDefault();
+                const nextView = event.key === "Home" || event.key === "ArrowLeft"
+                    ? "today"
+                    : "history";
+                setDailyFocusView(nextView, true);
             });
         });
 
