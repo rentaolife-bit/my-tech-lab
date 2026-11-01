@@ -319,10 +319,129 @@
             line-height: 1.6;
         }
 
+        .ai-chat {
+            margin-top: 20px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: rgba(7, 10, 15, 0.3);
+        }
+
+        .ai-chat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 11px 14px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .ai-chat-label {
+            margin: 0;
+            color: #aeb9c7;
+            font-size: 11px;
+            font-weight: 550;
+        }
+
+        .ai-chat-clear {
+            min-height: 30px;
+            padding: 0 9px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: transparent;
+            color: #aab5c3;
+            font: inherit;
+            font-size: 10px;
+            cursor: pointer;
+        }
+
+        .ai-chat-clear:hover,
+        .ai-chat-clear:focus-visible {
+            border-color: rgba(157, 232, 212, 0.4);
+            color: var(--accent);
+        }
+
+        .ai-chat-clear:disabled,
+        .ai-send-button:disabled,
+        .ai-prompt:disabled {
+            cursor: not-allowed;
+            opacity: 0.55;
+        }
+
+        .ai-chat-log {
+            display: grid;
+            max-height: 360px;
+            gap: 12px;
+            overflow-y: auto;
+            padding: 14px;
+            overscroll-behavior: contain;
+        }
+
+        .ai-chat-empty {
+            margin: 0;
+            color: #758194;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .ai-chat-message {
+            display: grid;
+            justify-self: start;
+            max-width: min(88%, 720px);
+            gap: 5px;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 10px 10px 10px 3px;
+            background: rgba(20, 27, 38, 0.82);
+        }
+
+        .ai-chat-message-user {
+            justify-self: end;
+            border-color: rgba(157, 232, 212, 0.18);
+            border-radius: 10px 10px 3px 10px;
+            background: rgba(157, 232, 212, 0.08);
+        }
+
+        .ai-chat-message-label {
+            color: var(--muted);
+            font-size: 10px;
+            font-weight: 550;
+        }
+
+        .ai-chat-message-content {
+            margin: 0;
+            color: var(--text);
+            font-size: 13px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .ai-chat-message-error .ai-chat-message-content {
+            color: #f0a2a2;
+        }
+
+        .ai-chat-retry {
+            justify-self: start;
+            min-height: 30px;
+            padding: 0 9px;
+            border: 1px solid rgba(239, 133, 133, 0.3);
+            border-radius: 7px;
+            background: transparent;
+            color: #f0a2a2;
+            font: inherit;
+            font-size: 10px;
+            cursor: pointer;
+        }
+
+        .ai-chat-retry:hover,
+        .ai-chat-retry:focus-visible {
+            background: rgba(239, 133, 133, 0.08);
+        }
+
         .ai-composer {
             display: grid;
             gap: 12px;
-            margin-top: 22px;
+            margin-top: 14px;
         }
 
         .ai-prompt {
@@ -2340,12 +2459,22 @@
                     <h3 class="ai-assistant-question">今天有什么需要处理？</h3>
                     <p class="ai-assistant-description">与你的 AI 助理交流，或选择一项工作。</p>
 
+                    <section class="ai-chat" aria-label="AI Assistant 对话">
+                        <div class="ai-chat-header">
+                            <h4 class="ai-chat-label">Conversation｜对话</h4>
+                            <button class="ai-chat-clear" id="ai-chat-clear" type="button" disabled>清空对话</button>
+                        </div>
+                        <div class="ai-chat-log" id="ai-chat-log" role="log" aria-live="polite" aria-relevant="additions text">
+                            <p class="ai-chat-empty" id="ai-chat-empty">发送消息开始对话。当前对话仅保存在此页面中。</p>
+                        </div>
+                    </section>
+
                     <form class="ai-composer" id="ai-assistant-form">
                         <label class="sr-only" for="ai-assistant-prompt">输入你想讨论的问题</label>
-                        <textarea class="notes-input ai-prompt" id="ai-assistant-prompt" name="prompt" placeholder="输入你想讨论的问题……"></textarea>
+                        <textarea class="notes-input ai-prompt" id="ai-assistant-prompt" name="prompt" placeholder="输入你想讨论的问题……" aria-describedby="ai-assistant-status"></textarea>
                         <div class="ai-composer-footer">
                             <p class="ai-assistant-status" id="ai-assistant-status" role="status" aria-live="polite"></p>
-                            <button class="notes-save ai-send-button" type="submit">发送</button>
+                            <button class="notes-save ai-send-button" id="ai-send-button" type="submit">Send</button>
                         </div>
                     </form>
 
@@ -2838,6 +2967,14 @@
         });
         const aiAssistantForm = document.getElementById("ai-assistant-form");
         const aiAssistantStatus = document.getElementById("ai-assistant-status");
+        const aiAssistantPrompt = document.getElementById("ai-assistant-prompt");
+        const aiAssistantSendButton = document.getElementById("ai-send-button");
+        const aiChatLog = document.getElementById("ai-chat-log");
+        const aiChatEmpty = document.getElementById("ai-chat-empty");
+        const aiChatClearButton = document.getElementById("ai-chat-clear");
+        const aiWorkerEndpoint = "https://my-tech-lab-api.rentao-life.workers.dev";
+        const aiConversation = [];
+        let aiRequestPending = false;
         const planningDate = document.getElementById("daily-planning-date");
         const planningPendingCount = document.getElementById("planning-pending-count");
         const planningHighCount = document.getElementById("planning-high-count");
@@ -4652,9 +4789,144 @@
             status.textContent = "结果已复制。";
         });
 
+        function appendAssistantMessage(role, content, options = {}) {
+            aiChatEmpty.hidden = true;
+            const message = document.createElement("article");
+            message.className = `ai-chat-message${role === "user" ? " ai-chat-message-user" : ""}${options.isError ? " ai-chat-message-error" : ""}`;
+            if (options.errorMessage) {
+                message.dataset.errorMessage = "true";
+            }
+
+            const label = document.createElement("span");
+            label.className = "ai-chat-message-label";
+            label.textContent = role === "user" ? "You" : options.isError ? "Connection issue" : "AI Assistant";
+
+            const text = document.createElement("p");
+            text.className = "ai-chat-message-content";
+            text.textContent = content;
+            message.append(label, text);
+
+            if (options.model) {
+                const model = document.createElement("span");
+                model.className = "ai-chat-message-label";
+                model.textContent = options.model;
+                message.append(model);
+            }
+
+            if (options.retry) {
+                const retryButton = document.createElement("button");
+                retryButton.className = "ai-chat-retry";
+                retryButton.type = "button";
+                retryButton.textContent = "重试";
+                retryButton.addEventListener("click", () => requestAssistantReply());
+                message.append(retryButton);
+            }
+
+            aiChatLog.append(message);
+            aiChatLog.scrollTop = aiChatLog.scrollHeight;
+            aiChatClearButton.disabled = aiRequestPending || aiConversation.length === 0;
+            return message;
+        }
+
+        function setAssistantRequestPending(isPending) {
+            aiRequestPending = isPending;
+            aiAssistantPrompt.disabled = isPending;
+            aiAssistantSendButton.disabled = isPending;
+            aiChatClearButton.disabled = isPending || aiConversation.length === 0;
+            aiAssistantSendButton.textContent = isPending ? "Thinking…" : "Send";
+        }
+
+        async function requestAssistantReply() {
+            if (aiRequestPending || aiConversation.length === 0) {
+                return;
+            }
+
+            aiChatLog.querySelectorAll('[data-error-message="true"]').forEach((message) => message.remove());
+            const thinkingMessage = appendAssistantMessage("assistant", "正在思考…");
+            aiAssistantStatus.textContent = "AI 正在思考，请稍候。";
+            setAssistantRequestPending(true);
+
+            try {
+                const response = await fetch(aiWorkerEndpoint, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ messages: aiConversation })
+                });
+                let result;
+                try {
+                    result = await response.json();
+                } catch (error) {
+                    throw new Error(`Worker 返回了无效的 JSON 响应（HTTP ${response.status}）。`);
+                }
+
+                if (!response.ok) {
+                    throw new Error(`AI 服务暂时不可用（HTTP ${response.status}）。请稍后重试。`);
+                }
+                if (!result || typeof result.reply !== "string" || !result.reply.trim()) {
+                    throw new Error("AI 服务返回的数据格式不正确。请稍后重试。");
+                }
+
+                thinkingMessage.remove();
+                aiConversation.push({ role: "assistant", content: result.reply });
+                appendAssistantMessage(
+                    "assistant",
+                    result.reply,
+                    { model: typeof result.model === "string" ? result.model : "" }
+                );
+                aiAssistantStatus.textContent = "回答已收到。";
+            } catch (error) {
+                thinkingMessage.remove();
+                const message = error instanceof TypeError
+                    ? "无法连接 AI 服务。请检查网络或稍后重试。"
+                    : error.message || "请求失败。请稍后重试。";
+                appendAssistantMessage("assistant", message, { isError: true, errorMessage: true, retry: true });
+                aiAssistantStatus.textContent = message;
+                console.error("AI Assistant request failed:", error);
+            } finally {
+                setAssistantRequestPending(false);
+                aiAssistantPrompt.focus();
+            }
+        }
+
         aiAssistantForm.addEventListener("submit", (event) => {
             event.preventDefault();
-            aiAssistantStatus.textContent = "AI 服务尚未接入，消息未发送，也不会生成模拟回复。";
+            if (aiRequestPending) {
+                return;
+            }
+            const content = aiAssistantPrompt.value.trim();
+            if (!content) {
+                aiAssistantStatus.textContent = "请输入消息后再发送。";
+                aiAssistantPrompt.focus();
+                return;
+            }
+
+            aiConversation.push({ role: "user", content });
+            appendAssistantMessage("user", content);
+            aiAssistantPrompt.value = "";
+            aiAssistantStatus.textContent = "";
+            requestAssistantReply();
+        });
+
+        aiAssistantPrompt.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
+                event.preventDefault();
+                if (!aiRequestPending) {
+                    aiAssistantForm.requestSubmit();
+                }
+            }
+        });
+
+        aiChatClearButton.addEventListener("click", () => {
+            if (aiRequestPending) {
+                return;
+            }
+            aiConversation.length = 0;
+            aiChatLog.replaceChildren(aiChatEmpty);
+            aiChatEmpty.hidden = false;
+            aiAssistantStatus.textContent = "对话已清空。";
+            aiChatClearButton.disabled = true;
+            aiAssistantPrompt.value = "";
+            aiAssistantPrompt.focus();
         });
 
         document.querySelectorAll(".ai-shortcut").forEach((button) => {
