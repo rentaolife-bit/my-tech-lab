@@ -2348,6 +2348,107 @@
             cursor: not-allowed;
         }
 
+        .data-center-danger-button {
+            border-color: rgba(240, 168, 168, 0.35);
+            background: rgba(240, 168, 168, 0.08);
+            color: #f0a8a8;
+        }
+
+        .data-center-danger-button:hover,
+        .data-center-danger-button:focus-visible {
+            border-color: #f0a8a8;
+        }
+
+        .data-center-danger-zone {
+            margin-top: 24px;
+            padding: 18px;
+            border: 1px solid rgba(240, 168, 168, 0.3);
+            border-radius: 11px;
+            background: linear-gradient(145deg, rgba(88, 31, 39, 0.18), rgba(31, 17, 24, 0.24));
+        }
+
+        .data-center-danger-heading {
+            margin: 0;
+            color: #f0a8a8;
+            font-size: 15px;
+        }
+
+        .data-center-danger-copy,
+        .data-center-clear-confirmation-copy {
+            margin: 8px 0 14px;
+            color: #c79b9b;
+            font-size: 12px;
+            line-height: 1.65;
+        }
+
+        .data-center-clear-confirmation[hidden] {
+            display: none;
+        }
+
+        .data-center-clear-confirmation {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(240, 168, 168, 0.2);
+        }
+
+        .data-center-clear-confirmation-label {
+            display: grid;
+            gap: 7px;
+            max-width: 360px;
+            margin-top: 14px;
+            color: var(--text);
+            font-size: 12px;
+        }
+
+        .data-center-clear-confirmation-label input {
+            width: 100%;
+            min-height: 40px;
+            padding: 0 11px;
+            border: 1px solid rgba(240, 168, 168, 0.3);
+            border-radius: 8px;
+            background: rgba(5, 8, 12, 0.55);
+            color: var(--text);
+            font: inherit;
+        }
+
+        .data-center-clear-confirmation-label input:focus {
+            border-color: #f0a8a8;
+            outline: 2px solid rgba(240, 168, 168, 0.14);
+        }
+
+        .data-center-backup-acknowledgment {
+            display: flex;
+            align-items: flex-start;
+            gap: 9px;
+            margin-top: 14px;
+            color: #c79b9b;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .data-center-backup-acknowledgment input {
+            flex: 0 0 auto;
+            margin: 2px 0 0;
+            accent-color: #f0a8a8;
+        }
+
+        .data-center-clear-result[hidden] {
+            display: none;
+        }
+
+        .data-center-clear-result {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(240, 168, 168, 0.2);
+        }
+
+        .data-center-clear-result-copy {
+            margin: 0 0 12px;
+            color: #b6d9cd;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
         .data-center-import-label {
             display: inline-flex;
             align-items: center;
@@ -3495,6 +3596,27 @@
                 </section>
                 <p class="data-center-note">支持备份：Quick Notes、Task Manager、Daily Focus、Ideas &amp; Writing、Document Summary 历史。AI Assistant 对话及尚未保存的分析、草稿和预览仅存在于当前页面，暂不支持备份。</p>
                 <p class="data-center-status" id="data-center-status" role="status" aria-live="polite"></p>
+                <section class="data-center-danger-zone" aria-labelledby="data-center-danger-heading">
+                    <h3 class="data-center-danger-heading" id="data-center-danger-heading">危险操作</h3>
+                    <p class="data-center-danger-copy">清空会永久删除 Quick Notes、Task Manager、Daily Focus、Ideas &amp; Writing 和 Document Summary 历史。删除后无法从本地恢复。继续前必须先生成并触发完整 JSON 备份下载。</p>
+                    <button class="data-center-button data-center-danger-button" id="data-center-prepare-clear" type="button">备份并继续清空</button>
+                    <div class="data-center-clear-confirmation" id="data-center-clear-confirmation" hidden>
+                        <p class="data-center-clear-confirmation-copy" id="data-center-clear-confirmation-copy"></p>
+                        <label class="data-center-backup-acknowledgment">
+                            <input id="data-center-backup-confirmed" type="checkbox">
+                            <span>我已确认备份文件已生成，浏览器已触发下载，并已妥善保存该文件。</span>
+                        </label>
+                        <label class="data-center-clear-confirmation-label" for="data-center-clear-phrase">
+                            输入 DELETE 以启用清理
+                            <input id="data-center-clear-phrase" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="data-center-clear-confirmation-copy">
+                        </label>
+                        <button class="data-center-button data-center-danger-button" id="data-center-confirm-clear" type="button" disabled>永久清空五类数据</button>
+                    </div>
+                    <div class="data-center-clear-result" id="data-center-clear-result" hidden>
+                        <p class="data-center-clear-result-copy">五类数据已清空。请保管好刚才下载的备份文件。</p>
+                        <button class="data-center-button" id="data-center-restore-backup" type="button">选择备份并恢复</button>
+                    </div>
+                </section>
             </section>
         </main>
 
@@ -3654,6 +3776,14 @@
         const dataCenterOverview = document.getElementById("data-center-overview");
         const dataCenterExportButton = document.getElementById("data-center-export");
         const dataCenterRefreshButton = document.getElementById("data-center-refresh");
+        const dataCenterPrepareClearButton = document.getElementById("data-center-prepare-clear");
+        const dataCenterClearConfirmation = document.getElementById("data-center-clear-confirmation");
+        const dataCenterClearConfirmationCopy = document.getElementById("data-center-clear-confirmation-copy");
+        const dataCenterBackupConfirmed = document.getElementById("data-center-backup-confirmed");
+        const dataCenterClearPhrase = document.getElementById("data-center-clear-phrase");
+        const dataCenterConfirmClearButton = document.getElementById("data-center-confirm-clear");
+        const dataCenterClearResult = document.getElementById("data-center-clear-result");
+        const dataCenterRestoreBackupButton = document.getElementById("data-center-restore-backup");
         const dataCenterFileInput = document.getElementById("data-center-file");
         const dataCenterPreview = document.getElementById("data-center-preview");
         const dataCenterPreviewList = document.getElementById("data-center-preview-list");
@@ -3662,6 +3792,8 @@
         const dataCenterFormat = "my-tech-lab-backup";
         const dataCenterVersion = 1;
         let dataCenterPendingBackup = null;
+        let dataCenterClearBackupSignature = "";
+        let dataCenterClearBackupFilename = "";
         const dataCenterModules = [
             {
                 id: "quick-notes",
@@ -3899,16 +4031,26 @@
             link.href = url;
             link.download = filename;
             link.hidden = true;
-            document.body.append(link);
-            link.click();
-            link.remove();
-            window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+            try {
+                document.body.append(link);
+                if (!link.isConnected || !link.href || !link.download) {
+                    throw new Error("无法准备备份文件下载。");
+                }
+                link.click();
+                return filename;
+            } catch (error) {
+                URL.revokeObjectURL(url);
+                throw new Error(`备份下载未能触发：${error.message || "浏览器下载失败"}`);
+            } finally {
+                link.remove();
+                window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+            }
         }
 
         function exportDataCenterBackup() {
             try {
-                downloadDataCenterBackup(createDataCenterBackup());
-                setDataCenterStatus("五类数据已导出为 JSON 备份。请妥善保存文件。");
+                const filename = downloadDataCenterBackup(createDataCenterBackup());
+                setDataCenterStatus(`五类数据已导出为 JSON 备份（${filename}）。请妥善保存文件。`);
             } catch (error) {
                 setDataCenterStatus(error.message || "导出失败，当前数据未更改。", true);
                 console.error("Data Center export failed:", error);
@@ -4094,6 +4236,136 @@
             }
         }
 
+        function getDataCenterStorageSignature() {
+            return JSON.stringify(dataCenterModules.map((module) => [
+                module.key,
+                localStorage.getItem(module.key)
+            ]));
+        }
+
+        function updateDataCenterClearButton() {
+            dataCenterConfirmClearButton.disabled =
+                !dataCenterClearBackupSignature ||
+                !dataCenterBackupConfirmed.checked ||
+                dataCenterClearPhrase.value !== "DELETE";
+        }
+
+        function prepareDataCenterClear() {
+            dataCenterClearResult.hidden = true;
+            dataCenterClearConfirmation.hidden = true;
+            dataCenterClearBackupSignature = "";
+            dataCenterClearBackupFilename = "";
+            dataCenterBackupConfirmed.checked = false;
+            dataCenterClearPhrase.value = "";
+            updateDataCenterClearButton();
+            try {
+                const backup = createDataCenterBackup();
+                const filename = downloadDataCenterBackup(backup, "pre-clear-backup");
+                dataCenterClearBackupSignature = getDataCenterStorageSignature();
+                dataCenterClearBackupFilename = filename;
+                dataCenterClearConfirmationCopy.textContent =
+                    `完整备份 ${filename} 已生成，浏览器已触发下载。将清理的类别：Quick Notes、Task Manager、Daily Focus、Ideas & Writing、Document Summary 历史。清理后无法从本地恢复；如果下载未完成，请勿继续。`;
+                dataCenterClearConfirmation.hidden = false;
+                setDataCenterStatus(`完整备份已生成并触发下载：${filename}。请确认文件已下载并输入 DELETE 后继续。`);
+                dataCenterClearPhrase.focus();
+            } catch (error) {
+                dataCenterClearBackupSignature = "";
+                dataCenterClearBackupFilename = "";
+                dataCenterClearConfirmation.hidden = true;
+                setDataCenterStatus(`备份或下载失败，已取消清理：${error.message || "无法生成完整备份"}。`, true);
+                console.error("Data Center could not prepare clear:", error);
+            }
+        }
+
+        function confirmDataCenterClear() {
+            updateDataCenterClearButton();
+            if (dataCenterConfirmClearButton.disabled) {
+                setDataCenterStatus("请先生成备份、确认已下载备份文件，并准确输入 DELETE。", true);
+                return;
+            }
+            try {
+                if (getDataCenterStorageSignature() !== dataCenterClearBackupSignature) {
+                    dataCenterClearBackupSignature = "";
+                    dataCenterClearBackupFilename = "";
+                    dataCenterBackupConfirmed.checked = false;
+                    updateDataCenterClearButton();
+                    setDataCenterStatus("备份后数据发生了变化。为保证备份与清理内容一致，请重新生成备份。", true);
+                    return;
+                }
+            } catch (error) {
+                setDataCenterStatus(`无法核对当前数据，已取消清理：${error.message || "本地数据不可读取"}。`, true);
+                return;
+            }
+            if (!window.confirm(
+                `最后确认：永久删除 Quick Notes、Task Manager、Daily Focus、Ideas & Writing 和 Document Summary 历史？\n\n备份下载：${dataCenterClearBackupFilename}\n\n此操作无法撤销。`
+            )) {
+                setDataCenterStatus("已取消清理，当前数据未更改。");
+                return;
+            }
+
+            const original = [];
+            try {
+                dataCenterModules.forEach((module) => {
+                    const raw = localStorage.getItem(module.key);
+                    original.push({ definition: module, raw, present: raw !== null });
+                });
+                dataCenterModules.forEach((module) => localStorage.removeItem(module.key));
+            } catch (error) {
+                const rollbackErrors = [];
+                original.forEach(({ definition, raw, present }) => {
+                    try {
+                        if (present) {
+                            localStorage.setItem(definition.key, raw);
+                        } else {
+                            localStorage.removeItem(definition.key);
+                        }
+                    } catch (rollbackError) {
+                        rollbackErrors.push(`${definition.name}: ${rollbackError.message}`);
+                    }
+                });
+                const rollbackMessage = rollbackErrors.length
+                    ? `自动恢复未能完整完成（${rollbackErrors.join("；")}）。`
+                    : "已恢复清空前的数据。";
+                setDataCenterStatus(`清空失败：${error.message || "浏览器存储操作失败"}。${rollbackMessage}`, true);
+                console.error("Data Center could not clear local data:", error, rollbackErrors);
+                renderDataCenterOverview();
+                dataCenterClearBackupSignature = "";
+                dataCenterClearBackupFilename = "";
+                dataCenterBackupConfirmed.checked = false;
+                dataCenterClearPhrase.value = "";
+                updateDataCenterClearButton();
+                return;
+            }
+
+            const emptyModules = dataCenterModules.map((definition) => ({
+                definition,
+                data: definition.id === "daily-focus"
+                    ? { date: getLocalDateKey(new Date()), priorities: ["", "", ""] }
+                    : definition.emptyValue()
+            }));
+            const completedBackupFilename = dataCenterClearBackupFilename;
+            applyDataCenterData(emptyModules);
+            dataCenterPendingBackup = null;
+            dataCenterPreview.hidden = true;
+            dataCenterPreviewList.replaceChildren();
+            dataCenterConfirmImportButton.disabled = true;
+            dataCenterFileInput.value = "";
+            dataCenterClearBackupSignature = "";
+            dataCenterClearBackupFilename = "";
+            dataCenterBackupConfirmed.checked = false;
+            dataCenterClearPhrase.value = "";
+            dataCenterClearConfirmation.hidden = true;
+            dataCenterClearResult.hidden = false;
+            updateDataCenterClearButton();
+            renderDataCenterOverview();
+            dailyFocusStatus.textContent = "每日重点已清空。";
+            notesStatus.textContent = "笔记已清空。";
+            tasksStatus.textContent = "任务已清空。";
+            ideaStatus.textContent = "灵感已清空。";
+            documentHistoryStatus.textContent = "资料总结历史已清空。";
+            setDataCenterStatus(`五类 My Tech Lab 本地数据已清空。备份文件：${completedBackupFilename}。其他网站数据和应用代码未更改。`);
+        }
+
         dataCenterExportButton.addEventListener("click", exportDataCenterBackup);
         dataCenterRefreshButton.addEventListener("click", () => {
             renderDataCenterOverview();
@@ -4101,9 +4373,17 @@
             setDataCenterStatus("数据总览已刷新。");
         });
         dataCenterFileInput.addEventListener("change", () => {
+            dataCenterClearResult.hidden = true;
             void previewDataCenterImport(dataCenterFileInput.files?.[0]);
         });
         dataCenterConfirmImportButton.addEventListener("click", confirmDataCenterImport);
+        dataCenterPrepareClearButton.addEventListener("click", prepareDataCenterClear);
+        dataCenterBackupConfirmed.addEventListener("change", updateDataCenterClearButton);
+        dataCenterClearPhrase.addEventListener("input", updateDataCenterClearButton);
+        dataCenterConfirmClearButton.addEventListener("click", confirmDataCenterClear);
+        dataCenterRestoreBackupButton.addEventListener("click", () => {
+            dataCenterFileInput.click();
+        });
 
         function updateClock() {
             const now = new Date();
