@@ -2249,6 +2249,173 @@
             content: "";
         }
 
+        .data-center {
+            margin-top: 56px;
+            padding: 26px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: linear-gradient(145deg, rgba(20, 27, 38, 0.88), rgba(13, 18, 26, 0.92));
+        }
+
+        .data-center-heading {
+            margin: 0;
+            font-size: clamp(22px, 3vw, 28px);
+            letter-spacing: -0.04em;
+        }
+
+        .data-center-description,
+        .data-center-note,
+        .data-center-status,
+        .data-center-preview-warning {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.65;
+        }
+
+        .data-center-description {
+            margin: 8px 0 20px;
+        }
+
+        .data-center-overview {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .data-center-module {
+            min-width: 0;
+            padding: 15px;
+            border: 1px solid var(--border);
+            border-radius: 11px;
+            background: rgba(8, 12, 18, 0.42);
+        }
+
+        .data-center-module-name {
+            display: block;
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 620;
+            overflow-wrap: anywhere;
+        }
+
+        .data-center-module-count {
+            display: block;
+            margin-top: 12px;
+            color: var(--accent);
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 25px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .data-center-module-meta {
+            display: block;
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 11px;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+
+        .data-center-actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .data-center-button {
+            min-height: 42px;
+            padding: 0 16px;
+            border: 1px solid rgba(157, 232, 212, 0.3);
+            border-radius: 9px;
+            background: var(--accent-soft);
+            color: var(--accent);
+            font: inherit;
+            font-size: 13px;
+            font-weight: 620;
+            cursor: pointer;
+        }
+
+        .data-center-button:hover,
+        .data-center-button:focus-visible {
+            border-color: var(--accent);
+            outline: none;
+        }
+
+        .data-center-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .data-center-import-label {
+            display: inline-flex;
+            align-items: center;
+            min-height: 42px;
+            padding: 0 16px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            color: var(--text);
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .data-center-import-label:focus-within {
+            border-color: var(--accent);
+        }
+
+        .data-center-file {
+            max-width: 100%;
+            color: var(--muted);
+            font: inherit;
+            font-size: 12px;
+        }
+
+        .data-center-preview {
+            margin-top: 18px;
+            padding: 16px;
+            border: 1px solid rgba(157, 232, 212, 0.2);
+            border-radius: 10px;
+            background: rgba(157, 232, 212, 0.04);
+        }
+
+        .data-center-preview[hidden] {
+            display: none;
+        }
+
+        .data-center-preview-title {
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .data-center-preview-list {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px 18px;
+            margin: 12px 0;
+            padding-left: 20px;
+            color: var(--text);
+            font-size: 12px;
+        }
+
+        .data-center-preview-warning {
+            margin: 8px 0 14px;
+            color: #e6c982;
+        }
+
+        .data-center-note {
+            margin: 18px 0 0;
+        }
+
+        .data-center-status {
+            min-height: 1.65em;
+            margin: 14px 0 0;
+        }
+
+        .data-center-error {
+            color: #f0a8a8;
+        }
+
         @media (min-width: 601px) {
             .workspace-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2274,6 +2441,10 @@
         @media (max-width: 900px) {
             .task-form {
                 grid-template-columns: minmax(0, 1fr) 120px;
+            }
+
+            .data-center-overview {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
             }
 
             .task-add {
@@ -2416,6 +2587,27 @@
 
             .document-workspace {
                 padding: 16px 13px;
+            }
+
+            .data-center {
+                margin-top: 42px;
+                padding: 18px;
+            }
+
+            .data-center-overview,
+            .data-center-preview-list {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .data-center-actions {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .data-center-button,
+            .data-center-import-label {
+                justify-content: center;
+                width: 100%;
             }
 
             .document-layout,
@@ -2657,6 +2849,7 @@
                 <a class="header-link" href="#task-manager-section">Tasks</a>
                 <a class="header-link" href="#quick-notes-section">Notes</a>
                 <a class="header-link" href="#projects">Projects</a>
+                <a class="header-link" href="#data-center-section">Data</a>
             </nav>
         </header>
 
@@ -3281,6 +3474,28 @@
                     </article>
                 </div>
             </section>
+
+            <section class="data-center" id="data-center-section" aria-labelledby="data-center-heading">
+                <h2 class="data-center-heading" id="data-center-heading">Data Center｜数据管理中心</h2>
+                <p class="data-center-description">查看、导出和恢复本浏览器中的 My Tech Lab 持久化数据。数据不会上传到服务器。</p>
+                <div class="data-center-overview" id="data-center-overview" aria-live="polite"></div>
+                <div class="data-center-actions">
+                    <button class="data-center-button" id="data-center-export" type="button">导出全部数据</button>
+                    <button class="data-center-button" id="data-center-refresh" type="button">刷新总览</button>
+                    <label class="data-center-import-label" for="data-center-file">
+                        选择备份 JSON
+                        <input class="data-center-file" id="data-center-file" type="file" accept=".json,application/json">
+                    </label>
+                </div>
+                <section class="data-center-preview" id="data-center-preview" aria-labelledby="data-center-preview-title" hidden>
+                    <h3 class="data-center-preview-title" id="data-center-preview-title">导入预览</h3>
+                    <ul class="data-center-preview-list" id="data-center-preview-list"></ul>
+                    <p class="data-center-preview-warning">确认后将覆盖以上五个模块的当前本地数据，包括备份中为空的模块。导入前会自动下载当前数据备份；请勿关闭页面直至操作完成。</p>
+                    <button class="data-center-button" id="data-center-confirm-import" type="button">确认并导入</button>
+                </section>
+                <p class="data-center-note">支持备份：Quick Notes、Task Manager、Daily Focus、Ideas &amp; Writing、Document Summary 历史。AI Assistant 对话及尚未保存的分析、草稿和预览仅存在于当前页面，暂不支持备份。</p>
+                <p class="data-center-status" id="data-center-status" role="status" aria-live="polite"></p>
+            </section>
         </main>
 
         <footer class="site-footer">
@@ -3436,6 +3651,109 @@
         const dashboardCompletedTasks = document.getElementById("dashboard-completed-tasks");
         const dashboardFocusItems = document.getElementById("dashboard-focus-items");
         const dashboardSavedNotes = document.getElementById("dashboard-saved-notes");
+        const dataCenterOverview = document.getElementById("data-center-overview");
+        const dataCenterExportButton = document.getElementById("data-center-export");
+        const dataCenterRefreshButton = document.getElementById("data-center-refresh");
+        const dataCenterFileInput = document.getElementById("data-center-file");
+        const dataCenterPreview = document.getElementById("data-center-preview");
+        const dataCenterPreviewList = document.getElementById("data-center-preview-list");
+        const dataCenterConfirmImportButton = document.getElementById("data-center-confirm-import");
+        const dataCenterStatus = document.getElementById("data-center-status");
+        const dataCenterFormat = "my-tech-lab-backup";
+        const dataCenterVersion = 1;
+        let dataCenterPendingBackup = null;
+        const dataCenterModules = [
+            {
+                id: "quick-notes",
+                name: "Quick Notes",
+                key: notesStorageKey,
+                emptyValue: () => [],
+                validate: (data) => Array.isArray(data) && data.every((note) =>
+                    note &&
+                    typeof note.id === "string" &&
+                    typeof note.text === "string" &&
+                    typeof note.createdAt === "string" &&
+                    !Number.isNaN(Date.parse(note.createdAt))
+                ),
+                count: (data) => data.length,
+                latest: (data) => latestDataCenterDate(data.map((note) => note.createdAt))
+            },
+            {
+                id: "task-manager",
+                name: "Task Manager",
+                key: tasksStorageKey,
+                emptyValue: () => [],
+                validate: (data) => Array.isArray(data) && data.every((task) =>
+                    task &&
+                    typeof task.id === "string" &&
+                    typeof task.text === "string" &&
+                    ["high", "medium", "low"].includes(task.priority) &&
+                    typeof task.completed === "boolean" &&
+                    typeof task.createdAt === "string" &&
+                    !Number.isNaN(Date.parse(task.createdAt))
+                ),
+                count: (data) => data.length,
+                latest: (data) => latestDataCenterDate(data.map((task) => task.createdAt))
+            },
+            {
+                id: "daily-focus",
+                name: "Daily Focus",
+                key: dailyFocusStorageKey,
+                emptyValue: () => ({ date: "", priorities: ["", "", ""] }),
+                validate: (data) => Boolean(
+                    data &&
+                    typeof data.date === "string" &&
+                    Array.isArray(data.priorities) &&
+                    data.priorities.length === 3 &&
+                    data.priorities.every((priority) => typeof priority === "string")
+                ),
+                count: (data) => data.priorities.filter((priority) => priority.trim()).length,
+                latest: (data) => data.date || ""
+            },
+            {
+                id: "ideas-writing",
+                name: "Ideas & Writing",
+                key: ideasStorageKey,
+                emptyValue: () => [],
+                validate: (data) => Array.isArray(data) && data.every((idea) =>
+                    idea &&
+                    typeof idea.id === "string" &&
+                    typeof idea.title === "string" &&
+                    typeof idea.content === "string" &&
+                    typeof idea.createdAt === "string" &&
+                    !Number.isNaN(Date.parse(idea.createdAt)) &&
+                    typeof idea.updatedAt === "string" &&
+                    !Number.isNaN(Date.parse(idea.updatedAt))
+                ),
+                count: (data) => data.length,
+                latest: (data) => latestDataCenterDate(data.map((idea) => idea.updatedAt))
+            },
+            {
+                id: "document-summaries",
+                name: "Document Summary 历史",
+                key: documentStorageKey,
+                emptyValue: () => [],
+                validate: (data) => Array.isArray(data) && data.every((record) =>
+                    record &&
+                    typeof record.id === "string" &&
+                    typeof record.title === "string" &&
+                    typeof record.sourceText === "string" &&
+                    record.summary &&
+                    ["executive", "keyPoints", "important", "actions"].every((key) =>
+                        typeof record.summary[key] === "string"
+                    ) &&
+                    (record.summary.deepAnalysis === undefined || typeof record.summary.deepAnalysis === "string") &&
+                    (record.analysisMode === undefined || ["full", "quick", "key-points", "deep"].includes(record.analysisMode)) &&
+                    (record.model === undefined || typeof record.model === "string") &&
+                    typeof record.createdAt === "string" &&
+                    !Number.isNaN(Date.parse(record.createdAt)) &&
+                    typeof record.updatedAt === "string" &&
+                    !Number.isNaN(Date.parse(record.updatedAt))
+                ),
+                count: (data) => data.length,
+                latest: (data) => latestDataCenterDate(data.map((record) => record.updatedAt))
+            }
+        ];
 
         function updateDashboardStats() {
             dashboardPendingTasks.textContent = String(tasks.filter((task) => !task.completed).length);
@@ -3445,6 +3763,347 @@
             );
             dashboardSavedNotes.textContent = String(notes.length);
         }
+
+        function latestDataCenterDate(values) {
+            return values
+                .filter((value) => typeof value === "string" && !Number.isNaN(Date.parse(value)))
+                .sort((left, right) => Date.parse(right) - Date.parse(left))[0] || "";
+        }
+
+        function readDataCenterModule(module) {
+            const raw = localStorage.getItem(module.key);
+            const data = raw === null ? module.emptyValue() : JSON.parse(raw);
+            if (!module.validate(data)) {
+                throw new Error(`${module.name} 数据格式无效或已损坏。`);
+            }
+            return { data, raw, present: raw !== null };
+        }
+
+        function formatDataCenterDate(value) {
+            if (!value) return "暂无";
+            const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(value);
+            const date = new Date(dateOnly ? `${value}T12:00:00` : value);
+            if (Number.isNaN(date.getTime())) return "暂无";
+            return dateOnly
+                ? new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(date)
+                : noteTimestampFormatter.format(date);
+        }
+
+        function renderDataCenterOverview() {
+            dataCenterOverview.replaceChildren();
+            let hasInvalidData = false;
+            dataCenterModules.forEach((module) => {
+                const card = document.createElement("article");
+                card.className = "data-center-module";
+                const name = document.createElement("span");
+                name.className = "data-center-module-name";
+                name.textContent = module.name;
+                const count = document.createElement("span");
+                count.className = "data-center-module-count";
+                const meta = document.createElement("span");
+                meta.className = "data-center-module-meta";
+                try {
+                    const { data } = readDataCenterModule(module);
+                    const total = module.count(data);
+                    count.textContent = String(total);
+                    const dateLabel = module.id === "daily-focus"
+                        ? "日期"
+                        : ["quick-notes", "task-manager"].includes(module.id) ? "最近记录" : "最近更新";
+                    meta.textContent = `${total > 0 ? "有数据" : "暂无数据"} · 支持备份 · ${dateLabel}：${formatDataCenterDate(module.latest(data))}`;
+                    card.dataset.valid = "true";
+                } catch (error) {
+                    hasInvalidData = true;
+                    count.textContent = "!";
+                    meta.textContent = `数据异常 · 无法安全备份`;
+                    card.dataset.valid = "false";
+                    console.error("Data Center could not read module:", error);
+                }
+                card.append(name, count, meta);
+                dataCenterOverview.append(card);
+            });
+            dataCenterExportButton.disabled = hasInvalidData;
+            if (hasInvalidData) {
+                setDataCenterStatus("检测到格式异常或损坏的数据。为避免导出不完整备份，已禁用导出；请勿导入覆盖。", true);
+            }
+        }
+
+        function setDataCenterStatus(message, isError = false) {
+            dataCenterStatus.textContent = message;
+            dataCenterStatus.classList.toggle("data-center-error", isError);
+            dataCenterStatus.setAttribute("role", isError ? "alert" : "status");
+        }
+
+        function createDataCenterBackup() {
+            return {
+                format: dataCenterFormat,
+                version: dataCenterVersion,
+                exportedAt: new Date().toISOString(),
+                modules: dataCenterModules.map((module) => ({
+                    id: module.id,
+                    name: module.name,
+                    key: module.key,
+                    data: readDataCenterModule(module).data
+                }))
+            };
+        }
+
+        function createDataCenterPreImportBackup(original) {
+            let hasInvalidData = false;
+            const modules = original.map(({ definition, raw }) => {
+                let data = definition.emptyValue();
+                if (raw !== null) {
+                    try {
+                        data = JSON.parse(raw);
+                        if (!definition.validate(data)) hasInvalidData = true;
+                    } catch {
+                        hasInvalidData = true;
+                    }
+                }
+                return {
+                    id: definition.id,
+                    name: definition.name,
+                    key: definition.key,
+                    data
+                };
+            });
+            if (hasInvalidData) {
+                return {
+                    format: "my-tech-lab-raw-safety-backup",
+                    version: dataCenterVersion,
+                    exportedAt: new Date().toISOString(),
+                    modules: original.map(({ definition, raw }) => ({
+                        id: definition.id,
+                        name: definition.name,
+                        key: definition.key,
+                        storageValue: raw
+                    }))
+                };
+            }
+            return {
+                format: dataCenterFormat,
+                version: dataCenterVersion,
+                exportedAt: new Date().toISOString(),
+                modules
+            };
+        }
+
+        function downloadDataCenterBackup(backup, label = "backup") {
+            const date = getLocalDateKey(new Date());
+            const time = new Date().toTimeString().slice(0, 8).replaceAll(":", "-");
+            const filename = label === "backup"
+                ? `my-tech-lab-backup-${date}.json`
+                : `my-tech-lab-${label}-${date}-${time}.json`;
+            const blob = new Blob([`${JSON.stringify(backup, null, 2)}\n`], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = filename;
+            link.hidden = true;
+            document.body.append(link);
+            link.click();
+            link.remove();
+            window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+
+        function exportDataCenterBackup() {
+            try {
+                downloadDataCenterBackup(createDataCenterBackup());
+                setDataCenterStatus("五类数据已导出为 JSON 备份。请妥善保存文件。");
+            } catch (error) {
+                setDataCenterStatus(error.message || "导出失败，当前数据未更改。", true);
+                console.error("Data Center export failed:", error);
+            }
+        }
+
+        function validateDataCenterBackup(backup) {
+            if (!backup || typeof backup !== "object" ||
+                backup.format !== dataCenterFormat ||
+                backup.version !== dataCenterVersion ||
+                typeof backup.exportedAt !== "string" ||
+                Number.isNaN(Date.parse(backup.exportedAt)) ||
+                !Array.isArray(backup.modules) ||
+                backup.modules.length !== dataCenterModules.length) {
+                throw new Error("备份文件格式或版本不受支持，或缺少必要字段。");
+            }
+
+            const modulesById = new Map();
+            backup.modules.forEach((entry) => {
+                if (!entry || typeof entry.id !== "string" || modulesById.has(entry.id)) {
+                    throw new Error("备份文件包含重复或无效的数据模块。");
+                }
+                modulesById.set(entry.id, entry);
+            });
+
+            return dataCenterModules.map((module) => {
+                const entry = modulesById.get(module.id);
+                if (!entry || entry.name !== module.name || entry.key !== module.key || !module.validate(entry.data)) {
+                    throw new Error(`备份中的 ${module.name} 缺失、键名不匹配或数据格式无效。`);
+                }
+                return { definition: module, data: entry.data };
+            });
+        }
+
+        async function previewDataCenterImport(file) {
+            dataCenterPreview.hidden = true;
+            dataCenterPreviewList.replaceChildren();
+            dataCenterConfirmImportButton.disabled = true;
+            if (!file) return;
+            if (file.size > 50 * 1024 * 1024) {
+                setDataCenterStatus("备份文件超过 50 MB 安全上限，未读取或修改任何数据。", true);
+                return;
+            }
+            try {
+                const backup = JSON.parse(await file.text());
+                const modules = validateDataCenterBackup(backup);
+                modules.forEach(({ definition, data }) => {
+                    const item = document.createElement("li");
+                    item.textContent = `${definition.name}：将恢复 ${definition.count(data)} 条${definition.count(data) === 0 ? "（空数据将替换该模块当前内容）" : ""}`;
+                    dataCenterPreviewList.append(item);
+                });
+                dataCenterPendingBackup = backup;
+                dataCenterPreview.hidden = false;
+                dataCenterConfirmImportButton.disabled = false;
+                setDataCenterStatus("备份校验通过。请核对各模块条数；确认后会覆盖对应模块。");
+            } catch (error) {
+                dataCenterPendingBackup = null;
+                setDataCenterStatus(error instanceof SyntaxError
+                    ? "文件不是有效 JSON，未修改任何数据。"
+                    : error.message || "备份文件校验失败，未修改任何数据。", true);
+            }
+        }
+
+        function applyDataCenterData(modules) {
+            const imported = new Map(modules.map(({ definition, data }) => [definition.id, data]));
+            notes = imported.get("quick-notes");
+            tasks = imported.get("task-manager");
+            dailyFocus = imported.get("daily-focus");
+            ideas = imported.get("ideas-writing");
+            documentHistory = imported.get("document-summaries").map((record) => ({
+                ...record,
+                summary: {
+                    ...record.summary,
+                    deepAnalysis: record.summary.deepAnalysis ??
+                        "旧版记录未保存深度分析，请重新分析后补充。"
+                },
+                analysisMode: record.analysisMode ?? "full",
+                model: record.model ?? ""
+            }));
+            dailyFocusStorageReady = true;
+            notesStorageReady = true;
+            tasksStorageReady = true;
+            ideasStorageReady = true;
+            documentStorageReady = true;
+            dailyFocusInputs.forEach((input, index) => {
+                input.value = dailyFocus.priorities[index];
+            });
+            dailyFocusDate.textContent = dailyFocus.date ? dateFormatter.format(new Date(`${dailyFocus.date}T12:00:00`)) : "暂无";
+            dailyFocusDate.dateTime = dailyFocus.date;
+            renderNotes();
+            renderTasks();
+            renderIdeas();
+            renderDocumentHistory();
+            updateDashboardStats();
+            refreshDailyPlanning(false);
+        }
+
+        function confirmDataCenterImport() {
+            if (!dataCenterPendingBackup) {
+                setDataCenterStatus("请先选择并验证备份文件。", true);
+                return;
+            }
+            let modules;
+            try {
+                modules = validateDataCenterBackup(dataCenterPendingBackup);
+            } catch (error) {
+                dataCenterPendingBackup = null;
+                dataCenterPreview.hidden = true;
+                setDataCenterStatus(error.message || "备份文件校验失败，未修改任何数据。", true);
+                return;
+            }
+            const willRestoreOldFocus = modules.some(({ definition, data }) =>
+                definition.id === "daily-focus" &&
+                data.date &&
+                data.date !== getLocalDateKey(new Date())
+            );
+            const warning = willRestoreOldFocus
+                ? "\n\n备份中的 Daily Focus 属于其他日期。按模块的每日语义，恢复后将把原有三个重点用于今天。"
+                : "";
+            if (!window.confirm(`即将覆盖五个模块的本地数据。导入前会自动下载当前数据备份；请确认已理解覆盖风险。${warning}\n\n继续导入？`)) {
+                setDataCenterStatus("已取消导入，当前数据未更改。");
+                return;
+            }
+
+            let original;
+            try {
+                original = dataCenterModules.map((module) => {
+                    const raw = localStorage.getItem(module.key);
+                    return { definition: module, raw, present: raw !== null };
+                });
+                const safetyBackup = createDataCenterPreImportBackup(original);
+                downloadDataCenterBackup(
+                    safetyBackup,
+                    safetyBackup.format === dataCenterFormat ? "pre-import-backup" : "pre-import-raw-snapshot"
+                );
+            } catch (error) {
+                setDataCenterStatus(`无法创建导入前完整备份，已中止导入：${error.message || "本地数据不可读取"}`, true);
+                console.error("Data Center pre-import backup failed:", error);
+                return;
+            }
+
+            const restoreModules = modules.map(({ definition, data }) => {
+                if (definition.id !== "daily-focus" || !data.date ||
+                    data.date === getLocalDateKey(new Date())) {
+                    return { definition, data };
+                }
+                return {
+                    definition,
+                    data: { ...data, date: getLocalDateKey(new Date()) }
+                };
+            });
+            try {
+                restoreModules.forEach(({ definition, data }) => {
+                    localStorage.setItem(definition.key, JSON.stringify(data));
+                });
+                applyDataCenterData(restoreModules);
+                dataCenterPreview.hidden = true;
+                dataCenterFileInput.value = "";
+                dataCenterPendingBackup = null;
+                dataCenterConfirmImportButton.disabled = true;
+                renderDataCenterOverview();
+                setDataCenterStatus("导入成功，五类数据已恢复。导入前数据备份已下载到浏览器的下载目录。");
+            } catch (error) {
+                const rollbackErrors = [];
+                original.forEach(({ definition, raw, present }) => {
+                    try {
+                        if (present) {
+                            localStorage.setItem(definition.key, raw);
+                        } else {
+                            localStorage.removeItem(definition.key);
+                        }
+                    } catch (rollbackError) {
+                        rollbackErrors.push(`${definition.name}: ${rollbackError.message}`);
+                    }
+                });
+                const rollbackMessage = rollbackErrors.length
+                    ? `自动回滚未能完整完成（${rollbackErrors.join("；")}）。请勿关闭页面，保留导出的导入前备份。`
+                    : "已尝试恢复导入前的本地数据。";
+                setDataCenterStatus(`导入失败：${error.message || "浏览器存储写入失败"}。${rollbackMessage}`, true);
+                console.error("Data Center import failed:", error, rollbackErrors);
+            } finally {
+                renderDataCenterOverview();
+            }
+        }
+
+        dataCenterExportButton.addEventListener("click", exportDataCenterBackup);
+        dataCenterRefreshButton.addEventListener("click", () => {
+            renderDataCenterOverview();
+            if (dataCenterOverview.querySelector('[data-valid="false"]')) return;
+            setDataCenterStatus("数据总览已刷新。");
+        });
+        dataCenterFileInput.addEventListener("change", () => {
+            void previewDataCenterImport(dataCenterFileInput.files?.[0]);
+        });
+        dataCenterConfirmImportButton.addEventListener("click", confirmDataCenterImport);
 
         function updateClock() {
             const now = new Date();
@@ -6295,6 +6954,7 @@
         loadDocumentHistory();
         loadTasks();
         refreshDailyPlanning(false);
+        renderDataCenterOverview();
     </script>
 </body>
 </html>
