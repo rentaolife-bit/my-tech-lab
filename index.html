@@ -2955,13 +2955,15 @@
         .module-management-protected {
             display: inline-flex;
             align-items: center;
-            min-height: 38px;
-            padding: 5px 9px;
-            border: 1px solid rgba(157, 232, 212, 0.32);
+            max-width: 100%;
+            padding: 4px 8px;
+            border: 1px solid rgba(157, 232, 212, 0.28);
             border-radius: 999px;
             color: var(--accent);
-            font-size: 11px;
+            font-size: 10px;
+            line-height: 1.4;
             text-align: center;
+            overflow-wrap: anywhere;
         }
 
         .module-management-card-description,
@@ -3025,6 +3027,32 @@
             color: var(--muted);
             font-size: 13px;
             line-height: 1.6;
+        }
+
+        .module-management-recovery {
+            margin-top: 18px;
+            padding: 16px;
+            border: 1px solid rgba(240, 168, 168, 0.3);
+            border-radius: 11px;
+            background: linear-gradient(145deg, rgba(88, 31, 39, 0.18), rgba(31, 17, 24, 0.24));
+        }
+
+        .module-management-recovery[hidden] {
+            display: none;
+        }
+
+        .module-management-recovery-heading {
+            margin: 0;
+            color: #f0a8a8;
+            font-size: 14px;
+        }
+
+        .module-management-recovery-copy {
+            margin: 8px 0 12px;
+            color: #c79b9b;
+            font-size: 12px;
+            line-height: 1.65;
+            overflow-wrap: anywhere;
         }
 
         .module-management-detail-header {
@@ -4189,6 +4217,11 @@
                     <div id="module-management-list" aria-live="polite"></div>
                 </div>
                 <p class="module-management-feedback" id="module-management-feedback" role="status" aria-live="polite"></p>
+                <div class="module-management-recovery" id="module-management-recovery" hidden>
+                    <h3 class="module-management-recovery-heading">模块设置数据异常</h3>
+                    <p class="module-management-recovery-copy" id="module-management-recovery-message"></p>
+                    <button class="data-center-button data-center-danger-button" id="module-management-recover" type="button">恢复模块设置为默认启用</button>
+                </div>
                 <section class="module-management-details" id="module-management-details" aria-labelledby="module-management-detail-heading" hidden>
                     <div class="module-management-detail-header">
                         <h3 class="module-management-detail-heading" id="module-management-detail-heading"></h3>
@@ -4480,7 +4513,9 @@
             return matches.length > 0 ? Object.freeze(matches) : emptyModuleQueryResult;
         }
         const moduleSettingsStorageKey = "my-tech-lab-module-settings";
-        const moduleSettingsSchemaVersion = 1;
+        const moduleSettingsSchemaVersion = 2;
+        const legacyModuleSettingsSchemaVersion = 1;
+        const moduleSettingsRecoveryStorageKey = "my-tech-lab-module-settings-recovery";
         const protectedModuleIds = new Set(["data-center", "module-management-center"]);
         function freezeModuleSettings(settings) {
             return Object.freeze({
@@ -4490,10 +4525,11 @@
         }
         function validateModuleSettings(settings) {
             if (!settings || typeof settings !== "object" || Array.isArray(settings) ||
-                settings.schemaVersion !== moduleSettingsSchemaVersion ||
+                (settings.schemaVersion !== moduleSettingsSchemaVersion &&
+                    settings.schemaVersion !== legacyModuleSettingsSchemaVersion) ||
                 !settings.enabledById || typeof settings.enabledById !== "object" ||
                 Array.isArray(settings.enabledById)) {
-                return "模块设置格式无效。原始存储未更改。";
+                return "模块设置格式无效或版本不受支持。原始存储未更改。";
             }
             if (Object.keys(settings).some((key) => !["schemaVersion", "enabledById"].includes(key))) {
                 return "模块设置包含不支持的字段。原始存储未更改。";
@@ -4511,6 +4547,80 @@
             }
             return null;
         }
+        function parseModuleSettings(rawSettings) {
+            if (rawSettings === null) {
+                return {
+                    ok: true,
+                    state: "available",
+                    settings: freezeModuleSettings({
+                        schemaVersion: moduleSettingsSchemaVersion,
+                        enabledById: {}
+                    }),
+                    rawValue: null,
+                    needsMigration: false
+                };
+            }
+
+            let parsedSettings;
+            try {
+                parsedSettings = JSON.parse(rawSettings);
+            } catch (error) {
+                return {
+                    ok: false,
+                    state: "corrupt",
+                    message: "模块设置 JSON 已损坏；为避免覆盖原始内容，未修改存储。",
+                    rawValue: rawSettings
+                };
+            }
+
+            if (!parsedSettings || typeof parsedSettings !== "object" || Array.isArray(parsedSettings)) {
+                return {
+                    ok: false,
+                    state: "invalid",
+                    message: "模块设置不是有效的对象结构。原始存储未更改。",
+                    rawValue: rawSettings
+                };
+            }
+
+            if (parsedSettings.schemaVersion === moduleSettingsSchemaVersion) {
+                const validationError = validateModuleSettings(parsedSettings);
+                if (validationError) {
+                    return { ok: false, state: "invalid", message: validationError, rawValue: rawSettings };
+                }
+                return {
+                    ok: true,
+                    state: "available",
+                    settings: freezeModuleSettings(parsedSettings),
+                    rawValue: rawSettings,
+                    needsMigration: false
+                };
+            }
+
+            if (parsedSettings.schemaVersion === legacyModuleSettingsSchemaVersion) {
+                const validationError = validateModuleSettings(parsedSettings);
+                if (validationError) {
+                    return { ok: false, state: "invalid", message: validationError, rawValue: rawSettings };
+                }
+                return {
+                    ok: true,
+                    state: "legacy",
+                    settings: freezeModuleSettings({
+                        schemaVersion: moduleSettingsSchemaVersion,
+                        enabledById: parsedSettings.enabledById
+                    }),
+                    rawValue: rawSettings,
+                    needsMigration: true
+                };
+            }
+
+            return {
+                ok: false,
+                state: "unsupported-version",
+                message: `模块设置版本 ${String(parsedSettings.schemaVersion)} 不受支持；为避免数据丢失，未修改存储。`,
+                rawValue: rawSettings
+            };
+        }
+
         function readModuleSettings() {
             let rawSettings;
             try {
@@ -4522,48 +4632,149 @@
                     message: `无法读取模块设置：${error.message || "浏览器存储不可用。"}`
                 };
             }
+            return parseModuleSettings(rawSettings);
+        }
 
-            if (rawSettings === null) {
-                return {
-                    ok: true,
-                    state: "available",
-                    settings: freezeModuleSettings({
-                        schemaVersion: moduleSettingsSchemaVersion,
-                        enabledById: {}
-                    })
-                };
+        function writeModuleSettings(nextSettings, expectedRawValue) {
+            const validationError = validateModuleSettings(nextSettings);
+            if (validationError) {
+                return { ok: false, state: "invalid", message: validationError };
             }
+            const serializedSettings = JSON.stringify(nextSettings);
 
-            let parsedSettings;
+            let currentRawValue;
             try {
-                parsedSettings = JSON.parse(rawSettings);
+                currentRawValue = localStorage.getItem(moduleSettingsStorageKey);
             } catch (error) {
                 return {
                     ok: false,
-                    state: "corrupt",
-                    message: "模块设置 JSON 已损坏；为避免覆盖原始内容，未修改存储。"
+                    state: "storage-unavailable",
+                    message: `无法读取模块设置：${error.message || "浏览器存储不可用。"}`
+                };
+            }
+            if (currentRawValue !== expectedRawValue) {
+                return {
+                    ok: false,
+                    state: "concurrent-modification",
+                    message: "模块设置在另一个标签页被修改，请刷新后重试。"
                 };
             }
 
-            if (!parsedSettings || parsedSettings.schemaVersion !== moduleSettingsSchemaVersion) {
+            try {
+                localStorage.setItem(moduleSettingsStorageKey, serializedSettings);
+                if (localStorage.getItem(moduleSettingsStorageKey) !== serializedSettings) {
+                    throw new Error("verification failed");
+                }
+            } catch (error) {
+                try {
+                    if (expectedRawValue === null) {
+                        localStorage.removeItem(moduleSettingsStorageKey);
+                    } else {
+                        localStorage.setItem(moduleSettingsStorageKey, expectedRawValue);
+                    }
+                    if (localStorage.getItem(moduleSettingsStorageKey) !== expectedRawValue) {
+                        throw new Error("rollback verification failed");
+                    }
+                } catch (rollbackError) {
+                    return {
+                        ok: false,
+                        state: "storage-write-failed",
+                        message: `无法保存模块设置，且回滚校验失败：${rollbackError.message || "存储不可用"}。`
+                    };
+                }
                 return {
                     ok: false,
-                    state: "unsupported-version",
-                    message: "模块设置版本不受支持；为避免数据丢失，未修改存储。"
-                };
-            }
-            const validationError = validateModuleSettings(parsedSettings);
-            if (validationError) {
-                return {
-                    ok: false,
-                    state: "invalid",
-                    message: validationError
+                    state: "storage-write-failed",
+                    message: `无法保存模块设置，已尝试恢复原有数据：${error.message || "浏览器存储写入失败。"}`
                 };
             }
             return {
                 ok: true,
-                state: "available",
-                settings: freezeModuleSettings(parsedSettings)
+                state: "saved",
+                message: "",
+                settings: freezeModuleSettings(nextSettings)
+            };
+        }
+
+        function migrateModuleSettings() {
+            const result = readModuleSettings();
+            if (!result.ok) {
+                return result;
+            }
+            if (!result.needsMigration) {
+                return { ok: true, state: "up-to-date", message: "模块设置已是当前版本。", settings: result.settings };
+            }
+            const nextSettings = {
+                schemaVersion: moduleSettingsSchemaVersion,
+                enabledById: { ...result.settings.enabledById }
+            };
+            const writeResult = writeModuleSettings(nextSettings, result.rawValue);
+            if (!writeResult.ok) {
+                return {
+                    ok: false,
+                    state: writeResult.state,
+                    message: `模块设置从版本 1 迁移到版本 2 失败，原有数据未更改：${writeResult.message}`
+                };
+            }
+            return {
+                ok: true,
+                state: "migrated",
+                message: "模块设置已从版本 1 迁移到版本 2。",
+                settings: writeResult.settings
+            };
+        }
+
+        function recoverModuleSettings() {
+            let rawSettings;
+            try {
+                rawSettings = localStorage.getItem(moduleSettingsStorageKey);
+            } catch (error) {
+                return {
+                    ok: false,
+                    state: "storage-unavailable",
+                    message: `无法读取模块设置：${error.message || "浏览器存储不可用。"}`
+                };
+            }
+            if (rawSettings === null) {
+                return { ok: true, state: "already-clean", message: "模块设置无需恢复。" };
+            }
+
+            const recoveryRecord = JSON.stringify({
+                quarantinedAt: new Date().toISOString(),
+                sourceKey: moduleSettingsStorageKey,
+                rawValue: rawSettings
+            });
+            try {
+                localStorage.setItem(moduleSettingsRecoveryStorageKey, recoveryRecord);
+                if (localStorage.getItem(moduleSettingsRecoveryStorageKey) !== recoveryRecord) {
+                    return {
+                        ok: false,
+                        state: "quarantine-failed",
+                        message: "无法安全隔离原有模块设置；原数据未更改。"
+                    };
+                }
+            } catch (error) {
+                return {
+                    ok: false,
+                    state: "quarantine-failed",
+                    message: `无法安全隔离原有模块设置：${error.message || "浏览器存储写入失败。"}`
+                };
+            }
+
+            const freshSettings = { schemaVersion: moduleSettingsSchemaVersion, enabledById: {} };
+            const writeResult = writeModuleSettings(freshSettings, rawSettings);
+            if (!writeResult.ok) {
+                return {
+                    ok: false,
+                    state: writeResult.state,
+                    message: `模块设置恢复失败，原有数据未更改：${writeResult.message}`
+                };
+            }
+            return {
+                ok: true,
+                state: "recovered",
+                message: "模块设置已恢复到默认启用状态。原有数据已隔离保存，可手动检查。",
+                settings: writeResult.settings
             };
         }
         function getModuleSettings() {
@@ -4638,28 +4849,19 @@
                 return { ok: false, state: "invalid", message: validationError };
             }
 
-            const serializedSettings = JSON.stringify(nextSettings);
-            try {
-                localStorage.setItem(moduleSettingsStorageKey, serializedSettings);
-                if (localStorage.getItem(moduleSettingsStorageKey) !== serializedSettings) {
-                    return {
-                        ok: false,
-                        state: "verification-failed",
-                        message: "模块设置写入后校验失败；请检查浏览器存储状态。"
-                    };
-                }
-            } catch (error) {
+            const writeResult = writeModuleSettings(nextSettings, currentResult.rawValue);
+            if (!writeResult.ok) {
                 return {
                     ok: false,
-                    state: "storage-write-failed",
-                    message: `无法保存模块设置：${error.message || "浏览器存储写入失败。"}`
+                    state: writeResult.state,
+                    message: writeResult.message
                 };
             }
             return {
                 ok: true,
                 state: "saved",
                 message: enabled ? "模块已启用。" : "模块已停用。",
-                settings: freezeModuleSettings(nextSettings)
+                settings: writeResult.settings
             };
         }
         function getModuleSettingsStatus() {
@@ -5038,6 +5240,9 @@
         const moduleManagementDetailFields = document.getElementById("module-management-detail-fields");
         const moduleManagementBackButton = document.getElementById("module-management-back");
         const moduleManagementFeedback = document.getElementById("module-management-feedback");
+        const moduleManagementRecovery = document.getElementById("module-management-recovery");
+        const moduleManagementRecoveryMessage = document.getElementById("module-management-recovery-message");
+        const moduleManagementRecoverButton = document.getElementById("module-management-recover");
         let moduleManagementSelectedCategory = null;
         let moduleManagementSelectedModuleId = null;
         const dataCenterOverview = document.getElementById("data-center-overview");
@@ -5299,6 +5504,93 @@
             dataCenterStatus.setAttribute("role", isError ? "alert" : "status");
         }
 
+        function isValidModuleSettingsRecoveryRecord(record) {
+            return Boolean(
+                record &&
+                typeof record === "object" &&
+                !Array.isArray(record) &&
+                typeof record.quarantinedAt === "string" &&
+                !Number.isNaN(Date.parse(record.quarantinedAt)) &&
+                typeof record.sourceKey === "string" &&
+                typeof record.rawValue === "string"
+            );
+        }
+
+        function readModuleSettingsRecovery() {
+            let raw;
+            try {
+                raw = localStorage.getItem(moduleSettingsRecoveryStorageKey);
+            } catch (error) {
+                return { raw: null, present: false, record: null };
+            }
+            if (raw === null) {
+                return { raw: null, present: false, record: null };
+            }
+            let record = null;
+            try {
+                const parsed = JSON.parse(raw);
+                if (isValidModuleSettingsRecoveryRecord(parsed)) {
+                    record = parsed;
+                }
+            } catch {
+                record = null;
+            }
+            return { raw, present: true, record };
+        }
+
+        function getModuleSettingsRecoveryBackupValue() {
+            const { raw, present, record } = readModuleSettingsRecovery();
+            if (!present) {
+                return null;
+            }
+            if (record) {
+                return record;
+            }
+            return { storageValue: raw };
+        }
+
+        function validateModuleSettingsRecoveryInBackup(value) {
+            if (value === undefined || value === null) {
+                return null;
+            }
+            if (isValidModuleSettingsRecoveryRecord(value)) {
+                return { record: value };
+            }
+            if (value && typeof value === "object" && !Array.isArray(value) &&
+                Object.keys(value).length === 1 &&
+                typeof value.storageValue === "string") {
+                return { storageValue: value.storageValue };
+            }
+            throw new Error("备份中的模块设置隔离数据格式无效。");
+        }
+
+        function writeModuleSettingsRecovery(payload) {
+            if (!payload) {
+                return;
+            }
+            const value = payload.record !== undefined
+                ? JSON.stringify(payload.record)
+                : payload.storageValue;
+            localStorage.setItem(moduleSettingsRecoveryStorageKey, value);
+            if (localStorage.getItem(moduleSettingsRecoveryStorageKey) !== value) {
+                throw new Error("模块设置隔离数据写入后校验失败。");
+            }
+        }
+
+        function restoreModuleSettingsRecovery(originalRecovery) {
+            if (originalRecovery.present) {
+                localStorage.setItem(moduleSettingsRecoveryStorageKey, originalRecovery.raw);
+                if (localStorage.getItem(moduleSettingsRecoveryStorageKey) !== originalRecovery.raw) {
+                    throw new Error("模块设置隔离数据回滚后校验失败。");
+                }
+            } else {
+                localStorage.removeItem(moduleSettingsRecoveryStorageKey);
+                if (localStorage.getItem(moduleSettingsRecoveryStorageKey) !== null) {
+                    throw new Error("模块设置隔离数据回滚后校验失败。");
+                }
+            }
+        }
+
         function createDataCenterBackup() {
             return {
                 format: dataCenterFormat,
@@ -5314,11 +5606,13 @@
                             ? normalizeDataCenterDailyFocus(data)
                             : data
                     };
-                })
+                }),
+                moduleSettingsRecovery: getModuleSettingsRecoveryBackupValue()
             };
         }
 
         function createDataCenterPreImportBackup(original) {
+            const recoveryValue = getModuleSettingsRecoveryBackupValue();
             let hasInvalidData = false;
             const modules = original.map(({ definition, raw }) => {
                 let data = definition.emptyValue();
@@ -5350,14 +5644,16 @@
                         name: definition.name,
                         key: definition.key,
                         storageValue: raw
-                    }))
+                    })),
+                    moduleSettingsRecovery: recoveryValue
                 };
             }
             return {
                 format: dataCenterFormat,
                 version: dataCenterVersion,
                 exportedAt: new Date().toISOString(),
-                modules
+                modules,
+                moduleSettingsRecovery: recoveryValue
             };
         }
 
@@ -5448,6 +5744,7 @@
             try {
                 const backup = JSON.parse(await file.text());
                 const modules = validateDataCenterBackup(backup);
+                const recovery = validateModuleSettingsRecoveryInBackup(backup.moduleSettingsRecovery);
                 modules.forEach(({ definition, data, legacyDailyFocus, legacyDailyFocusDate }) => {
                     const item = document.createElement("li");
                     if (definition.id === "daily-focus" && legacyDailyFocus) {
@@ -5467,6 +5764,11 @@
                     }
                     dataCenterPreviewList.append(item);
                 });
+                if (recovery) {
+                    const item = document.createElement("li");
+                    item.textContent = "模块设置隔离数据：将恢复隔离记录，不会覆盖当前有效模块设置。";
+                    dataCenterPreviewList.append(item);
+                }
                 dataCenterPendingBackup = backup;
                 dataCenterPreview.hidden = false;
                 dataCenterConfirmImportButton.disabled = false;
@@ -5522,8 +5824,10 @@
                 return;
             }
             let modules;
+            let recovery;
             try {
                 modules = validateDataCenterBackup(dataCenterPendingBackup);
+                recovery = validateModuleSettingsRecoveryInBackup(dataCenterPendingBackup.moduleSettingsRecovery);
             } catch (error) {
                 dataCenterPendingBackup = null;
                 dataCenterPreview.hidden = true;
@@ -5545,11 +5849,13 @@
             }
 
             let original;
+            let originalRecovery;
             try {
                 original = dataCenterModules.map((module) => {
                     const raw = localStorage.getItem(module.key);
                     return { definition: module, raw, present: raw !== null };
                 });
+                originalRecovery = readModuleSettingsRecovery();
                 const safetyBackup = createDataCenterPreImportBackup(original);
                 downloadDataCenterBackup(
                     safetyBackup,
@@ -5590,13 +5896,16 @@
                         throw new Error(`${definition.name} 写入后校验失败。`);
                     }
                 });
+                writeModuleSettingsRecovery(recovery);
                 applyDataCenterData(restoreModules);
                 dataCenterPreview.hidden = true;
                 dataCenterFileInput.value = "";
                 dataCenterPendingBackup = null;
                 dataCenterConfirmImportButton.disabled = true;
                 renderDataCenterOverview();
-                setDataCenterStatus("导入成功，五类数据已恢复。导入前数据备份已下载到浏览器的下载目录。");
+                setDataCenterStatus(
+                    `导入成功，五类数据已恢复。${recovery ? "模块设置隔离数据已恢复，未改动当前有效模块设置。" : ""}导入前数据备份已下载到浏览器的下载目录。`
+                );
             } catch (error) {
                 const rollbackErrors = [];
                 original.forEach(({ definition, raw, present }) => {
@@ -5613,6 +5922,13 @@
                         rollbackErrors.push(`${definition.name}: ${rollbackError.message}`);
                     }
                 });
+                if (originalRecovery) {
+                    try {
+                        restoreModuleSettingsRecovery(originalRecovery);
+                    } catch (rollbackError) {
+                        rollbackErrors.push(`模块设置隔离数据: ${rollbackError.message}`);
+                    }
+                }
                 if (rollbackErrors.length === 0) {
                     try {
                         const restoredModules = original.map(({ definition, raw, present }) => {
@@ -6073,6 +6389,8 @@
                         const protectedLabel = document.createElement("span");
                         protectedLabel.className = "module-management-protected";
                         protectedLabel.textContent = "系统保护";
+                        protectedLabel.title = "该模块为系统保护模块，不可停用";
+                        protectedLabel.setAttribute("aria-label", `${module.name}：系统保护模块，不可停用`);
                         control.append(protectedLabel);
                     } else if (runtimeState.settingsAvailable) {
                         const toggleLabel = document.createElement("label");
@@ -6271,6 +6589,18 @@
             }
         }
 
+        function renderModuleManagementRecovery() {
+            const status = getModuleSettingsStatus();
+            const recoverable = !status.ok &&
+                ["corrupt", "unsupported-version", "invalid"].includes(status.state);
+            moduleManagementRecovery.hidden = !recoverable;
+            if (recoverable) {
+                moduleManagementRecoveryMessage.textContent =
+                    `检测到异常的模块设置（${status.state}），已暂停启停管理以避免覆盖原有数据。` +
+                    `你可以恢复到默认启用状态；原有数据会被隔离保存，不会删除。详情：${status.message}`;
+            }
+        }
+
         function renderModuleManagementCenter() {
             const statuses = [
                 ["implemented", "已实现"],
@@ -6288,6 +6618,7 @@
             renderModuleManagementStats();
             renderModuleManagementCategories();
             renderModuleManagementList();
+            renderModuleManagementRecovery();
         }
 
         moduleManagementCategoryList.addEventListener("click", (event) => {
@@ -6313,6 +6644,17 @@
             }
         });
         moduleManagementBackButton.addEventListener("click", closeModuleManagementDetails);
+        moduleManagementRecoverButton.addEventListener("click", () => {
+            const result = recoverModuleSettings();
+            if (result.ok) {
+                setModuleManagementFeedback(result.message);
+            } else {
+                setModuleManagementFeedback(`恢复失败：${result.message}`, "error");
+            }
+            renderModuleManagementRecovery();
+            renderModuleManagementList();
+            updateModuleAccessUI();
+        });
 
         document.querySelector(".site-nav").addEventListener("click", (event) => {
             const link = event.target.closest("[data-module-access-link]");
@@ -6323,11 +6665,12 @@
         });
 
         window.addEventListener("storage", (event) => {
-            if (event.key !== moduleSettingsStorageKey && event.key !== null) {
+            if (event.key !== moduleSettingsStorageKey && event.key !== moduleSettingsRecoveryStorageKey && event.key !== null) {
                 return;
             }
             updateModuleAccessUI();
             renderModuleManagementList();
+            renderModuleManagementRecovery();
             if (!moduleManagementDetails.hidden && moduleManagementSelectedModuleId) {
                 showModuleManagementDetails(moduleManagementSelectedModuleId);
             }
@@ -10147,6 +10490,7 @@
         planningProposalForm.addEventListener("submit", confirmDailyPlan);
 
         validateModuleRegistry();
+        migrateModuleSettings();
         renderModuleManagementCenter();
         loadDailyFocus();
         updateClock();
