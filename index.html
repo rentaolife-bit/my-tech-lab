@@ -101,6 +101,28 @@
             color: var(--accent);
         }
 
+        .header-link[aria-disabled="true"],
+        .header-link[aria-disabled="true"]:hover,
+        .header-link[aria-disabled="true"]:focus-visible {
+            color: #e6a3a3;
+            cursor: not-allowed;
+        }
+
+        .module-nav-state {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 5px;
+            border: 1px solid rgba(230, 163, 163, 0.42);
+            border-radius: 999px;
+            color: #e6a3a3;
+            font-size: 9px;
+            line-height: 1.3;
+        }
+
+        .module-nav-state[hidden] {
+            display: none;
+        }
+
         main {
             padding: 88px 0 96px;
         }
@@ -508,6 +530,11 @@
             transform: translateY(1px);
         }
 
+        .ai-shortcut:disabled {
+            cursor: not-allowed;
+            opacity: 0.55;
+        }
+
         .ai-shortcut-title {
             font-size: 13px;
             font-weight: 550;
@@ -738,6 +765,13 @@
             justify-content: space-between;
             flex-wrap: wrap;
             gap: 8px 14px;
+        }
+
+        .ideas-workspace-header-actions {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px 12px;
         }
 
         .ideas-workspace-heading {
@@ -2817,24 +2851,117 @@
             display: block;
             width: 100%;
             color: inherit;
-            font: inherit;
-            text-align: left;
-            cursor: pointer;
-            transition: border-color 160ms ease, transform 160ms ease;
+            transition: border-color 160ms ease;
         }
 
         .module-management-card:hover,
-        .module-management-card:focus-visible {
-            transform: translateY(-2px);
+        .module-management-card:focus-within {
             border-color: rgba(157, 232, 212, 0.42);
         }
 
+        .module-management-card-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            min-width: 0;
+        }
+
         .module-management-card-title {
-            display: block;
+            min-width: 0;
+            padding: 0;
+            border: 0;
+            background: transparent;
             color: var(--text);
+            font: inherit;
             font-size: 15px;
             font-weight: 620;
+            text-align: left;
             overflow-wrap: anywhere;
+            cursor: pointer;
+        }
+
+        .module-management-card-title:focus-visible {
+            border-radius: 3px;
+            outline: 2px solid var(--accent);
+            outline-offset: 3px;
+        }
+
+        .module-management-card-control {
+            flex: 0 0 auto;
+        }
+
+        .module-management-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            min-width: 112px;
+            min-height: 44px;
+            padding: 4px 8px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            color: var(--muted);
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        .module-management-toggle:focus-within {
+            outline: 2px solid rgba(157, 232, 212, 0.48);
+            outline-offset: 2px;
+        }
+
+        .module-management-toggle input {
+            position: relative;
+            width: 38px;
+            height: 22px;
+            flex: 0 0 auto;
+            margin: 0;
+            border: 1px solid #718094;
+            border-radius: 999px;
+            appearance: none;
+            background: #28313e;
+            cursor: inherit;
+            transition: background 160ms ease, border-color 160ms ease;
+        }
+
+        .module-management-toggle input::before {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #d3dbe5;
+            content: "";
+            transition: transform 160ms ease;
+        }
+
+        .module-management-toggle input:checked {
+            border-color: var(--accent);
+            background: rgba(157, 232, 212, 0.34);
+        }
+
+        .module-management-toggle input:checked::before {
+            transform: translateX(16px);
+            background: var(--accent);
+        }
+
+        .module-management-toggle input:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 3px;
+        }
+
+        .module-management-protected {
+            display: inline-flex;
+            align-items: center;
+            min-height: 38px;
+            padding: 5px 9px;
+            border: 1px solid rgba(157, 232, 212, 0.32);
+            border-radius: 999px;
+            color: var(--accent);
+            font-size: 11px;
+            text-align: center;
         }
 
         .module-management-card-description,
@@ -2854,6 +2981,22 @@
             margin-top: 12px;
         }
 
+        .module-management-card-state {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 9px;
+        }
+
+        .module-management-card-reason {
+            flex-basis: 100%;
+            margin: 2px 0 0;
+            color: #f0c58f;
+            font-size: 11px;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+
         .module-management-badge {
             max-width: 100%;
             padding: 4px 7px;
@@ -2862,6 +3005,19 @@
             color: #b7c3d1;
             font-size: 10px;
             overflow-wrap: anywhere;
+        }
+
+        .module-management-feedback {
+            min-height: 1.5em;
+            margin: 12px 0 0;
+            color: var(--accent);
+            font-size: 12px;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+
+        .module-management-feedback[data-state="error"] {
+            color: #f0a8a8;
         }
 
         .module-management-empty {
@@ -3562,9 +3718,13 @@
                     <section class="ideas-workspace" id="ideas-workspace" aria-labelledby="ideas-workspace-heading" hidden>
                         <div class="ideas-workspace-header">
                             <h3 class="ideas-workspace-heading" id="ideas-workspace-heading">Ideas &amp; Writing｜灵感创作</h3>
-                            <span class="ideas-local-label">DEEPSEEK · CLOUDFLARE WORKER</span>
+                            <div class="ideas-workspace-header-actions">
+                                <span class="ideas-local-label">DEEPSEEK · CLOUDFLARE WORKER</span>
+                                <button class="ideas-action ideas-action-secondary" id="ideas-return-home" type="button">返回 AI Assistant</button>
+                            </div>
                         </div>
                         <p class="ideas-workspace-description">通过项目现有 Cloudflare Worker 调用 DeepSeek。AI 结果仅作为可编辑建议；请核对事实，勿输入可识别患者身份的资料。</p>
+                        <p class="ideas-status" id="ideas-access-status" role="status" aria-live="polite"></p>
 
                         <div class="ideas-tabs" role="tablist" aria-label="灵感创作工具">
                             <button class="ideas-tab" id="ideas-tab-capture" type="button" role="tab" aria-selected="true" aria-controls="ideas-panel-capture" tabindex="0" data-ideas-tool="capture">Idea Capture｜灵感记录</button>
@@ -4013,7 +4173,7 @@
 
             <section class="module-management-center" id="module-management-center-section" aria-labelledby="module-management-heading">
                 <h2 class="module-management-heading" id="module-management-heading">Module Management Center｜模块管理中心</h2>
-                <p class="module-management-description">只读查看 Module Registry 中的模块定义、分类、实现状态和关系。实现状态不代表服务运行状态。</p>
+                <p class="module-management-description">查看模块定义与实现状态，并管理普通模块的用户启用设置。实现状态不代表服务运行状态；停用设置目前仅用于状态管理，不改变导航或模块访问行为。</p>
                 <div class="module-management-stats" id="module-management-stats" aria-label="模块实现状态总览"></div>
                 <div class="module-management-content" id="module-management-content">
                     <h3 class="module-management-section-heading">模块分类</h3>
@@ -4028,6 +4188,7 @@
                     </div>
                     <div id="module-management-list" aria-live="polite"></div>
                 </div>
+                <p class="module-management-feedback" id="module-management-feedback" role="status" aria-live="polite"></p>
                 <section class="module-management-details" id="module-management-details" aria-labelledby="module-management-detail-heading" hidden>
                     <div class="module-management-detail-header">
                         <h3 class="module-management-detail-heading" id="module-management-detail-heading"></h3>
@@ -4106,6 +4267,7 @@
         const aiChatLog = document.getElementById("ai-chat-log");
         const aiChatEmpty = document.getElementById("ai-chat-empty");
         const aiChatClearButton = document.getElementById("ai-chat-clear");
+        const aiAssistantSection = document.querySelector(".ai-assistant-section");
         const aiWorkerEndpoint = "https://my-tech-lab-api.rentao-life.workers.dev";
         const moduleCategoryDefinitions = Object.freeze([
             Object.freeze({
@@ -4181,7 +4343,7 @@
                 id: "document-summary",
                 name: "Document Summary",
                 description: "分析用户提供的资料，并管理已保存的总结历史。",
-                category: "work-knowledge",
+                category: "ai-intelligence",
                 type: "embedded-workflow",
                 entry: {
                     targetSelector: "#document-summary-workspace",
@@ -4196,7 +4358,7 @@
                 id: "ideas-writing",
                 name: "Ideas & Writing",
                 description: "记录灵感并提供文章起草、润色和表达转换工作流。",
-                category: "work-knowledge",
+                category: "ai-intelligence",
                 type: "embedded-workflow",
                 entry: {
                     targetSelector: "#ideas-workspace",
@@ -4316,6 +4478,257 @@
             }
             const matches = moduleRegistry.filter((module) => module.status === status);
             return matches.length > 0 ? Object.freeze(matches) : emptyModuleQueryResult;
+        }
+        const moduleSettingsStorageKey = "my-tech-lab-module-settings";
+        const moduleSettingsSchemaVersion = 1;
+        const protectedModuleIds = new Set(["data-center", "module-management-center"]);
+        function freezeModuleSettings(settings) {
+            return Object.freeze({
+                schemaVersion: settings.schemaVersion,
+                enabledById: Object.freeze({ ...settings.enabledById })
+            });
+        }
+        function validateModuleSettings(settings) {
+            if (!settings || typeof settings !== "object" || Array.isArray(settings) ||
+                settings.schemaVersion !== moduleSettingsSchemaVersion ||
+                !settings.enabledById || typeof settings.enabledById !== "object" ||
+                Array.isArray(settings.enabledById)) {
+                return "模块设置格式无效。原始存储未更改。";
+            }
+            if (Object.keys(settings).some((key) => !["schemaVersion", "enabledById"].includes(key))) {
+                return "模块设置包含不支持的字段。原始存储未更改。";
+            }
+            for (const [moduleId, enabled] of Object.entries(settings.enabledById)) {
+                if (!getModuleById(moduleId)) {
+                    return `模块设置包含未知模块 ID“${moduleId}”。原始存储未更改。`;
+                }
+                if (typeof enabled !== "boolean" || enabled) {
+                    return `模块“${moduleId}”的设置无效；仅允许保存明确停用的布尔状态。原始存储未更改。`;
+                }
+                if (protectedModuleIds.has(moduleId)) {
+                    return `受保护模块“${moduleId}”不能停用。原始存储未更改。`;
+                }
+            }
+            return null;
+        }
+        function readModuleSettings() {
+            let rawSettings;
+            try {
+                rawSettings = localStorage.getItem(moduleSettingsStorageKey);
+            } catch (error) {
+                return {
+                    ok: false,
+                    state: "storage-unavailable",
+                    message: `无法读取模块设置：${error.message || "浏览器存储不可用。"}`
+                };
+            }
+
+            if (rawSettings === null) {
+                return {
+                    ok: true,
+                    state: "available",
+                    settings: freezeModuleSettings({
+                        schemaVersion: moduleSettingsSchemaVersion,
+                        enabledById: {}
+                    })
+                };
+            }
+
+            let parsedSettings;
+            try {
+                parsedSettings = JSON.parse(rawSettings);
+            } catch (error) {
+                return {
+                    ok: false,
+                    state: "corrupt",
+                    message: "模块设置 JSON 已损坏；为避免覆盖原始内容，未修改存储。"
+                };
+            }
+
+            if (!parsedSettings || parsedSettings.schemaVersion !== moduleSettingsSchemaVersion) {
+                return {
+                    ok: false,
+                    state: "unsupported-version",
+                    message: "模块设置版本不受支持；为避免数据丢失，未修改存储。"
+                };
+            }
+            const validationError = validateModuleSettings(parsedSettings);
+            if (validationError) {
+                return {
+                    ok: false,
+                    state: "invalid",
+                    message: validationError
+                };
+            }
+            return {
+                ok: true,
+                state: "available",
+                settings: freezeModuleSettings(parsedSettings)
+            };
+        }
+        function getModuleSettings() {
+            const result = readModuleSettings();
+            return result.ok ? result.settings : null;
+        }
+        function getUserModuleEnabledState(moduleId) {
+            if (!getModuleById(moduleId)) {
+                return null;
+            }
+            const result = readModuleSettings();
+            if (!result.ok || !Object.prototype.hasOwnProperty.call(result.settings.enabledById, moduleId)) {
+                return null;
+            }
+            return result.settings.enabledById[moduleId];
+        }
+        function isModuleEffectivelyEnabled(moduleId) {
+            let currentModule = getModuleById(moduleId);
+            if (!currentModule) {
+                return false;
+            }
+            if (protectedModuleIds.has(moduleId)) {
+                return true;
+            }
+            const result = readModuleSettings();
+            if (!result.ok) {
+                return false;
+            }
+            const visited = new Set();
+            while (currentModule) {
+                if (visited.has(currentModule.id) ||
+                    result.settings.enabledById[currentModule.id] === false) {
+                    return false;
+                }
+                visited.add(currentModule.id);
+                if (currentModule.parentId === null) {
+                    return true;
+                }
+                currentModule = getModuleById(currentModule.parentId);
+                if (!currentModule) {
+                    return false;
+                }
+            }
+            return false;
+        }
+        function setModuleEnabled(moduleId, enabled) {
+            if (!getModuleById(moduleId)) {
+                return { ok: false, state: "unknown-module", message: `未知模块 ID“${String(moduleId)}”。` };
+            }
+            if (typeof enabled !== "boolean") {
+                return { ok: false, state: "invalid-value", message: "模块启用状态必须是布尔值。" };
+            }
+            if (!enabled && protectedModuleIds.has(moduleId)) {
+                return { ok: false, state: "protected-module", message: "Data Center 和 Module Management Center 受保护，不能停用。" };
+            }
+
+            const currentResult = readModuleSettings();
+            if (!currentResult.ok) {
+                return { ok: false, state: currentResult.state, message: currentResult.message };
+            }
+            const nextSettings = {
+                schemaVersion: moduleSettingsSchemaVersion,
+                enabledById: { ...currentResult.settings.enabledById }
+            };
+            if (enabled) {
+                delete nextSettings.enabledById[moduleId];
+            } else {
+                nextSettings.enabledById[moduleId] = false;
+            }
+            const validationError = validateModuleSettings(nextSettings);
+            if (validationError) {
+                return { ok: false, state: "invalid", message: validationError };
+            }
+
+            const serializedSettings = JSON.stringify(nextSettings);
+            try {
+                localStorage.setItem(moduleSettingsStorageKey, serializedSettings);
+                if (localStorage.getItem(moduleSettingsStorageKey) !== serializedSettings) {
+                    return {
+                        ok: false,
+                        state: "verification-failed",
+                        message: "模块设置写入后校验失败；请检查浏览器存储状态。"
+                    };
+                }
+            } catch (error) {
+                return {
+                    ok: false,
+                    state: "storage-write-failed",
+                    message: `无法保存模块设置：${error.message || "浏览器存储写入失败。"}`
+                };
+            }
+            return {
+                ok: true,
+                state: "saved",
+                message: enabled ? "模块已启用。" : "模块已停用。",
+                settings: freezeModuleSettings(nextSettings)
+            };
+        }
+        function getModuleSettingsStatus() {
+            const result = readModuleSettings();
+            if (!result.ok) {
+                return {
+                    ok: false,
+                    state: result.state,
+                    message: result.message
+                };
+            }
+            return {
+                ok: true,
+                state: result.state,
+                message: "模块设置可用。",
+                settings: result.settings
+            };
+        }
+        function getModuleAccessStatus(moduleId) {
+            const module = getModuleById(moduleId);
+            if (!module) {
+                return {
+                    enabled: false,
+                    state: "unknown-module",
+                    message: `找不到模块“${String(moduleId)}”，无法确认访问状态。`
+                };
+            }
+            const settingsStatus = getModuleSettingsStatus();
+            if (!settingsStatus.ok) {
+                return {
+                    enabled: false,
+                    state: settingsStatus.state,
+                    message: `模块设置异常，${module.name}暂不可用：${settingsStatus.message}`
+                };
+            }
+            if (isModuleEffectivelyEnabled(moduleId)) {
+                return { enabled: true, state: "enabled", message: "" };
+            }
+            const userEnabled = getUserModuleEnabledState(moduleId);
+            if (userEnabled === false) {
+                return {
+                    enabled: false,
+                    state: "disabled",
+                    message: `${module.name}已停用。请在 Module Management Center 重新启用后再使用。`
+                };
+            }
+            let parent = module.parentId === null ? null : getModuleById(module.parentId);
+            while (parent) {
+                if (!isModuleEffectivelyEnabled(parent.id)) {
+                    return {
+                        enabled: false,
+                        state: "parent-disabled",
+                        message: `${module.name}因父模块“${parent.name}”停用而不可用。`
+                    };
+                }
+                parent = parent.parentId === null ? null : getModuleById(parent.parentId);
+            }
+            return {
+                enabled: false,
+                state: "disabled",
+                message: `${module.name}当前不可用。`
+            };
+        }
+        function requireModuleAccess(moduleId, statusElement) {
+            const access = getModuleAccessStatus(moduleId);
+            if (!access.enabled && statusElement) {
+                setModuleAccessMessage(statusElement, access);
+            }
+            return access.enabled;
         }
         // Projects is static presentation content and is intentionally not a manageable module.
         function validateModuleRegistry(modules = moduleRegistry) {
@@ -4464,6 +4877,8 @@
         }
         const aiConversation = [];
         let aiRequestPending = false;
+        let aiRequestController = null;
+        let aiAssistantAccessVersion = 0;
         const planningDate = document.getElementById("daily-planning-date");
         const planningPendingCount = document.getElementById("planning-pending-count");
         const planningHighCount = document.getElementById("planning-high-count");
@@ -4483,7 +4898,10 @@
         const planningAIModel = document.getElementById("planning-ai-model");
         const planningConfirmButton = document.getElementById("planning-confirm");
         const planningStatus = document.getElementById("planning-status");
+        const dailyPlanningSection = document.querySelector(".daily-planning");
         let dailyPlanningAIRequestPending = false;
+        let dailyPlanningRequestController = null;
+        let dailyPlanningAccessVersion = 0;
         let dailyPlanningAnalysis = null;
         const taskOrganizerPanel = document.getElementById("task-organizer");
         const taskOrganizerForm = document.getElementById("task-organizer-form");
@@ -4498,6 +4916,8 @@
         let taskOrganizerImportedVersion = 0;
         let taskOrganizerPreviewSource = "";
         let taskOrganizerAIRequestPending = false;
+        let taskOrganizerRequestController = null;
+        let taskOrganizerAccessVersion = 0;
         const taskOrganizerImportedSources = new Set();
         let taskOrganizerSubmitting = false;
         let dailyPlanningReady = false;
@@ -4520,6 +4940,8 @@
         let notesStorageReady = false;
         const ideasStorageKey = "my-tech-lab-ideas";
         const ideasWorkspace = document.getElementById("ideas-workspace");
+        const ideasAccessStatus = document.getElementById("ideas-access-status");
+        const ideasReturnHomeButton = document.getElementById("ideas-return-home");
         const ideasTabs = [...document.querySelectorAll(".ideas-tab")];
         const ideaForm = document.getElementById("idea-form");
         const ideaTitleInput = document.getElementById("idea-title");
@@ -4532,6 +4954,9 @@
         let ideas = [];
         let ideasStorageReady = false;
         let editingIdeaId = null;
+        let ideasAccessAvailable = null;
+        let ideasAccessVersion = 0;
+        let ideasAIRequestController = null;
         const documentStorageKey = "my-tech-lab-document-summaries";
         const documentWorkspace = document.getElementById("document-summary-workspace");
         const documentTitleInput = document.getElementById("document-title");
@@ -4564,6 +4989,8 @@
         let currentDocumentModel = "";
         let currentDocumentAnalysisMode = "full";
         let documentAnalysisPending = false;
+        let documentAnalysisController = null;
+        let documentAccessVersion = 0;
         const tasksStorageKey = "my-tech-lab-tasks";
         const taskForm = document.getElementById("task-form");
         const taskInput = document.getElementById("task-input");
@@ -4610,7 +5037,9 @@
         const moduleManagementDetailHeading = document.getElementById("module-management-detail-heading");
         const moduleManagementDetailFields = document.getElementById("module-management-detail-fields");
         const moduleManagementBackButton = document.getElementById("module-management-back");
+        const moduleManagementFeedback = document.getElementById("module-management-feedback");
         let moduleManagementSelectedCategory = null;
+        let moduleManagementSelectedModuleId = null;
         const dataCenterOverview = document.getElementById("data-center-overview");
         const dataCenterExportButton = document.getElementById("data-center-export");
         const dataCenterRefreshButton = document.getElementById("data-center-refresh");
@@ -5349,6 +5778,115 @@
             setDataCenterStatus(`五类 My Tech Lab 本地数据已清空。备份文件：${completedBackupFilename}。其他网站数据和应用代码未更改。`);
         }
 
+        function setModuleAccessMessage(statusElement, access) {
+            if (!statusElement) {
+                return;
+            }
+            statusElement.textContent = access.message;
+            statusElement.setAttribute("role", "alert");
+            statusElement.dataset.moduleAccessBlocked = access.state;
+        }
+
+        function clearModuleAccessMessage(statusElement) {
+            if (statusElement?.dataset.moduleAccessBlocked) {
+                statusElement.textContent = "";
+                statusElement.removeAttribute("role");
+                delete statusElement.dataset.moduleAccessBlocked;
+            }
+        }
+
+        function updateDailyFocusControls() {
+            const access = getModuleAccessStatus("daily-focus");
+            const canEdit = access.enabled && dailyFocusStorageReady;
+            dailyFocusInputs.forEach((input) => { input.disabled = !canEdit; });
+            dailyFocusClearButtons.forEach((button) => { button.disabled = !canEdit; });
+            if (!access.enabled) {
+                setModuleAccessMessage(dailyFocusStatus, access);
+            } else {
+                clearModuleAccessMessage(dailyFocusStatus);
+            }
+        }
+
+        function updateModuleAccessUI() {
+            const moduleIds = ["quick-notes", "task-manager", "daily-focus"];
+            moduleIds.forEach((moduleId) => {
+                const module = getModuleById(moduleId);
+                const navigationLink = module?.entry.navigationSelector
+                    ? document.querySelector(module.entry.navigationSelector)
+                    : null;
+                const access = getModuleAccessStatus(moduleId);
+                const statusElement = moduleId === "quick-notes"
+                    ? notesStatus
+                    : moduleId === "task-manager"
+                        ? tasksStatus
+                        : dailyFocusStatus;
+                if (!access.enabled) {
+                    setModuleAccessMessage(statusElement, access);
+                } else {
+                    clearModuleAccessMessage(statusElement);
+                }
+
+                if (navigationLink) {
+                    let stateLabel = navigationLink.querySelector(".module-nav-state");
+                    if (!stateLabel) {
+                        stateLabel = document.createElement("span");
+                        stateLabel.className = "module-nav-state";
+                        navigationLink.append(stateLabel);
+                    }
+                    navigationLink.dataset.moduleAccessLink = moduleId;
+                    navigationLink.setAttribute("aria-disabled", String(!access.enabled));
+                    navigationLink.title = access.enabled ? "" : access.message;
+                    stateLabel.hidden = access.enabled;
+                    stateLabel.textContent = access.state === "disabled" || access.state === "parent-disabled"
+                        ? "已停用"
+                        : "设置异常";
+                    navigationLink.classList.toggle("module-nav-link-unavailable", !access.enabled);
+                    if (access.enabled) {
+                        navigationLink.removeAttribute("aria-label");
+                    } else {
+                        navigationLink.setAttribute(
+                            "aria-label",
+                            `${navigationLink.textContent.replace(stateLabel.textContent, "").trim()}，${access.message}`
+                        );
+                    }
+                }
+            });
+
+            const notesAccess = getModuleAccessStatus("quick-notes");
+            noteInput.disabled = !notesAccess.enabled || !notesStorageReady;
+            notesSave.disabled = !notesAccess.enabled || !notesStorageReady;
+            notesList.querySelectorAll(".note-delete").forEach((button) => {
+                button.disabled = !notesAccess.enabled || !notesStorageReady;
+            });
+            const tasksAccess = getModuleAccessStatus("task-manager");
+            taskInput.disabled = !tasksAccess.enabled || !tasksStorageReady;
+            taskPriority.disabled = !tasksAccess.enabled || !tasksStorageReady;
+            taskAdd.disabled = !tasksAccess.enabled || !tasksStorageReady;
+            document.querySelectorAll(".task-checkbox, .task-delete").forEach((control) => {
+                control.disabled = !tasksAccess.enabled || !tasksStorageReady;
+            });
+            updateDailyFocusControls();
+            updateAssistantAccessUI();
+            updateDailyPlanningAccessUI();
+            updateTaskOrganizationAccessUI();
+            updateDocumentSummaryAccessUI();
+            updateIdeasWritingAccessUI();
+        }
+
+        function showUnavailableNavigationMessage(moduleId) {
+            const access = getModuleAccessStatus(moduleId);
+            if (access.enabled) {
+                return false;
+            }
+            const statusElement = moduleId === "quick-notes"
+                ? notesStatus
+                : moduleId === "task-manager"
+                    ? tasksStatus
+                    : dailyFocusStatus;
+            setModuleAccessMessage(statusElement, access);
+            return true;
+        }
+
         function createModuleManagementStat(label, value) {
             const card = document.createElement("article");
             card.className = "module-management-stat";
@@ -5437,6 +5975,55 @@
             return badge;
         }
 
+        function getModuleManagementRuntimeState(module) {
+            const settingsStatus = getModuleSettingsStatus();
+            const parent = module.parentId === null ? null : getModuleById(module.parentId);
+            const parentEnabled = parent ? isModuleEffectivelyEnabled(parent.id) : true;
+            if (!settingsStatus.ok) {
+                return {
+                    settingsAvailable: false,
+                    settingsMessage: settingsStatus.message,
+                    userEnabled: null,
+                    effectiveEnabled: protectedModuleIds.has(module.id),
+                    parent,
+                    parentEnabled
+                };
+            }
+
+            const userEnabled = getUserModuleEnabledState(module.id) !== false;
+            return {
+                settingsAvailable: true,
+                settingsMessage: "",
+                userEnabled,
+                effectiveEnabled: isModuleEffectivelyEnabled(module.id),
+                parent,
+                parentEnabled
+            };
+        }
+
+        function getModuleManagementUnavailableReasons(module, runtimeState) {
+            const reasons = [];
+            if (!runtimeState.settingsAvailable) {
+                reasons.push(runtimeState.settingsMessage);
+                return reasons;
+            }
+            if (!runtimeState.userEnabled) {
+                reasons.push("用户已停用此模块。");
+            }
+            if (runtimeState.parent && !runtimeState.parentEnabled) {
+                reasons.push(`因父模块“${runtimeState.parent.name}”停用而不可用。`);
+            }
+            if (!runtimeState.effectiveEnabled && reasons.length === 0) {
+                reasons.push("模块当前不可用，无法从现有状态确定具体原因。");
+            }
+            return reasons;
+        }
+
+        function setModuleManagementFeedback(message, state = "success") {
+            moduleManagementFeedback.textContent = message;
+            moduleManagementFeedback.dataset.state = state;
+        }
+
         function renderModuleManagementList() {
             const listModules = moduleManagementStatusFilter.value === "all"
                 ? getAllModules()
@@ -5467,15 +6054,44 @@
                 cards.className = "module-management-list";
 
                 categoryModules.forEach((module) => {
-                    const card = document.createElement("button");
+                    const card = document.createElement("article");
                     card.className = "module-management-card";
-                    card.type = "button";
                     card.dataset.moduleId = module.id;
-                    card.setAttribute("aria-label", `查看 ${module.name} 模块详情`);
+                    const runtimeState = getModuleManagementRuntimeState(module);
+                    const header = document.createElement("div");
+                    header.className = "module-management-card-header";
 
-                    const title = document.createElement("span");
+                    const title = document.createElement("button");
                     title.className = "module-management-card-title";
+                    title.type = "button";
+                    title.dataset.moduleDetails = module.id;
+                    title.setAttribute("aria-label", `查看 ${module.name} 模块详情`);
                     title.textContent = module.name;
+                    const control = document.createElement("div");
+                    control.className = "module-management-card-control";
+                    if (protectedModuleIds.has(module.id)) {
+                        const protectedLabel = document.createElement("span");
+                        protectedLabel.className = "module-management-protected";
+                        protectedLabel.textContent = "系统保护";
+                        control.append(protectedLabel);
+                    } else if (runtimeState.settingsAvailable) {
+                        const toggleLabel = document.createElement("label");
+                        toggleLabel.className = "module-management-toggle";
+                        const toggleText = document.createElement("span");
+                        toggleText.textContent = runtimeState.userEnabled ? "已启用" : "已停用";
+                        const toggle = document.createElement("input");
+                        toggle.type = "checkbox";
+                        toggle.checked = runtimeState.userEnabled;
+                        toggle.dataset.moduleToggle = module.id;
+                        toggle.setAttribute("aria-label", `${module.name}：${runtimeState.userEnabled ? "已启用" : "已停用"}`);
+                        toggleLabel.append(toggleText, toggle);
+                        control.append(toggleLabel);
+                    } else {
+                        const unavailable = createModuleManagementBadge("设置不可用");
+                        control.append(unavailable);
+                    }
+                    header.append(title, control);
+
                     const description = document.createElement("span");
                     description.className = "module-management-card-description";
                     description.textContent = module.description;
@@ -5484,8 +6100,25 @@
                     metadata.append(
                         createModuleManagementBadge(getModuleCategoryDefinition(module.category).name),
                         createModuleManagementBadge(module.type),
-                        createModuleManagementBadge(module.status)
+                        createModuleManagementBadge(`开发状态：${module.status}`)
                     );
+                    const state = document.createElement("span");
+                    state.className = "module-management-card-state";
+                    state.append(
+                        createModuleManagementBadge(
+                            `用户设置：${runtimeState.userEnabled === null ? "无法读取" : runtimeState.userEnabled ? "启用" : "停用"}`
+                        ),
+                        createModuleManagementBadge(
+                            `有效启用：${runtimeState.effectiveEnabled ? "是" : "否"}`
+                        )
+                    );
+                    const reasons = getModuleManagementUnavailableReasons(module, runtimeState);
+                    if (reasons.length > 0) {
+                        const reason = document.createElement("span");
+                        reason.className = "module-management-card-reason";
+                        reason.textContent = reasons.join(" ");
+                        state.append(reason);
+                    }
                     const relation = document.createElement("span");
                     relation.className = "module-management-card-relation";
                     if (module.parentId !== null) {
@@ -5497,7 +6130,7 @@
                             ? `包含子模块：${children.map((child) => child.name).join("、")}`
                             : "独立模块";
                     }
-                    card.append(title, description, metadata, relation);
+                    card.append(header, description, metadata, state, relation);
                     cards.append(card);
                     visibleCount += 1;
                 });
@@ -5537,6 +6170,8 @@
 
             const parent = module.parentId === null ? null : getModuleById(module.parentId);
             const children = getModulesByParentId(module.id);
+            const runtimeState = getModuleManagementRuntimeState(module);
+            const unavailableReasons = getModuleManagementUnavailableReasons(module, runtimeState);
             const entry = document.createElement("div");
             Object.entries(module.entry || {}).forEach(([key, value]) => {
                 const line = document.createElement("div");
@@ -5577,8 +6212,35 @@
                         : "无"
                 ),
                 createModuleManagementDetailField("实现状态", module.status || "未配置"),
+                createModuleManagementDetailField(
+                    "用户启用状态",
+                    runtimeState.userEnabled === null
+                        ? "无法读取模块设置"
+                        : runtimeState.userEnabled
+                            ? "已启用（默认或用户设置）"
+                            : "已停用（用户设置）"
+                ),
+                createModuleManagementDetailField(
+                    "有效启用状态",
+                    runtimeState.effectiveEnabled ? "启用" : "停用 / 不可用"
+                ),
+                createModuleManagementDetailField(
+                    "父模块状态",
+                    parent
+                        ? runtimeState.settingsAvailable
+                            ? `用户设置：${getUserModuleEnabledState(parent.id) === false ? "停用" : "启用"}；有效状态：${runtimeState.parentEnabled ? "启用" : "停用"}`
+                            : "无法读取模块设置"
+                        : "无父模块"
+                ),
+                createModuleManagementDetailField(
+                    "当前不可用原因",
+                    unavailableReasons.length > 0
+                        ? unavailableReasons.join(" ")
+                        : "无；按当前用户设置和父模块状态有效启用。实际访问入口不受本阶段状态设置影响。"
+                ),
                 createModuleManagementDetailField("数据归属", module.dataOwnership || "未配置")
             );
+            moduleManagementSelectedModuleId = module.id;
             moduleManagementContent.hidden = true;
             moduleManagementDetails.hidden = false;
             moduleManagementBackButton.focus();
@@ -5587,7 +6249,26 @@
         function closeModuleManagementDetails() {
             moduleManagementDetails.hidden = true;
             moduleManagementContent.hidden = false;
+            moduleManagementSelectedModuleId = null;
             moduleManagementCategoryList.querySelector("button")?.focus();
+        }
+
+        function handleModuleManagementToggle(toggle) {
+            const moduleId = toggle.dataset.moduleToggle;
+            if (!moduleId) {
+                return;
+            }
+            const result = setModuleEnabled(moduleId, toggle.checked);
+            if (result.ok) {
+                setModuleManagementFeedback(result.message);
+            } else {
+                setModuleManagementFeedback(`模块状态保存失败：${result.message}`, "error");
+            }
+            updateModuleAccessUI();
+            renderModuleManagementList();
+            if (!moduleManagementDetails.hidden && moduleManagementSelectedModuleId) {
+                showModuleManagementDetails(moduleManagementSelectedModuleId);
+            }
         }
 
         function renderModuleManagementCenter() {
@@ -5619,13 +6300,38 @@
             renderModuleManagementList();
         });
         moduleManagementStatusFilter.addEventListener("change", renderModuleManagementList);
+        moduleManagementList.addEventListener("change", (event) => {
+            const toggle = event.target.closest("[data-module-toggle]");
+            if (toggle instanceof HTMLInputElement) {
+                handleModuleManagementToggle(toggle);
+            }
+        });
         moduleManagementList.addEventListener("click", (event) => {
-            const card = event.target.closest("[data-module-id]");
-            if (card) {
-                showModuleManagementDetails(card.dataset.moduleId);
+            const detailsButton = event.target.closest("[data-module-details]");
+            if (detailsButton) {
+                showModuleManagementDetails(detailsButton.dataset.moduleDetails);
             }
         });
         moduleManagementBackButton.addEventListener("click", closeModuleManagementDetails);
+
+        document.querySelector(".site-nav").addEventListener("click", (event) => {
+            const link = event.target.closest("[data-module-access-link]");
+            if (!link || !showUnavailableNavigationMessage(link.dataset.moduleAccessLink)) {
+                return;
+            }
+            event.preventDefault();
+        });
+
+        window.addEventListener("storage", (event) => {
+            if (event.key !== moduleSettingsStorageKey && event.key !== null) {
+                return;
+            }
+            updateModuleAccessUI();
+            renderModuleManagementList();
+            if (!moduleManagementDetails.hidden && moduleManagementSelectedModuleId) {
+                showModuleManagementDetails(moduleManagementSelectedModuleId);
+            }
+        });
 
         dataCenterExportButton.addEventListener("click", exportDataCenterBackup);
         dataCenterRefreshButton.addEventListener("click", () => {
@@ -5996,6 +6702,10 @@
             removeButton.textContent = "删除";
             removeButton.setAttribute("aria-label", `删除预览任务 ${index + 1}`);
             removeButton.addEventListener("click", () => {
+                if (!requireTaskOrganizationAccess(taskOrganizerStatus)) {
+                    updateTaskOrganizationAccessUI();
+                    return;
+                }
                 item.remove();
                 updateTaskImportButton();
                 if (!taskPreviewList.children.length) taskOrganizerStatus.textContent = "预览已清空。";
@@ -6018,16 +6728,31 @@
             const items = [...taskPreviewList.querySelectorAll(".task-preview-item")];
             const allConfirmed = items.length > 0 &&
                 items.every((item) => item.querySelector(".task-preview-confirm-checkbox").checked);
-            taskImportButton.disabled = !tasksStorageReady ||
+            const organizationEnabled = getModuleAccessStatus("ai-assistant").enabled &&
+                getModuleAccessStatus("task-organization").enabled;
+            const taskManagerAccess = getModuleAccessStatus("task-manager");
+            taskImportButton.disabled = !organizationEnabled ||
+                !taskManagerAccess.enabled ||
+                !tasksStorageReady ||
                 taskOrganizerAIRequestPending ||
                 !taskOrganizerPreviewVersion ||
                 taskOrganizerImportedVersion === taskOrganizerPreviewVersion ||
                 taskOrganizerPreviewSource !== taskOrganizerInput.value.trim() ||
                 !allConfirmed;
-            taskOrganizerCopyButton.disabled = items.length === 0;
+            taskOrganizerCopyButton.disabled = !organizationEnabled ||
+                taskOrganizerAIRequestPending || items.length === 0;
+            if (organizationEnabled && !taskManagerAccess.enabled) {
+                setModuleAccessMessage(taskOrganizerStatus, taskManagerAccess);
+            } else if (organizationEnabled) {
+                clearModuleAccessMessage(taskOrganizerStatus);
+            }
         }
 
         function renderTaskOrganizationPreview(parsedTasks) {
+            if (!requireTaskOrganizationAccess()) {
+                updateTaskOrganizationAccessUI();
+                return false;
+            }
             taskPreviewList.replaceChildren();
             parsedTasks.forEach((task, index) => {
                 taskPreviewList.append(createTaskPreviewItem(task, index));
@@ -6036,9 +6761,14 @@
             taskOrganizerCopyButton.disabled = parsedTasks.length === 0;
             taskImportButton.textContent = "确认并添加到 Task Manager";
             updateTaskImportButton();
+            return true;
         }
 
         function copyTaskOrganizationPreview() {
+            if (!requireTaskOrganizationAccess(taskOrganizerStatus)) {
+                updateTaskOrganizationAccessUI();
+                return;
+            }
             const items = [...taskPreviewList.querySelectorAll(".task-preview-item")];
             if (!items.length) {
                 taskOrganizerStatus.textContent = "没有可复制的任务分析结果。";
@@ -6061,6 +6791,10 @@
                 ].join("\n");
             }).join("\n\n");
             const fallbackCopy = (error) => {
+                if (!requireTaskOrganizationAccess(taskOrganizerStatus)) {
+                    updateTaskOrganizationAccessUI();
+                    return;
+                }
                 const input = document.createElement("textarea");
                 input.value = text;
                 input.setAttribute("readonly", "");
@@ -6083,7 +6817,13 @@
             };
             if (navigator.clipboard?.writeText) {
                 navigator.clipboard.writeText(text).then(
-                    () => { taskOrganizerStatus.textContent = "任务分析结果已复制。"; },
+                    () => {
+                        if (requireTaskOrganizationAccess(taskOrganizerStatus)) {
+                            taskOrganizerStatus.textContent = "任务分析结果已复制。";
+                        } else {
+                            updateTaskOrganizationAccessUI();
+                        }
+                    },
                     (error) => fallbackCopy(error)
                 );
             } else {
@@ -6191,6 +6931,10 @@
 
         async function organizeTasks(event) {
             event.preventDefault();
+            if (!requireTaskOrganizationAccess(taskOrganizerStatus)) {
+                updateTaskOrganizationAccessUI();
+                return;
+            }
             if (taskOrganizerAIRequestPending) return;
             const source = taskOrganizerInput.value.trim();
             if (!source) {
@@ -6223,6 +6967,9 @@
             taskOrganizerStatus.setAttribute("role", "status");
             taskOrganizerStatus.textContent = "正在通过 Cloudflare Worker 分析任务和日期，请稍候……";
             const controller = new AbortController();
+            const requestVersion = taskOrganizerAccessVersion;
+            taskOrganizerRequestController = controller;
+            updateTaskOrganizationAccessUI();
             const timeoutId = window.setTimeout(() => controller.abort(), 90000);
 
             try {
@@ -6234,12 +6981,14 @@
                         messages: [{ role: "user", content: buildTaskOrganizationPrompt(source) }]
                     })
                 });
+                if (!isTaskOrganizationRequestAllowed(requestVersion)) return;
                 let result;
                 try {
                     result = await response.json();
                 } catch (error) {
                     throw new Error(`AI 服务返回了无效响应（HTTP ${response.status}）。`);
                 }
+                if (!isTaskOrganizationRequestAllowed(requestVersion)) return;
                 if (!response.ok) {
                     throw new Error(`AI 服务暂时不可用（HTTP ${response.status}），请稍后重试。`);
                 }
@@ -6256,6 +7005,7 @@
                 } catch (error) {
                     throw new Error("AI 返回的任务预览格式无法识别，请重新分析。");
                 }
+                if (!isTaskOrganizationRequestAllowed(requestVersion)) return;
                 if (Array.isArray(parsed?.tasks) && parsed.tasks.length === 0) {
                     taskPreviewList.replaceChildren();
                     taskOrganizerPreview.hidden = true;
@@ -6270,7 +7020,7 @@
                 taskOrganizerPreviewVersion += 1;
                 taskOrganizerImportedVersion = 0;
                 taskOrganizerPreviewSource = source;
-                renderTaskOrganizationPreview(parsedTasks);
+                if (!renderTaskOrganizationPreview(parsedTasks)) return;
                 const model = typeof result.model === "string" && result.model ? `（${result.model}）` : "";
                 const notes = typeof parsed.notes === "string" && parsed.notes.trim()
                     ? ` 备注：${parsed.notes.trim()}`
@@ -6278,6 +7028,10 @@
                 taskOrganizerStatus.textContent =
                     `已生成 ${parsedTasks.length} 项 AI 任务预览${model}。原文未更改；检查、编辑并逐项勾选确认后再导入。${notes}`;
             } catch (error) {
+                if (!isTaskOrganizationRequestAllowed(requestVersion)) {
+                    updateTaskOrganizationAccessUI();
+                    return;
+                }
                 const message = error.name === "AbortError"
                     ? "AI 请求等待超时。原文和 Task Manager 均未更改，请稍后重试。"
                     : error instanceof TypeError
@@ -6288,11 +7042,13 @@
                 console.error("Task Organization AI request failed:", error);
             } finally {
                 window.clearTimeout(timeoutId);
+                if (taskOrganizerRequestController === controller) {
+                    taskOrganizerRequestController = null;
+                }
                 taskOrganizerAIRequestPending = false;
-                taskOrganizeButton.disabled = false;
                 taskOrganizeButton.textContent = "AI 分析并生成预览";
                 taskOrganizerPanel.removeAttribute("aria-busy");
-                updateTaskImportButton();
+                updateTaskOrganizationAccessUI();
             }
         }
 
@@ -6314,6 +7070,14 @@
         }
 
         function importOrganizedTasks() {
+            if (!requireTaskOrganizationAccess(taskOrganizerStatus)) {
+                updateTaskOrganizationAccessUI();
+                return;
+            }
+            if (!requireModuleAccess("task-manager", taskOrganizerStatus)) {
+                updateTaskOrganizationAccessUI();
+                return;
+            }
             if (taskOrganizerSubmitting || !taskOrganizerPreviewVersion ||
                 taskOrganizerImportedVersion === taskOrganizerPreviewVersion) {
                 return;
@@ -6385,6 +7149,11 @@
                     taskImportButton.disabled = false;
                     return;
                 }
+                if (!requireTaskOrganizationAccess(taskOrganizerStatus) ||
+                    !requireModuleAccess("task-manager", taskOrganizerStatus)) {
+                    updateTaskOrganizationAccessUI();
+                    return;
+                }
                 if (persistTasks([...latestTasks, ...additions])) {
                     taskOrganizerImportedVersion = taskOrganizerPreviewVersion;
                     taskOrganizerImportedSources.add(taskOrganizerInput.value.trim());
@@ -6408,6 +7177,140 @@
             } finally {
                 taskOrganizerSubmitting = false;
                 taskOrganizerPanel.removeAttribute("aria-busy");
+            }
+        }
+
+        function requireTaskOrganizationAccess(statusElement = taskOrganizerStatus) {
+            return requireModuleAccess("ai-assistant", statusElement) &&
+                requireModuleAccess("task-organization", statusElement);
+        }
+
+        function isTaskOrganizationRequestAllowed(requestVersion) {
+            if (requestVersion !== taskOrganizerAccessVersion) {
+                if (requireTaskOrganizationAccess(taskOrganizerStatus)) {
+                    taskOrganizerStatus.textContent = "模块访问状态在分析期间发生变化；旧结果未应用，请重新分析。";
+                    taskOrganizerStatus.setAttribute("role", "status");
+                } else {
+                    updateTaskOrganizationAccessUI();
+                }
+                return false;
+            }
+            return requireTaskOrganizationAccess(taskOrganizerStatus);
+        }
+
+        function updateTaskOrganizationAccessUI() {
+            const assistantAccess = getModuleAccessStatus("ai-assistant");
+            const organizationAccess = getModuleAccessStatus("task-organization");
+            const taskManagerAccess = getModuleAccessStatus("task-manager");
+            const enabled = assistantAccess.enabled && organizationAccess.enabled;
+            const unavailableAccess = assistantAccess.enabled ? organizationAccess : assistantAccess;
+            const module = getModuleById("task-organization");
+            const shortcut = module?.entry.shortcutSelector
+                ? document.querySelector(module.entry.shortcutSelector)
+                : null;
+
+            if (!enabled) {
+                taskOrganizerAccessVersion += 1;
+                setModuleAccessMessage(taskOrganizerStatus, unavailableAccess);
+                taskOrganizerPanel.dataset.moduleAccessState = unavailableAccess.state;
+                taskOrganizerPanel.setAttribute("aria-disabled", "true");
+                taskOrganizerRequestController?.abort();
+            } else {
+                delete taskOrganizerPanel.dataset.moduleAccessState;
+                taskOrganizerPanel.removeAttribute("aria-disabled");
+                clearModuleAccessMessage(taskOrganizerStatus);
+                if (!taskManagerAccess.enabled) {
+                    setModuleAccessMessage(taskOrganizerStatus, taskManagerAccess);
+                }
+            }
+
+            if (shortcut) {
+                shortcut.disabled = !enabled;
+                shortcut.setAttribute("aria-disabled", String(!enabled));
+                shortcut.title = enabled ? "" : unavailableAccess.message;
+            }
+            taskOrganizerInput.disabled = !enabled;
+            taskOrganizeButton.disabled = !enabled || taskOrganizerAIRequestPending || !tasksStorageReady;
+            taskOrganizerCopyButton.disabled = !enabled ||
+                taskOrganizerAIRequestPending ||
+                !taskPreviewList.querySelector(".task-preview-item");
+            taskPreviewList.querySelectorAll("input, textarea, select, button").forEach((control) => {
+                const imported = taskOrganizerImportedVersion === taskOrganizerPreviewVersion &&
+                    taskOrganizerPreviewVersion > 0;
+                control.disabled = !enabled || taskOrganizerAIRequestPending || imported;
+            });
+            updateTaskImportButton();
+        }
+
+        function requireDailyPlanningAccess(statusElement) {
+            return requireModuleAccess("ai-assistant", statusElement) &&
+                requireModuleAccess("daily-planning", statusElement);
+        }
+
+        function requireDailyPlanningWriteAccess() {
+            if (!requireDailyPlanningAccess(planningStatus)) {
+                return false;
+            }
+            return requireModuleAccess("daily-focus", planningStatus);
+        }
+
+        function isDailyPlanningRequestAllowed(requestVersion) {
+            if (requestVersion !== dailyPlanningAccessVersion) {
+                if (requireDailyPlanningAccess(planningAIStatus)) {
+                    planningAIStatus.textContent = "模块访问状态在分析期间发生变化；旧结果未应用，请重新规划。";
+                    planningAIStatus.setAttribute("role", "status");
+                } else {
+                    updateDailyPlanningAccessUI();
+                }
+                return false;
+            }
+            return requireDailyPlanningAccess(planningAIStatus);
+        }
+
+        function updateDailyPlanningAccessUI() {
+            const assistantAccess = getModuleAccessStatus("ai-assistant");
+            const planningAccess = getModuleAccessStatus("daily-planning");
+            const focusAccess = getModuleAccessStatus("daily-focus");
+            const enabled = assistantAccess.enabled && planningAccess.enabled;
+            const planningModule = getModuleById("daily-planning");
+            const shortcut = planningModule?.entry.shortcutSelector
+                ? document.querySelector(planningModule.entry.shortcutSelector)
+                : null;
+
+            if (!enabled) {
+                dailyPlanningAccessVersion += 1;
+                const unavailableAccess = assistantAccess.enabled ? planningAccess : assistantAccess;
+                setModuleAccessMessage(planningAIStatus, unavailableAccess);
+                setModuleAccessMessage(planningStatus, unavailableAccess);
+                dailyPlanningSection.dataset.moduleAccessState = unavailableAccess.state;
+                dailyPlanningSection.setAttribute("aria-disabled", "true");
+                if (dailyPlanningRequestController) {
+                    dailyPlanningRequestController.abort();
+                }
+            } else {
+                clearModuleAccessMessage(planningAIStatus);
+                clearModuleAccessMessage(planningStatus);
+                delete dailyPlanningSection.dataset.moduleAccessState;
+                dailyPlanningSection.removeAttribute("aria-disabled");
+            }
+
+            if (shortcut) {
+                const unavailableAccess = assistantAccess.enabled ? planningAccess : assistantAccess;
+                shortcut.disabled = !enabled;
+                shortcut.setAttribute("aria-disabled", String(!enabled));
+                shortcut.title = enabled ? "" : unavailableAccess.message;
+            }
+            planningRefreshButton.disabled = !enabled || !dailyPlanningReady || dailyPlanningAIRequestPending;
+            planningAnalysisMode.disabled = !enabled || dailyPlanningAIRequestPending;
+            planningCopyButton.disabled = !enabled || !dailyPlanningAnalysis;
+            planningProposalInputs.forEach((input) => { input.disabled = !enabled; });
+            planningConfirmButton.disabled = !enabled || !focusAccess.enabled ||
+                !dailyPlanningReady || !dailyPlanningAnalysis || dailyPlanningAIRequestPending;
+
+            if (enabled && !focusAccess.enabled) {
+                setModuleAccessMessage(planningStatus, focusAccess);
+            } else if (enabled) {
+                clearModuleAccessMessage(planningStatus);
             }
         }
 
@@ -6528,6 +7431,10 @@
         }
 
         function renderDailyPlanningAI(analysis, data, model, mode) {
+            if (!requireDailyPlanningAccess(planningAIStatus)) {
+                updateDailyPlanningAccessUI();
+                return;
+            }
             document.getElementById("planning-ai-overview").textContent = analysis.overview;
             document.getElementById("planning-ai-priority-advice").textContent = analysis.priorityAdvice;
             document.getElementById("planning-ai-schedule-advice").textContent = analysis.scheduleAdvice;
@@ -6573,9 +7480,14 @@
             planningConfirmButton.disabled = !dailyPlanningReady;
             planningStatus.textContent = "三个 AI 重点建议已填入下方预览；Daily Focus 尚未更改。检查或编辑后再确认。";
             planningStatus.setAttribute("role", "status");
+            updateDailyPlanningAccessUI();
         }
 
         async function runDailyPlanningAnalysis() {
+            if (!requireDailyPlanningAccess(planningAIStatus)) {
+                updateDailyPlanningAccessUI();
+                return;
+            }
             if (dailyPlanningAIRequestPending) {
                 return;
             }
@@ -6620,12 +7532,11 @@
             planningCopyButton.disabled = true;
             planningConfirmButton.disabled = true;
             planningRefreshButton.textContent = "分析中……";
-            planningAIResults.hidden = true;
-            dailyPlanningAnalysis = null;
-            planningConfirmButton.disabled = true;
             planningAIStatus.setAttribute("role", "status");
             planningAIStatus.textContent = "正在读取真实任务并请求 DeepSeek 分析……";
             const controller = new AbortController();
+            const requestVersion = dailyPlanningAccessVersion;
+            dailyPlanningRequestController = controller;
             const timeoutId = window.setTimeout(() => controller.abort(), 90000);
 
             try {
@@ -6635,11 +7546,17 @@
                     signal: controller.signal,
                     body: JSON.stringify({ messages: [{ role: "user", content: prompt }] })
                 });
+                if (!isDailyPlanningRequestAllowed(requestVersion)) {
+                    return;
+                }
                 let result;
                 try {
                     result = await response.json();
                 } catch (error) {
                     throw new Error(`AI 服务返回了无效响应（HTTP ${response.status}）。`);
+                }
+                if (!isDailyPlanningRequestAllowed(requestVersion)) {
+                    return;
                 }
                 if (!response.ok) {
                     throw new Error(`AI 服务暂时不可用（HTTP ${response.status}），请稍后重试。`);
@@ -6667,7 +7584,12 @@
                 if (sourceData.tasks.length === 0) {
                     planningAIStatus.textContent += " 当前没有 Task Manager 任务，报告不会虚构待办。";
                 }
+                updateDailyPlanningAccessUI();
             } catch (error) {
+                if (!isDailyPlanningRequestAllowed(requestVersion)) {
+                    updateDailyPlanningAccessUI();
+                    return;
+                }
                 const message = error.name === "AbortError"
                     ? "规划请求等待超时。任务和每日重点未更改，请稍后重试。"
                     : error instanceof TypeError
@@ -6678,15 +7600,20 @@
                 console.error("Daily Planning AI request failed:", error);
             } finally {
                 window.clearTimeout(timeoutId);
+                if (dailyPlanningRequestController === controller) {
+                    dailyPlanningRequestController = null;
+                }
                 dailyPlanningAIRequestPending = false;
-                planningRefreshButton.disabled = !dailyPlanningReady;
-                planningAnalysisMode.disabled = false;
                 planningRefreshButton.textContent = "重新规划";
-                planningConfirmButton.disabled = !dailyPlanningReady || !dailyPlanningAnalysis;
+                updateDailyPlanningAccessUI();
             }
         }
 
         function copyDailyPlanningResult() {
+            if (!requireDailyPlanningAccess(planningAIStatus)) {
+                updateDailyPlanningAccessUI();
+                return;
+            }
             if (!dailyPlanningAnalysis) {
                 planningAIStatus.textContent = "请先生成规划结果，再复制。";
                 planningAIStatus.setAttribute("role", "alert");
@@ -6709,6 +7636,10 @@
                 `规划说明\n${analysis.rationale}`
             ].join("\n\n");
             const fallbackCopy = (error) => {
+                if (!requireDailyPlanningAccess(planningAIStatus)) {
+                    updateDailyPlanningAccessUI();
+                    return;
+                }
                 const input = document.createElement("textarea");
                 input.value = text;
                 input.setAttribute("readonly", "");
@@ -6733,7 +7664,13 @@
             };
             if (navigator.clipboard?.writeText) {
                 navigator.clipboard.writeText(text).then(
-                    () => { planningAIStatus.textContent = "规划结果已复制。"; },
+                    () => {
+                        if (requireDailyPlanningAccess(planningAIStatus)) {
+                            planningAIStatus.textContent = "规划结果已复制。";
+                        } else {
+                            updateDailyPlanningAccessUI();
+                        }
+                    },
                     (error) => fallbackCopy(error)
                 );
             } else {
@@ -6773,6 +7710,10 @@
         }
 
         function renderDailyPlanning(data, announce = false) {
+            if (!requireDailyPlanningAccess(planningAIStatus)) {
+                updateDailyPlanningAccessUI();
+                return false;
+            }
             const pendingTasksForToday = data.tasks.filter((task) => !task.completed);
             const highPriorityCount = pendingTasksForToday.filter((task) => task.priority === "high").length;
             const focusedPriorities = data.priorities.filter((priority) => priority.trim());
@@ -6826,11 +7767,18 @@
             planningStatus.textContent = announce
                 ? "已重新读取本地任务和今日重点。"
                 : "任务统计来自本地数据；请先生成并检查 AI 建议，再确认更新每日重点。";
+            updateDailyPlanningAccessUI();
+            return true;
         }
 
         function refreshDailyPlanning(announce = true) {
+            if (!requireDailyPlanningAccess(planningAIStatus)) {
+                updateDailyPlanningAccessUI();
+                return false;
+            }
             try {
                 renderDailyPlanning(readDailyPlanningData(), announce);
+                return true;
             } catch (error) {
                 dailyPlanningReady = false;
                 dailyPlanningSourceSignature = "";
@@ -6848,11 +7796,17 @@
                 planningStatus.textContent = "无法读取最新任务或每日重点，请检查本地数据后重试。";
                 planningStatus.setAttribute("role", "alert");
                 console.error("Daily Planning could not read local data:", error);
+                updateDailyPlanningAccessUI();
+                return false;
             }
         }
 
         function confirmDailyPlan(event) {
             event.preventDefault();
+            if (!requireDailyPlanningWriteAccess()) {
+                updateDailyPlanningAccessUI();
+                return;
+            }
             if (!dailyPlanningAnalysis) {
                 planningStatus.textContent = "请先生成并检查 AI 规划建议，再确认更新每日重点。";
                 planningStatus.setAttribute("role", "alert");
@@ -6881,6 +7835,10 @@
                 date: latestData.today,
                 priorities: planningProposalInputs.map((input) => input.value.trim())
             };
+            if (!requireDailyPlanningWriteAccess()) {
+                updateDailyPlanningAccessUI();
+                return;
+            }
             if (persistDailyFocus(updatedFocus)) {
                 dailyFocusInputs.forEach((input, index) => {
                     input.value = updatedFocus.priorities[index];
@@ -6892,6 +7850,7 @@
                 planningStatus.textContent = "重点未能保存，请检查浏览器存储设置后重试。";
                 planningStatus.setAttribute("role", "alert");
             }
+            updateDailyPlanningAccessUI();
         }
 
         function setDailyFocusUnavailable(message, error) {
@@ -6990,6 +7949,9 @@
         }
 
         function writeDailyFocusArchive(nextArchive, expectedRawValue) {
+            if (!requireModuleAccess("daily-focus", dailyFocusStatus)) {
+                throw new Error(dailyFocusStatus.textContent);
+            }
             validateDailyFocusArchive(nextArchive);
             const serialized = JSON.stringify(nextArchive);
             if (localStorage.getItem(dailyFocusStorageKey) !== expectedRawValue) {
@@ -7141,6 +8103,9 @@
         }
 
         function persistDailyFocus(nextFocus = dailyFocus) {
+            if (!requireModuleAccess("daily-focus", dailyFocusStatus)) {
+                return false;
+            }
             if (!nextFocus ||
                 !isDailyFocusDateKey(nextFocus.date) ||
                 !isDailyFocusPriorities(nextFocus.priorities)) {
@@ -7180,6 +8145,20 @@
             }
             try {
                 const { archive: savedArchive, rawValue, needsMigration } = readDailyFocusArchive();
+                const access = getModuleAccessStatus("daily-focus");
+                if (!access.enabled) {
+                    dailyFocus = {
+                        date: dateKey,
+                        priorities: savedArchive?.records[dateKey]
+                            ? [...savedArchive.records[dateKey].priorities]
+                            : ["", "", ""]
+                    };
+                    dailyFocusStorageReady = true;
+                    renderActiveDailyFocus();
+                    setModuleAccessMessage(dailyFocusStatus, access);
+                    updateDailyFocusControls();
+                    return true;
+                }
                 const archive = savedArchive
                     ? cloneDailyFocusArchive(savedArchive)
                     : createDailyFocusArchive(dateKey);
@@ -7207,6 +8186,7 @@
                 };
                 dailyFocusStorageReady = true;
                 renderActiveDailyFocus();
+                updateDailyFocusControls();
                 dailyFocusStatus.textContent = previousActiveDate && previousActiveDate !== dateKey
                     ? "The previous day's priorities were preserved. Today's saved priorities are ready."
                     : needsMigration
@@ -7232,10 +8212,15 @@
                 return;
             }
             dailyFocusStorageReady = true;
+            updateDailyFocusControls();
         }
 
         dailyFocusInputs.forEach((input, index) => {
             input.addEventListener("input", () => {
+                if (!requireModuleAccess("daily-focus", dailyFocusStatus)) {
+                    updateDailyFocusControls();
+                    return;
+                }
                 if (!dailyFocusStorageReady) {
                     return;
                 }
@@ -7257,6 +8242,10 @@
 
         dailyFocusClearButtons.forEach((button, index) => {
             button.addEventListener("click", () => {
+                if (!requireModuleAccess("daily-focus", dailyFocusStatus)) {
+                    updateDailyFocusControls();
+                    return;
+                }
                 if (!dailyFocusStorageReady) {
                     return;
                 }
@@ -7333,12 +8322,16 @@
         }
 
         function persistNotes(nextNotes) {
+            if (!requireModuleAccess("quick-notes", notesStatus)) {
+                return false;
+            }
             try {
                 localStorage.setItem(notesStorageKey, JSON.stringify(nextNotes));
                 notes = nextNotes;
                 renderNotes();
                 notesStatus.textContent = "Saved in this browser.";
                 notesStatus.setAttribute("role", "status");
+                delete notesStatus.dataset.moduleAccessBlocked;
                 return true;
             } catch (error) {
                 notesStatus.textContent = "Unable to save notes. Check browser storage settings and try again.";
@@ -7348,6 +8341,9 @@
         }
 
         function deleteNote(noteId) {
+            if (!requireModuleAccess("quick-notes", notesStatus)) {
+                return;
+            }
             if (!notesStorageReady) {
                 return;
             }
@@ -7382,6 +8378,10 @@
 
         notesForm.addEventListener("submit", (event) => {
             event.preventDefault();
+            if (!requireModuleAccess("quick-notes", notesStatus)) {
+                updateModuleAccessUI();
+                return;
+            }
             const text = noteInput.value.trim();
             if (!text) {
                 notesStatus.textContent = "Write a note before saving.";
@@ -7460,12 +8460,16 @@
         }
 
         function persistTasks(nextTasks) {
+            if (!requireModuleAccess("task-manager", tasksStatus)) {
+                return false;
+            }
             try {
                 localStorage.setItem(tasksStorageKey, JSON.stringify(nextTasks));
                 tasks = nextTasks;
                 renderTasks();
                 tasksStatus.textContent = "Tasks saved in this browser.";
                 tasksStatus.setAttribute("role", "status");
+                delete tasksStatus.dataset.moduleAccessBlocked;
                 return true;
             } catch (error) {
                 tasksStatus.textContent = "Unable to save tasks. Check browser storage settings and try again.";
@@ -7475,6 +8479,11 @@
         }
 
         function toggleTask(taskId) {
+            if (!requireModuleAccess("task-manager", tasksStatus)) {
+                renderTasks();
+                updateModuleAccessUI();
+                return;
+            }
             if (!tasksStorageReady) {
                 return;
             }
@@ -7485,6 +8494,10 @@
         }
 
         function deleteTask(taskId) {
+            if (!requireModuleAccess("task-manager", tasksStatus)) {
+                updateModuleAccessUI();
+                return;
+            }
             if (!tasksStorageReady) {
                 return;
             }
@@ -7520,6 +8533,10 @@
 
         taskForm.addEventListener("submit", (event) => {
             event.preventDefault();
+            if (!requireModuleAccess("task-manager", tasksStatus)) {
+                updateModuleAccessUI();
+                return;
+            }
             const text = taskInput.value.trim();
             if (!text) {
                 tasksStatus.textContent = "Enter a task before adding it.";
@@ -7648,6 +8665,10 @@
         }
 
         function showDocumentSummary(summary, recordId = null, model = "", mode = "full") {
+            if (!requireDocumentSummaryAccess(documentInputStatus)) {
+                updateDocumentSummaryAccessUI();
+                return false;
+            }
             setDocumentSummaryValues(summary);
             currentDocumentId = recordId;
             hasDocumentSummary = true;
@@ -7661,25 +8682,21 @@
                 `当前对应资料：“${documentTitleInput.value.trim() || "未命名资料"}” · 原文 ${sourceLength.toLocaleString()} 字符`;
             documentModelLabel.textContent = model ? `· ${model}` : "";
             documentSaveButton.disabled = !documentStorageReady;
+            updateDocumentSummaryAccessUI();
+            return true;
         }
 
         function setDocumentAnalysisPending(isPending) {
             documentAnalysisPending = isPending;
-            documentTitleInput.disabled = isPending;
-            documentSourceInput.disabled = isPending;
-            documentAnalysisMode.disabled = isPending;
-            documentAnalyzeButton.disabled = isPending;
-            documentClearButton.disabled = isPending;
-            document.getElementById("document-reorganize").disabled = isPending;
-            document.querySelectorAll(".document-history-open, .document-history-action, .document-copy-button, #document-copy-all")
-                .forEach((button) => { button.disabled = isPending; });
-            Object.values(documentResultInputs).forEach((input) => { input.disabled = isPending; });
-            documentSaveButton.disabled = isPending || !documentStorageReady ||
-                !hasDocumentSummary || documentSourceInput.value !== summarizedDocumentSource;
             documentAnalyzeButton.textContent = isPending ? "DeepSeek 分析中…" : "开始 AI 分析";
+            updateDocumentSummaryAccessUI();
         }
 
         function updateDocumentSourceState() {
+            if (!requireDocumentSummaryAccess(documentInputStatus)) {
+                updateDocumentSummaryAccessUI();
+                return;
+            }
             documentSourceCount.textContent =
                 `${Array.from(documentSourceInput.value).length.toLocaleString()} / ${documentMaximumCharacters.toLocaleString()} 字符。本地不截断资料；超过上限时请分段分析。`;
             if (!hasDocumentSummary) {
@@ -7695,6 +8712,10 @@
         }
 
         async function organizeCurrentDocument() {
+            if (!requireDocumentSummaryAccess(documentInputStatus)) {
+                updateDocumentSummaryAccessUI();
+                return false;
+            }
             if (documentAnalysisPending) {
                 return;
             }
@@ -7719,6 +8740,8 @@
             documentResultsStatus.textContent = "";
             setDocumentAnalysisPending(true);
             const controller = new AbortController();
+            const requestVersion = documentAccessVersion;
+            documentAnalysisController = controller;
             const timeoutId = window.setTimeout(() => controller.abort(), 90000);
 
             try {
@@ -7733,11 +8756,17 @@
                         }]
                     })
                 });
+                if (!isDocumentSummaryRequestAllowed(requestVersion)) {
+                    return false;
+                }
                 let result;
                 try {
                     result = await response.json();
                 } catch {
                     throw new Error(`Worker 返回了无效的 JSON 响应（HTTP ${response.status}）。`);
+                }
+                if (!isDocumentSummaryRequestAllowed(requestVersion)) {
+                    return false;
                 }
                 if (!response.ok) {
                     throw new Error(`AI 分析服务暂时不可用（HTTP ${response.status}）。请稍后重试。`);
@@ -7748,11 +8777,19 @@
 
                 const summary = parseDocumentAnalysisReply(result.reply);
                 const model = typeof result.model === "string" ? result.model : "";
-                showDocumentSummary(summary, recordId, model, mode);
+                if (!isDocumentSummaryRequestAllowed(requestVersion) ||
+                    !showDocumentSummary(summary, recordId, model, mode)) {
+                    return false;
+                }
                 documentInputStatus.textContent = "AI 分析完成。请核对原文中的数字、日期、专业术语和行动要求。";
                 documentInputStatus.setAttribute("role", "status");
                 documentResultsStatus.textContent = "五部分分析已生成，可编辑、复制或保存到历史。";
+                return true;
             } catch (error) {
+                if (!isDocumentSummaryRequestAllowed(requestVersion)) {
+                    updateDocumentSummaryAccessUI();
+                    return false;
+                }
                 const message = error.name === "AbortError"
                     ? "资料分析等待超时。原始资料未更改，请稍后重试或分段分析。"
                     : error instanceof TypeError
@@ -7761,19 +8798,31 @@
                 documentInputStatus.textContent = message;
                 documentInputStatus.setAttribute("role", "alert");
                 console.error("Document Summary analysis failed:", error);
+                return false;
             } finally {
                 window.clearTimeout(timeoutId);
+                if (documentAnalysisController === controller) {
+                    documentAnalysisController = null;
+                }
                 setDocumentAnalysisPending(false);
             }
         }
 
         function copyDocumentText(text, statusElement, successMessage) {
+            if (!requireDocumentSummaryAccess(statusElement)) {
+                updateDocumentSummaryAccessUI();
+                return;
+            }
             if (!text.trim()) {
                 statusElement.textContent = "没有可复制的内容。";
                 return;
             }
 
             const fallbackCopy = (error) => {
+                if (!requireDocumentSummaryAccess(statusElement)) {
+                    updateDocumentSummaryAccessUI();
+                    return;
+                }
                 const temporaryInput = document.createElement("textarea");
                 temporaryInput.value = text;
                 temporaryInput.setAttribute("readonly", "");
@@ -7801,7 +8850,13 @@
 
             if (navigator.clipboard?.writeText) {
                 navigator.clipboard.writeText(text).then(
-                    () => { statusElement.textContent = successMessage; },
+                    () => {
+                        if (requireDocumentSummaryAccess(statusElement)) {
+                            statusElement.textContent = successMessage;
+                        } else {
+                            updateDocumentSummaryAccessUI();
+                        }
+                    },
                     (error) => fallbackCopy(error)
                 );
             } else {
@@ -7851,6 +8906,10 @@
         }
 
         function persistDocumentHistory(nextHistory) {
+            if (!requireDocumentSummaryAccess(documentHistoryStatus)) {
+                updateDocumentSummaryAccessUI();
+                return false;
+            }
             try {
                 localStorage.setItem(documentStorageKey, JSON.stringify(nextHistory));
                 documentHistory = nextHistory;
@@ -7913,6 +8972,10 @@
         }
 
         function openDocumentRecord(recordId) {
+            if (!requireDocumentSummaryAccess(documentHistoryStatus)) {
+                updateDocumentSummaryAccessUI();
+                return;
+            }
             const record = documentHistory.find((item) => item.id === recordId);
             if (!record) {
                 documentHistoryStatus.textContent = "找不到这条历史资料，可能已被删除。";
@@ -7928,6 +8991,10 @@
         }
 
         function deleteDocumentRecord(recordId) {
+            if (!requireDocumentSummaryAccess(documentHistoryStatus)) {
+                updateDocumentSummaryAccessUI();
+                return;
+            }
             const record = documentHistory.find((item) => item.id === recordId);
             if (!record || !documentStorageReady) {
                 return;
@@ -7944,6 +9011,10 @@
         }
 
         function clearDocumentInput() {
+            if (!requireDocumentSummaryAccess(documentInputStatus)) {
+                updateDocumentSummaryAccessUI();
+                return;
+            }
             document.getElementById("document-input-form").reset();
             Object.values(documentResultInputs).forEach((input) => { input.value = ""; });
             documentResults.hidden = true;
@@ -7961,8 +9032,81 @@
             documentResultsStatus.textContent = "";
         }
 
+        function requireDocumentSummaryAccess(statusElement = documentInputStatus) {
+            return requireModuleAccess("ai-assistant", statusElement) &&
+                requireModuleAccess("document-summary", statusElement);
+        }
+
+        function isDocumentSummaryRequestAllowed(requestVersion) {
+            if (requestVersion !== documentAccessVersion) {
+                if (requireDocumentSummaryAccess(documentInputStatus)) {
+                    documentInputStatus.textContent = "模块访问状态在分析期间发生变化；旧结果未应用，请重新分析。";
+                    documentInputStatus.setAttribute("role", "status");
+                } else {
+                    updateDocumentSummaryAccessUI();
+                }
+                return false;
+            }
+            return requireDocumentSummaryAccess(documentInputStatus);
+        }
+
+        function updateDocumentSummaryAccessUI() {
+            const assistantAccess = getModuleAccessStatus("ai-assistant");
+            const documentAccess = getModuleAccessStatus("document-summary");
+            const enabled = assistantAccess.enabled && documentAccess.enabled;
+            const unavailableAccess = assistantAccess.enabled ? documentAccess : assistantAccess;
+            const module = getModuleById("document-summary");
+            const shortcut = module?.entry.shortcutSelector
+                ? document.querySelector(module.entry.shortcutSelector)
+                : null;
+
+            if (!enabled) {
+                documentAccessVersion += 1;
+                [documentInputStatus, documentResultsStatus, documentHistoryStatus].forEach((statusElement) => {
+                    setModuleAccessMessage(statusElement, unavailableAccess);
+                });
+                documentWorkspace.dataset.moduleAccessState = unavailableAccess.state;
+                documentWorkspace.setAttribute("aria-disabled", "true");
+                documentAnalysisController?.abort();
+            } else {
+                delete documentWorkspace.dataset.moduleAccessState;
+                documentWorkspace.removeAttribute("aria-disabled");
+                [documentInputStatus, documentResultsStatus, documentHistoryStatus].forEach(clearModuleAccessMessage);
+            }
+
+            if (shortcut) {
+                shortcut.disabled = !enabled;
+                shortcut.setAttribute("aria-disabled", String(!enabled));
+                shortcut.title = enabled ? "" : unavailableAccess.message;
+            }
+
+            const controlsDisabled = !enabled || documentAnalysisPending;
+            documentTitleInput.disabled = controlsDisabled;
+            documentSourceInput.disabled = controlsDisabled;
+            documentAnalysisMode.disabled = controlsDisabled;
+            documentAnalyzeButton.disabled = controlsDisabled;
+            documentClearButton.disabled = controlsDisabled;
+            document.getElementById("document-reorganize").disabled = controlsDisabled;
+            documentSaveButton.disabled = controlsDisabled ||
+                !documentStorageReady ||
+                !hasDocumentSummary ||
+                documentSourceInput.value !== summarizedDocumentSource;
+            document.querySelectorAll(
+                ".document-history-open, .document-history-action, .document-copy-button, #document-copy-all"
+            ).forEach((button) => {
+                button.disabled = controlsDisabled;
+            });
+            Object.values(documentResultInputs).forEach((input) => {
+                input.disabled = controlsDisabled;
+            });
+        }
+
         documentSourceInput.addEventListener("input", updateDocumentSourceState);
         documentTitleInput.addEventListener("input", () => {
+            if (!requireDocumentSummaryAccess(documentInputStatus)) {
+                updateDocumentSummaryAccessUI();
+                return;
+            }
             if (hasDocumentSummary) {
                 const sourceLength = Array.from(documentSourceInput.value).length;
                 document.getElementById("document-source-meta").textContent =
@@ -7982,6 +9126,10 @@
         });
 
         document.getElementById("document-save").addEventListener("click", () => {
+            if (!requireDocumentSummaryAccess(documentHistoryStatus)) {
+                updateDocumentSummaryAccessUI();
+                return;
+            }
             if (!documentStorageReady) {
                 documentHistoryStatus.textContent = "资料历史存储不可用，无法保存。";
                 documentHistoryStatus.setAttribute("role", "alert");
@@ -8043,7 +9191,10 @@
         document.getElementById("document-return-home").addEventListener("click", () => {
             documentWorkspace.hidden = true;
             document.getElementById("ai-assistant-title").scrollIntoView({ behavior: "smooth", block: "start" });
-            document.querySelector('[data-ai-feature="document-summary"]').focus({ preventScroll: true });
+            const shortcut = document.querySelector('[data-ai-feature="document-summary"]');
+            if (!shortcut.disabled) {
+                shortcut.focus({ preventScroll: true });
+            }
         });
 
         function renderIdeas() {
@@ -8070,6 +9221,10 @@
                 editButton.textContent = "编辑";
                 editButton.setAttribute("aria-label", `编辑灵感：${idea.title}`);
                 editButton.addEventListener("click", () => {
+                    if (!requireIdeasWritingAccess()) {
+                        updateIdeasWritingAccessUI();
+                        return;
+                    }
                     editingIdeaId = idea.id;
                     ideaTitleInput.value = idea.title;
                     ideaContentInput.value = idea.content;
@@ -8090,9 +9245,14 @@
                 item.append(title, content, actions);
                 ideaList.append(item);
             });
+            updateIdeasWritingAccessUI();
         }
 
         function persistIdeas(nextIdeas) {
+            if (!requireIdeasWritingAccess()) {
+                updateIdeasWritingAccessUI();
+                return false;
+            }
             try {
                 localStorage.setItem(ideasStorageKey, JSON.stringify(nextIdeas));
                 ideas = nextIdeas;
@@ -8140,6 +9300,10 @@
         }
 
         function resetIdeaForm() {
+            if (!requireIdeasWritingAccess()) {
+                updateIdeasWritingAccessUI();
+                return;
+            }
             editingIdeaId = null;
             ideaForm.reset();
             ideaSaveButton.textContent = "保存灵感";
@@ -8147,6 +9311,10 @@
         }
 
         function deleteIdea(ideaId) {
+            if (!requireIdeasWritingAccess()) {
+                updateIdeasWritingAccessUI();
+                return;
+            }
             if (!ideasStorageReady) {
                 return;
             }
@@ -8164,6 +9332,60 @@
 
         const ideasMaximumCharacters = 30000;
         let ideasAIRequestPending = false;
+
+        function requireIdeasWritingAccess(statusElement = ideasAccessStatus) {
+            if (!requireModuleAccess("ai-assistant", statusElement)) {
+                return false;
+            }
+            return requireModuleAccess("ideas-writing", statusElement);
+        }
+
+        function updateIdeasWritingAccessUI() {
+            const assistantAccess = getModuleAccessStatus("ai-assistant");
+            const ideasAccess = getModuleAccessStatus("ideas-writing");
+            const access = assistantAccess.enabled ? ideasAccess : assistantAccess;
+            const enabled = assistantAccess.enabled && ideasAccess.enabled;
+            if (ideasAccessAvailable !== enabled) {
+                ideasAccessAvailable = enabled;
+                ideasAccessVersion += 1;
+                if (!enabled) {
+                    ideasAIRequestController?.abort();
+                }
+            }
+
+            const shortcut = document.querySelector('[data-ai-feature="ideas-writing"]');
+            if (shortcut) {
+                shortcut.disabled = !enabled;
+                shortcut.setAttribute("aria-disabled", String(!enabled));
+                shortcut.title = enabled ? "" : access.message;
+            }
+
+            if (!enabled) {
+                setModuleAccessMessage(ideasAccessStatus, access);
+                ideasWorkspace.dataset.moduleAccessState = access.state;
+            } else {
+                clearModuleAccessMessage(ideasAccessStatus);
+                delete ideasWorkspace.dataset.moduleAccessState;
+            }
+
+            ideasWorkspace.querySelectorAll("input, textarea, select, button").forEach((control) => {
+                if (control === ideasReturnHomeButton) {
+                    control.disabled = false;
+                    return;
+                }
+                control.disabled = !enabled || ideasAIRequestPending;
+            });
+            ideaSaveButton.disabled = !enabled || !ideasStorageReady || ideasAIRequestPending;
+        }
+
+        ideasReturnHomeButton.addEventListener("click", () => {
+            ideasWorkspace.hidden = true;
+            document.getElementById("ai-assistant-title").scrollIntoView({ behavior: "smooth", block: "start" });
+            const shortcut = document.querySelector('[data-ai-feature="ideas-writing"]');
+            if (!shortcut.disabled) {
+                shortcut.focus({ preventScroll: true });
+            }
+        });
 
         function buildIdeasPrompt(instructions, data) {
             return [
@@ -8191,18 +9413,24 @@
         }
 
         async function requestIdeasAI(prompt, button, status, pendingLabel) {
+            if (!requireIdeasWritingAccess(status)) {
+                updateIdeasWritingAccessUI();
+                return null;
+            }
             if (ideasAIRequestPending) {
                 status.textContent = "另一项 AI 请求正在处理中，请稍后再试。";
                 return null;
             }
 
+            const requestAccessVersion = ideasAccessVersion;
             ideasAIRequestPending = true;
             const originalLabel = button.textContent;
-            button.disabled = true;
             button.textContent = pendingLabel;
             status.setAttribute("role", "status");
             status.textContent = "正在通过 Cloudflare Worker 请求 DeepSeek，请稍候……";
             const controller = new AbortController();
+            ideasAIRequestController = controller;
+            updateIdeasWritingAccessUI();
             const timeoutId = window.setTimeout(() => controller.abort(), 90000);
 
             try {
@@ -8212,11 +9440,20 @@
                     signal: controller.signal,
                     body: JSON.stringify({ messages: [{ role: "user", content: prompt }] })
                 });
+                if (requestAccessVersion !== ideasAccessVersion || !requireIdeasWritingAccess(status)) {
+                    return null;
+                }
                 let result;
                 try {
                     result = await response.json();
                 } catch (error) {
+                    if (requestAccessVersion !== ideasAccessVersion || !requireIdeasWritingAccess(status)) {
+                        return null;
+                    }
                     throw new Error(`AI 服务返回了无效响应（HTTP ${response.status}）。`);
+                }
+                if (requestAccessVersion !== ideasAccessVersion || !requireIdeasWritingAccess(status)) {
+                    return null;
                 }
                 if (!response.ok) {
                     throw new Error(`AI 服务暂时不可用（HTTP ${response.status}），请稍后重试。`);
@@ -8227,6 +9464,9 @@
                 status.textContent = `已收到 DeepSeek 结果${typeof result.model === "string" && result.model ? `（${result.model}）` : ""}；请检查后再使用。`;
                 return { reply: result.reply.trim(), model: typeof result.model === "string" ? result.model : "" };
             } catch (error) {
+                if (requestAccessVersion !== ideasAccessVersion || !requireIdeasWritingAccess(status)) {
+                    return null;
+                }
                 const message = error.name === "AbortError"
                     ? "请求等待超时。输入内容未更改，请稍后重试。"
                     : error instanceof TypeError
@@ -8237,8 +9477,11 @@
             } finally {
                 window.clearTimeout(timeoutId);
                 ideasAIRequestPending = false;
-                button.disabled = false;
                 button.textContent = originalLabel;
+                if (ideasAIRequestController === controller) {
+                    ideasAIRequestController = null;
+                }
+                updateIdeasWritingAccessUI();
             }
         }
 
@@ -8257,6 +9500,10 @@
         }
 
         async function copyIdeasText(text, status) {
+            if (!requireIdeasWritingAccess(status)) {
+                updateIdeasWritingAccessUI();
+                return;
+            }
             if (!text.trim()) {
                 status.textContent = "没有可复制的结果。";
                 return;
@@ -8267,7 +9514,15 @@
                 } else {
                     throw new Error("Clipboard API is unavailable.");
                 }
+                if (!requireIdeasWritingAccess(status)) {
+                    updateIdeasWritingAccessUI();
+                    return;
+                }
             } catch (error) {
+                if (!requireIdeasWritingAccess(status)) {
+                    updateIdeasWritingAccessUI();
+                    return;
+                }
                 const temporaryInput = document.createElement("textarea");
                 temporaryInput.value = text;
                 temporaryInput.setAttribute("readonly", "");
@@ -8289,10 +9544,18 @@
                     return;
                 }
             }
+            if (!requireIdeasWritingAccess(status)) {
+                updateIdeasWritingAccessUI();
+                return;
+            }
             status.textContent = "结果已复制。";
         }
 
         function setIdeasTab(tab, focus = false) {
+            if (!requireIdeasWritingAccess()) {
+                updateIdeasWritingAccessUI();
+                return;
+            }
             ideasTabs.forEach((candidate) => {
                 const selected = candidate === tab;
                 candidate.setAttribute("aria-selected", String(selected));
@@ -8306,6 +9569,10 @@
 
         ideaForm.addEventListener("submit", (event) => {
             event.preventDefault();
+            if (!requireIdeasWritingAccess()) {
+                updateIdeasWritingAccessUI();
+                return;
+            }
             const title = ideaTitleInput.value.trim();
             const content = ideaContentInput.value.trim();
             if (!title || !content) {
@@ -8337,6 +9604,10 @@
         });
 
         ideaCancelEditButton.addEventListener("click", () => {
+            if (!requireIdeasWritingAccess()) {
+                updateIdeasWritingAccessUI();
+                return;
+            }
             resetIdeaForm();
             ideaStatus.textContent = "已取消编辑。";
             ideaTitleInput.focus();
@@ -8368,6 +9639,10 @@
         const ideaAIStatus = document.getElementById("idea-ai-status");
 
         document.getElementById("idea-ai-analyze").addEventListener("click", async (event) => {
+            if (!requireIdeasWritingAccess(ideaAIStatus)) {
+                updateIdeasWritingAccessUI();
+                return;
+            }
             const data = { title: ideaTitleInput.value.trim(), content: ideaContentInput.value.trim() };
             if (!data.title || !data.content) {
                 setIdeasAIError(ideaAIStatus, "请先填写灵感标题和内容，再进行 AI 整理。");
@@ -8386,7 +9661,8 @@
                 ideaAIStatus,
                 "整理中……"
             );
-            if (!result) {
+            if (!result || !requireIdeasWritingAccess(ideaAIStatus)) {
+                updateIdeasWritingAccessUI();
                 return;
             }
             try {
@@ -8404,6 +9680,10 @@
         });
 
         document.getElementById("idea-ai-use-title").addEventListener("click", () => {
+            if (!requireIdeasWritingAccess(ideaAIStatus)) {
+                updateIdeasWritingAccessUI();
+                return;
+            }
             const suggestion = ideaAITitle.value.trim();
             if (!suggestion) {
                 setIdeasAIError(ideaAIStatus, "标题建议为空，请先检查或编辑预览内容。");
@@ -8417,6 +9697,10 @@
         });
 
         document.getElementById("idea-ai-use-content").addEventListener("click", () => {
+            if (!requireIdeasWritingAccess(ideaAIStatus)) {
+                updateIdeasWritingAccessUI();
+                return;
+            }
             const organized = ideaAIOrganized.value.trim();
             if (!organized) {
                 setIdeasAIError(ideaAIStatus, "结构化内容为空，请先检查或编辑预览内容。");
@@ -8430,6 +9714,10 @@
         });
 
         document.getElementById("idea-ai-copy").addEventListener("click", () => {
+            if (!requireIdeasWritingAccess()) {
+                updateIdeasWritingAccessUI();
+                return;
+            }
             const fields = [
                 ["核心观点", document.getElementById("idea-ai-core").value],
                 ["标题建议", ideaAITitle.value],
@@ -8445,6 +9733,10 @@
 
         document.getElementById("draft-form").addEventListener("submit", async (event) => {
             event.preventDefault();
+            if (!requireIdeasWritingAccess(document.getElementById("draft-status"))) {
+                updateIdeasWritingAccessUI();
+                return;
+            }
             const data = {
                 topic: document.getElementById("draft-topic").value.trim(),
                 purpose: document.getElementById("draft-purpose").value.trim(),
@@ -8476,7 +9768,8 @@
                 status,
                 "生成中……"
             );
-            if (!result) {
+            if (!result || !requireIdeasWritingAccess(status)) {
+                updateIdeasWritingAccessUI();
                 return;
             }
             const output = document.getElementById("draft-output");
@@ -8494,6 +9787,10 @@
 
         document.getElementById("polish-form").addEventListener("submit", async (event) => {
             event.preventDefault();
+            if (!requireIdeasWritingAccess(document.getElementById("polish-status"))) {
+                updateIdeasWritingAccessUI();
+                return;
+            }
             const original = document.getElementById("polish-input").value.trim();
             const style = document.getElementById("polish-style").selectedOptions[0].textContent;
             const status = document.getElementById("polish-status");
@@ -8515,7 +9812,8 @@
                 status,
                 "润色中……"
             );
-            if (!result) {
+            if (!result || !requireIdeasWritingAccess(status)) {
+                updateIdeasWritingAccessUI();
                 return;
             }
             document.getElementById("polish-output").value = result.reply;
@@ -8532,6 +9830,10 @@
 
         document.getElementById("convert-form").addEventListener("submit", async (event) => {
             event.preventDefault();
+            if (!requireIdeasWritingAccess(document.getElementById("convert-status"))) {
+                updateIdeasWritingAccessUI();
+                return;
+            }
             const source = document.getElementById("convert-input").value.trim();
             const format = document.getElementById("convert-format").selectedOptions[0].textContent;
             const status = document.getElementById("convert-status");
@@ -8553,7 +9855,8 @@
                 status,
                 "转换中……"
             );
-            if (!result) {
+            if (!result || !requireIdeasWritingAccess(status)) {
+                updateIdeasWritingAccessUI();
                 return;
             }
             document.getElementById("convert-output").value = result.reply;
@@ -8609,17 +9912,48 @@
 
         function setAssistantRequestPending(isPending) {
             aiRequestPending = isPending;
-            aiAssistantPrompt.disabled = isPending;
-            aiAssistantSendButton.disabled = isPending;
-            aiChatClearButton.disabled = isPending || aiConversation.length === 0;
+            const access = getModuleAccessStatus("ai-assistant");
+            aiAssistantPrompt.disabled = isPending || !access.enabled;
+            aiAssistantSendButton.disabled = isPending || !access.enabled;
+            aiChatClearButton.disabled = isPending || aiConversation.length === 0 || !access.enabled;
             aiAssistantSendButton.textContent = isPending ? "Thinking…" : "Send";
         }
 
+        function updateAssistantAccessUI() {
+            const access = getModuleAccessStatus("ai-assistant");
+            if (!access.enabled) {
+                aiAssistantAccessVersion += 1;
+                setModuleAccessMessage(aiAssistantStatus, access);
+                aiAssistantSection.dataset.moduleAccessState = access.state;
+                aiAssistantSection.setAttribute("aria-disabled", "true");
+                if (aiRequestController) {
+                    aiRequestController.abort();
+                }
+            } else {
+                clearModuleAccessMessage(aiAssistantStatus);
+                delete aiAssistantSection.dataset.moduleAccessState;
+                aiAssistantSection.removeAttribute("aria-disabled");
+            }
+            setAssistantRequestPending(aiRequestPending);
+        }
+
+        function isAssistantRequestAllowed(requestVersion) {
+            return requestVersion === aiAssistantAccessVersion &&
+                requireModuleAccess("ai-assistant", aiAssistantStatus);
+        }
+
         async function requestAssistantReply() {
+            if (!requireModuleAccess("ai-assistant", aiAssistantStatus)) {
+                updateAssistantAccessUI();
+                return;
+            }
             if (aiRequestPending || aiConversation.length === 0) {
                 return;
             }
 
+            const requestVersion = aiAssistantAccessVersion;
+            const controller = new AbortController();
+            aiRequestController = controller;
             aiChatLog.querySelectorAll('[data-error-message="true"]').forEach((message) => message.remove());
             const thinkingMessage = appendAssistantMessage("assistant", "正在思考…");
             aiAssistantStatus.textContent = "AI 正在思考，请稍候。";
@@ -8629,13 +9963,20 @@
                 const response = await fetch(aiWorkerEndpoint, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
+                    signal: controller.signal,
                     body: JSON.stringify({ messages: aiConversation })
                 });
+                if (!isAssistantRequestAllowed(requestVersion)) {
+                    return;
+                }
                 let result;
                 try {
                     result = await response.json();
                 } catch (error) {
                     throw new Error(`Worker 返回了无效的 JSON 响应（HTTP ${response.status}）。`);
+                }
+                if (!isAssistantRequestAllowed(requestVersion)) {
+                    return;
                 }
 
                 if (!response.ok) {
@@ -8655,6 +9996,9 @@
                 aiAssistantStatus.textContent = "回答已收到。";
             } catch (error) {
                 thinkingMessage.remove();
+                if (!isAssistantRequestAllowed(requestVersion)) {
+                    return;
+                }
                 const message = error instanceof TypeError
                     ? "无法连接 AI 服务。请检查网络或稍后重试。"
                     : error.message || "请求失败。请稍后重试。";
@@ -8662,13 +10006,25 @@
                 aiAssistantStatus.textContent = message;
                 console.error("AI Assistant request failed:", error);
             } finally {
+                thinkingMessage.remove();
+                if (aiRequestController === controller) {
+                    aiRequestController = null;
+                }
                 setAssistantRequestPending(false);
-                aiAssistantPrompt.focus();
+                if (requireModuleAccess("ai-assistant", aiAssistantStatus)) {
+                    aiAssistantPrompt.focus();
+                } else {
+                    updateAssistantAccessUI();
+                }
             }
         }
 
         aiAssistantForm.addEventListener("submit", (event) => {
             event.preventDefault();
+            if (!requireModuleAccess("ai-assistant", aiAssistantStatus)) {
+                updateAssistantAccessUI();
+                return;
+            }
             if (aiRequestPending) {
                 return;
             }
@@ -8688,6 +10044,11 @@
 
         aiAssistantPrompt.addEventListener("keydown", (event) => {
             if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
+                if (!requireModuleAccess("ai-assistant", aiAssistantStatus)) {
+                    event.preventDefault();
+                    updateAssistantAccessUI();
+                    return;
+                }
                 event.preventDefault();
                 if (!aiRequestPending) {
                     aiAssistantForm.requestSubmit();
@@ -8696,6 +10057,10 @@
         });
 
         aiChatClearButton.addEventListener("click", () => {
+            if (!requireModuleAccess("ai-assistant", aiAssistantStatus)) {
+                updateAssistantAccessUI();
+                return;
+            }
             if (aiRequestPending) {
                 return;
             }
@@ -8711,11 +10076,19 @@
         document.querySelectorAll(".ai-shortcut").forEach((button) => {
             button.addEventListener("click", () => {
                 if (button.dataset.aiFeature === "daily-planning") {
+                    if (!requireDailyPlanningAccess(planningAIStatus)) {
+                        updateDailyPlanningAccessUI();
+                        return;
+                    }
                     document.querySelector(".daily-planning").scrollIntoView({ behavior: "smooth", block: "nearest" });
                     runDailyPlanningAnalysis();
                     return;
                 }
                 if (button.dataset.aiFeature === "document-summary") {
+                    if (!requireDocumentSummaryAccess(documentInputStatus)) {
+                        updateDocumentSummaryAccessUI();
+                        return;
+                    }
                     documentWorkspace.hidden = false;
                     aiAssistantStatus.textContent = "资料总结工作区已启用。整理时会通过 Cloudflare Worker 调用 DeepSeek。";
                     documentWorkspace.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -8723,6 +10096,10 @@
                     return;
                 }
                 if (button.dataset.aiFeature === "ideas-writing") {
+                    if (!requireIdeasWritingAccess()) {
+                        updateIdeasWritingAccessUI();
+                        return;
+                    }
                     ideasWorkspace.hidden = false;
                     setIdeasTab(ideasTabs[0]);
                     aiAssistantStatus.textContent = "灵感创作工作区已启用。四项功能通过 Cloudflare Worker 调用 DeepSeek。";
@@ -8731,6 +10108,10 @@
                     return;
                 }
                 if (button.dataset.aiFeature === "task-organization") {
+                    if (!requireTaskOrganizationAccess(taskOrganizerStatus)) {
+                        updateTaskOrganizationAccessUI();
+                        return;
+                    }
                     taskOrganizerPanel.hidden = false;
                     taskOrganizerStatus.textContent = "AI 任务整理已就绪；分析结果仅供预览，逐项检查并确认后才会添加任务。";
                     aiAssistantStatus.textContent = "任务整理已启用。DeepSeek 只提供建议，不会自动添加或修改任务。";
@@ -8748,6 +10129,10 @@
         taskImportButton.addEventListener("click", importOrganizedTasks);
         taskOrganizerCopyButton.addEventListener("click", copyTaskOrganizationPreview);
         taskOrganizerInput.addEventListener("input", () => {
+            if (!requireTaskOrganizationAccess(taskOrganizerStatus)) {
+                updateTaskOrganizationAccessUI();
+                return;
+            }
             if (taskOrganizerPreviewSource && taskOrganizerInput.value.trim() !== taskOrganizerPreviewSource) {
                 taskOrganizerPreview.hidden = true;
                 taskOrganizerPreviewVersion = 0;
@@ -8770,6 +10155,7 @@
         loadIdeas();
         loadDocumentHistory();
         loadTasks();
+        updateModuleAccessUI();
         refreshDailyPlanning(false);
         renderDataCenterOverview();
     </script>
