@@ -91,7 +91,7 @@ My Tech Lab 以个人使用为起点，长期演进为由用户自主掌握数�
 
 | Category ID | 显示名称 | 用途 |
 |---|---|---|
-| `work-knowledge` | Work & Knowledge（工作与知识） | 工作、效率及知识相关功能模块 |
+| `work-knowledge` | Productivity & Knowledge（效率与知识） | 工作、效率及知识相关功能模块 |
 | `ai-intelligence` | AI & Intelligence（AI 与智能） | AI 助手及其工作流模块 |
 | `system` | System（系统管理） | 模块管理和数据管理等系统功能 |
 
@@ -133,6 +133,38 @@ My Tech Lab 以个人使用为起点，长期演进为由用户自主掌握数�
 - 模块隐藏、排序或搬迁不能删除、覆盖或迁移用户业务数据。
 - 移除模块及其数据属于不同操作；任何数据删除必须遵循“先备份，再确认，后删除”及人工确认原则（细则见 `DEVELOPMENT_RULES.md`）。
 - Data Center 的**备份数据注册表**与功能模块的 **Module Registry** 必须分离。两者目的、标识和生命周期不同；备份定义不能替代模块定义，模块注册也不能未经设计自动扩大备份或清理范围。
+
+### 5.5 顶层信息架构、导航分组与模块职责边界
+
+**[已实现]** 当前用户可见的顶层信息架构（导航分组）如下：
+
+1. **Dashboard**：今日概览与统计摘要的独立入口。
+2. **Productivity & Knowledge**（效率与知识）：个人效率与知识沉淀，含 Daily Focus、Tasks、Notes。
+3. **Projects & Creation**（项目与创作）：围绕项目与产出的组织与创作，当前含 Projects（静态展示区）。
+4. **AI Assistant**：全局对话入口 + 横向 AI 能力（见 §9），非普通业务分类。
+5. **System**（系统管理）：Module Management Center、Data Center。
+
+**导航分组 ≠ Registry category ≠ parentId**（三者必须区分，不得混为一谈）：
+
+- **导航分组（用户可见）**：`Dashboard`、`Productivity & Knowledge`、`Projects & Creation`、`AI Assistant`、`System` 是**显示名称**，由导航层定义，仅用于用户界面组织，不参与任何运行逻辑（停用级联、读写守卫、AI 取消均不依赖导航分组）。
+- **Registry category（内部标识）**：`work-knowledge`、`ai-intelligence`、`system` 是模块的内部分类枚举，仅用于 Module Management Center 的展示分组。`Productivity & Knowledge` 是**显示名称**，`work-knowledge` 是**内部标识**，二者是映射关系，而非等同；不得以显示名替换内部标识。
+- **parentId（父子关系）**：负责模块的父子关系与停用级联（`isModuleEffectivelyEnabled` 沿父链判断）。导航分组不改变 parentId，parentId 也不决定导航分组。
+
+**模块职责边界**（[未来规划]，当前部分模块尚未实现）：
+
+- **Notes（快速笔记）负责 Capture（捕获）**：快速、临时、无结构的记录。
+- **Knowledge Base（知识库）负责 Curate（沉淀）**：长期、结构化、可检索的知识条目。
+- **Note 可经过整理提升为 Knowledge Item**：两者是「先捕获、再沉淀」的漏斗关系，而非两个孤立数据岛。
+- **Tasks 与 Projects 分离**：Tasks 是无项目上下文的轻任务；未来 Task 可关联 Project（如 `task.project_id`），但 Tasks 模块独立存在，不强制所有任务归属项目。
+- **Projects 未来作为跨模块组织中心**：组织任务、文档、知识，而非把其他模块嵌套进去。
+- **Documents & Writing 负责产出、Research 负责研究过程、Knowledge Base 负责知识沉淀**：三者是「产出 → 过程 → 沉淀」的生命周期关系。
+
+**[未来规划]** 上述职责边界中，Knowledge Base、Projects 正式管理能力、Research、Documents & Writing 等尚未实现；Note 提升为 Knowledge Item、Task 关联 Project 等能力亦为规划。当前实际实现仍以 §3.2 与 §5.2 的模块清单为准。
+
+**AI Assistant 的产品定位**（[已实现] 当前形态 + [未来规划]）：
+
+- AI Assistant 是**全局入口**和**横向共享能力**，不应简单视为普通业务分类（这也是它被列为独立入口、而非分类分组的原因）。
+- 当前 4 个子工作流（Daily Planning、Task Organization、Document Summary、Ideas & Writing）**暂时保留现有 parentId 结构与停用级联机制**；未来根据各自数据归属（`shared` 无自有数据 / `own` 有自有数据）和业务成熟度**渐进调整**，不一步拆除。
 
 ## 6. 模块运行时行为（启用与停用 · 第二阶段已实现）
 
