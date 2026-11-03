@@ -123,6 +123,25 @@
             display: none;
         }
 
+        .module-readonly-badge {
+            display: inline-flex;
+            align-items: center;
+            margin: 4px 0 0 10px;
+            padding: 3px 8px;
+            border: 1px solid rgba(230, 163, 163, 0.42);
+            border-radius: 999px;
+            color: #e6a3a3;
+            font-size: 10px;
+            font-weight: 500;
+            line-height: 1.4;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        .module-readonly-badge[hidden] {
+            display: none;
+        }
+
         main {
             padding: 88px 0 96px;
         }
@@ -4201,7 +4220,7 @@
 
             <section class="module-management-center" id="module-management-center-section" aria-labelledby="module-management-heading">
                 <h2 class="module-management-heading" id="module-management-heading">Module Management Center｜模块管理中心</h2>
-                <p class="module-management-description">查看模块定义与实现状态，并管理普通模块的用户启用设置。实现状态不代表服务运行状态；停用设置目前仅用于状态管理，不改变导航或模块访问行为。</p>
+                <p class="module-management-description">查看模块定义与实现状态，并管理普通模块的用户启用设置。启用：模块正常使用；停用：模块保留入口并进入只读状态，可查看历史内容但不能新增、编辑、删除或发起 AI 请求；系统保护：核心模块不可停用。实现状态不代表服务运行状态。</p>
                 <div class="module-management-stats" id="module-management-stats" aria-label="模块实现状态总览"></div>
                 <div class="module-management-content" id="module-management-content">
                     <h3 class="module-management-section-heading">模块分类</h3>
@@ -4880,49 +4899,122 @@
                 settings: result.settings
             };
         }
-        function getModuleAccessStatus(moduleId) {
+        const MODULE_READONLY_MESSAGE = "该模块已停用，目前处于只读状态。重新启用后可恢复操作。";
+        function getModuleRuntimeState(moduleId) {
             const module = getModuleById(moduleId);
             if (!module) {
                 return {
-                    enabled: false,
+                    moduleId,
+                    module: null,
+                    exists: false,
+                    protected: false,
+                    settingsAvailable: false,
+                    selfEnabled: false,
+                    parentEnabled: false,
+                    effectiveEnabled: false,
+                    readonly: true,
                     state: "unknown-module",
                     message: `找不到模块“${String(moduleId)}”，无法确认访问状态。`
                 };
             }
+
+            if (protectedModuleIds.has(moduleId)) {
+                return {
+                    moduleId,
+                    module,
+                    exists: true,
+                    protected: true,
+                    settingsAvailable: true,
+                    selfEnabled: true,
+                    parentEnabled: true,
+                    effectiveEnabled: true,
+                    readonly: false,
+                    state: "enabled",
+                    message: ""
+                };
+            }
+
             const settingsStatus = getModuleSettingsStatus();
             if (!settingsStatus.ok) {
                 return {
-                    enabled: false,
+                    moduleId,
+                    module,
+                    exists: true,
+                    protected: false,
+                    settingsAvailable: false,
+                    selfEnabled: false,
+                    parentEnabled: false,
+                    effectiveEnabled: false,
+                    readonly: true,
                     state: settingsStatus.state,
                     message: `模块设置异常，${module.name}暂不可用：${settingsStatus.message}`
                 };
             }
-            if (isModuleEffectivelyEnabled(moduleId)) {
-                return { enabled: true, state: "enabled", message: "" };
-            }
-            const userEnabled = getUserModuleEnabledState(moduleId);
-            if (userEnabled === false) {
-                return {
-                    enabled: false,
-                    state: "disabled",
-                    message: `${module.name}已停用。请在 Module Management Center 重新启用后再使用。`
-                };
-            }
-            let parent = module.parentId === null ? null : getModuleById(module.parentId);
-            while (parent) {
-                if (!isModuleEffectivelyEnabled(parent.id)) {
-                    return {
-                        enabled: false,
-                        state: "parent-disabled",
-                        message: `${module.name}因父模块“${parent.name}”停用而不可用。`
-                    };
+
+            const selfDisabled = getUserModuleEnabledState(moduleId) === false;
+            const effectiveEnabled = isModuleEffectivelyEnabled(moduleId);
+
+            let disabledByParent = false;
+            let disabledParent = null;
+            let current = module.parentId === null ? null : getModuleById(module.parentId);
+            while (current) {
+                if (!isModuleEffectivelyEnabled(current.id)) {
+                    disabledByParent = true;
+                    disabledParent = current;
+                    break;
                 }
-                parent = parent.parentId === null ? null : getModuleById(parent.parentId);
+                current = current.parentId === null ? null : getModuleById(current.parentId);
             }
+
+            const readonly = !effectiveEnabled;
+            let state = "enabled";
+            let message = "";
+            if (readonly) {
+                if (selfDisabled) {
+                    state = "disabled";
+                    message = MODULE_READONLY_MESSAGE;
+                } else if (disabledByParent) {
+                    state = "parent-disabled";
+                    message = `该模块因父模块“${disabledParent.name}”停用而处于只读状态。重新启用父模块后可恢复操作。`;
+                } else {
+                    state = "disabled";
+                    message = MODULE_READONLY_MESSAGE;
+                }
+            }
+
             return {
-                enabled: false,
-                state: "disabled",
-                message: `${module.name}当前不可用。`
+                moduleId,
+                module,
+                exists: true,
+                protected: false,
+                settingsAvailable: true,
+                selfEnabled: !selfDisabled,
+                parentEnabled: !disabledByParent,
+                effectiveEnabled,
+                readonly,
+                state,
+                message
+            };
+        }
+        function isModuleReadOnly(moduleId) {
+            return getModuleRuntimeState(moduleId).readonly;
+        }
+        function canModulePerformAction(moduleId, action = "mutate") {
+            const state = getModuleRuntimeState(moduleId);
+            if (!state.exists) {
+                return { allowed: false, state: "unknown-module", message: state.message };
+            }
+            if (state.readonly) {
+                return { allowed: false, state: state.state, message: state.message };
+            }
+            return { allowed: true, state: "enabled", message: "" };
+        }
+        function getModuleAccessStatus(moduleId) {
+            const state = getModuleRuntimeState(moduleId);
+            return {
+                enabled: state.effectiveEnabled,
+                state: state.state,
+                message: state.message
             };
         }
         function requireModuleAccess(moduleId, statusElement) {
@@ -6187,6 +6279,51 @@
             updateTaskOrganizationAccessUI();
             updateDocumentSummaryAccessUI();
             updateIdeasWritingAccessUI();
+            updateModuleReadonlyBadges();
+        }
+
+        function getModuleHeading(moduleId) {
+            const module = getModuleById(moduleId);
+            if (!module?.entry?.targetSelector) {
+                return null;
+            }
+            const section = document.querySelector(module.entry.targetSelector);
+            if (!section) {
+                return null;
+            }
+            const labelledBy = section.getAttribute("aria-labelledby");
+            if (labelledBy) {
+                return document.getElementById(labelledBy);
+            }
+            return section.querySelector("h1, h2, h3");
+        }
+
+        function updateModuleReadonlyBadges() {
+            getAllModules().forEach((module) => {
+                if (protectedModuleIds.has(module.id)) {
+                    return;
+                }
+                const heading = getModuleHeading(module.id);
+                if (!heading) {
+                    return;
+                }
+                let badge = heading.parentElement.querySelector(
+                    `.module-readonly-badge[data-module-readonly-for="${module.id}"]`
+                );
+                const readonly = isModuleReadOnly(module.id);
+                if (readonly) {
+                    if (!badge) {
+                        badge = document.createElement("span");
+                        badge.className = "module-readonly-badge";
+                        badge.dataset.moduleReadonlyFor = module.id;
+                        badge.textContent = "已停用 · 只读";
+                        heading.after(badge);
+                    }
+                    badge.hidden = false;
+                } else if (badge) {
+                    badge.hidden = true;
+                }
+            });
         }
 
         function showUnavailableNavigationMessage(moduleId) {
@@ -6324,10 +6461,10 @@
                 return reasons;
             }
             if (!runtimeState.userEnabled) {
-                reasons.push("用户已停用此模块。");
+                reasons.push("用户已停用此模块，处于只读状态。");
             }
             if (runtimeState.parent && !runtimeState.parentEnabled) {
-                reasons.push(`因父模块“${runtimeState.parent.name}”停用而不可用。`);
+                reasons.push(`因父模块“${runtimeState.parent.name}”停用而处于只读状态。`);
             }
             if (!runtimeState.effectiveEnabled && reasons.length === 0) {
                 reasons.push("模块当前不可用，无法从现有状态确定具体原因。");
@@ -6540,7 +6677,7 @@
                 ),
                 createModuleManagementDetailField(
                     "有效启用状态",
-                    runtimeState.effectiveEnabled ? "启用" : "停用 / 不可用"
+                    runtimeState.effectiveEnabled ? "启用" : "停用 · 只读"
                 ),
                 createModuleManagementDetailField(
                     "父模块状态",
@@ -6554,7 +6691,7 @@
                     "当前不可用原因",
                     unavailableReasons.length > 0
                         ? unavailableReasons.join(" ")
-                        : "无；按当前用户设置和父模块状态有效启用。实际访问入口不受本阶段状态设置影响。"
+                        : "无；模块当前有效启用，可正常操作。"
                 ),
                 createModuleManagementDetailField("数据归属", module.dataOwnership || "未配置")
             );

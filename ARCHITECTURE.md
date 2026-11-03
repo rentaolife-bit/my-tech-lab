@@ -1,6 +1,8 @@
 # My Tech Lab 2.0 总体架构设计
 
 > 本文描述当前代码可确认的架构现状，以及 My Tech Lab 2.0 的渐进式目标。所有能力均以 `[已实现]`、`[正在推进]` 或 `[未来规划]` 标记；规划内容不代表功能已经上线。实施状态应结合代码、测试和部署情况持续更新。
+>
+> 本文的定位是描述**系统是什么**（当前架构、核心机制、数据契约）与**未来目标结构**；**怎么干活**见 `DEVELOPMENT_RULES.md`，**往哪走 / 进度**见 `ROADMAP.md`。三者单向交叉引用，不互相重复维护同一份细则。
 
 ## 1. 项目定位与设计目标
 
@@ -31,8 +33,11 @@ My Tech Lab 以个人使用为起点，长期演进为由用户自主掌握数�
 | `index.html` | 主入口；集中承载 HTML、CSS、JavaScript、模块界面、导航、业务逻辑和本地数据访问 |
 | `apple-tech-icon.png` | 页面 Apple touch icon 资源 |
 | `README.md` | 简短项目介绍 |
-| `ROADMAP.md` | 长期发展方向、模块化与 Dashboard 目标、数据安全原则和渐进式顺序 |
-| `.github/copilot-instructions.md` | 项目开发规范，重点包括数据安全与删除保护 |
+| `ARCHITECTURE.md` | 本文；描述当前架构、核心机制与数据契约 |
+| `DEVELOPMENT_RULES.md` | 开发规范（人机协同、工程纪律、数据安全、测试、Git 工作流） |
+| `ROADMAP.md` | 项目进度与未来实施顺序的唯一来源 |
+| `.github/copilot-instructions.md` | GitHub Copilot 项目指令（数据安全摘要，引用 `DEVELOPMENT_RULES.md`） |
+| `tests/` | 自动化测试套件与一键运行入口（`node tests/run-all.js`） |
 
 **[已实现]** 仓库中没有独立的前端构建系统、模块源码目录、Cloudflare Worker 源码或 Worker 部署配置。页面使用原生 HTML/CSS/JavaScript。
 
@@ -40,19 +45,16 @@ My Tech Lab 以个人使用为起点，长期演进为由用户自主掌握数�
 
 **[已实现]** 下列功能的实现目前集中于 `index.html`：
 
-- AI Assistant
-- Document Summary
-- Ideas & Writing（灵感记录、文章起草、文字润色、表达转换）
-- Daily Planning
-- Task Organization
+- AI Assistant（含 Daily Planning、Task Organization、Document Summary、Ideas & Writing 四个子工作流）
 - Daily Focus（今日重点和历史查看）
 - Task Manager
 - Quick Notes
 - Data Center
+- Module Management Center
 
 **[已实现]** 顶部导航使用页面内锚点；AI 工作流通过 AI Assistant 中的快捷入口打开、滚动或触发。部分工作区使用 `hidden` 控制显示。
 
-**[已实现]** My Tech Lab v1.2.0 已发布，发布基准为 `493c29315be527450080be211a71ab83a8d2a03b`，`v1.2.0` 标签指向该提交。该版本包含 Daily Focus History View；本架构文档以该发布基准中的代码作为当前功能依据。
+**[已实现]** My Tech Lab v1.2.0 已发布，发布基准为 `493c29315be527450080be211a71ab83a8d2a03b`，`v1.2.0` 标签指向该提交。该版本包含 Daily Focus History View；本架构文档以该发布基准及后续提交中的代码作为当前功能依据。
 
 ## 4. 五层逻辑架构
 
@@ -62,8 +64,8 @@ My Tech Lab 以个人使用为起点，长期演进为由用户自主掌握数�
 |---|---|---|
 | 1. 用户交互层 | Dashboard、统一导航、工作区入口、响应式界面、交互状态与反馈 | **[已实现]** 当前为单页中的顶部导航、AI 快捷入口、工作区和统计摘要；**[未来规划]** 独立 Dashboard 与分层工作区 |
 | 2. 功能模块层 | 承载 AI Assistant、任务、重点、笔记、资料总结及其他业务流程 | **[已实现]** 功能区存在于 `index.html`，但尚未拆成独立模块文件 |
-| 3. 公共服务层 | 统一 AI 请求、本地存储、数据校验与迁移、模块注册与导航、导入导出、通知等共用能力 | **[已实现]** Data Center 已提供集中式数据模块定义及备份恢复流程；其余业务逻辑仍直接位于页面脚本中。**[未来规划]** 形成明确的共享服务接口 |
-| 4. 数据层 | 业务数据、AI 数据、系统配置、格式版本、迁移和数据保留策略 | **[已实现]** 五类持久化业务数据保存在浏览器 `localStorage`；对话及部分临时结果仅在页面内存中。**[未来规划]** 独立系统配置和可迁移存储 |
+| 3. 公共服务层 | 统一 AI 请求、本地存储、数据校验与迁移、模块注册与导航、导入导出、通知等共用能力 | **[已实现]** Data Center 已提供集中式数据模块定义及备份恢复流程，Module Registry 已作为模块元数据单一事实来源；其余业务逻辑仍直接位于页面脚本中。**[未来规划]** 形成明确的共享服务接口 |
+| 4. 数据层 | 业务数据、AI 数据、系统配置、格式版本、迁移和数据保留策略 | **[已实现]** 五类持久化业务数据保存在浏览器 `localStorage`；模块设置与隔离记录各占一个独立系统键；对话及部分临时结果仅在页面内存中。**[未来规划]** 独立系统配置和可迁移存储 |
 | 5. 基础设施层 | 前端托管、后端代理、模型 API、未来可替换的部署环境 | **[已实现（前端调用关系）]** 页面调用 Cloudflare Worker，再由其连接 DeepSeek 的架构已体现在前端端点与请求代码中。Worker 实现和线上配置不在仓库，无法在此确认。**[未来规划]** 可替换托管、后端和模型服务 |
 
 层与层之间应通过清晰的调用方向协作：交互层调用功能模块，模块依赖公共服务，公共服务处理数据和外部接口，基础设施提供运行环境。业务模块不应直接掌握 Secret，也不应因页面结构变化而隐式删除持久化数据。
@@ -72,14 +74,14 @@ My Tech Lab 以个人使用为起点，长期演进为由用户自主掌握数�
 
 ### 5.1 Module Registry
 
-**[已实现]** `index.html` 中已有静态、只读的 Module Registry，作为当前功能模块元数据及入口关系的单一事实来源；当前登记 10 个模块，并由只读 Module Management Center 查询展示。注册项包含：
+**[已实现]** `index.html` 中存在静态、只读（冻结）的 Module Registry，作为当前功能模块元数据及入口关系的单一事实来源；当前登记 **10 个模块**。注册项包含：
 
 - 稳定且唯一的模块 `id`；发布后不因显示名称或分类变化而改变。
-- 名称、说明、分类和模块类型。
-- 入口标识及父子模块关系。
-- 实现状态和数据归属说明；实现状态不代表远程服务健康状态。
+- 名称、说明、分类（`category`）和模块类型（`type`）。
+- 入口标识（`entry`：`targetSelector` / `navigationSelector` / `shortcutSelector`）及父子模块关系（`parentId`）。
+- 实现状态（`status`）和数据归属（`dataOwnership`）；实现状态不代表远程服务健康状态。
 
-**[已实现]** Registry 校验模块 ID、分类/类型/状态/数据归属枚举、父子关系和声明的 DOM 入口；Module Management Center 通过查询接口提供只读概览、分类/状态筛选和详情查看。**[未来规划]** 如需启停、排序或可配置状态，应另行定义运行时配置与数据边界，不能将这些能力描述为当前已有功能。
+**[已实现]** Registry 校验模块 ID 格式、分类/类型/状态/数据归属枚举、父子关系和声明的 DOM 入口（`validateModuleRegistry`，页面加载时执行）。Module Management Center 通过查询接口消费 Registry，提供概览、分类/状态筛选、模块详情查看，以及模块启用/停用开关（见 §6）。
 
 ### 5.2 功能模块分类与知识库内容分类
 
@@ -93,7 +95,11 @@ My Tech Lab 以个人使用为起点，长期演进为由用户自主掌握数�
 | `ai-intelligence` | AI & Intelligence（AI 与智能） | AI 助手及其工作流模块 |
 | `system` | System（系统管理） | 模块管理和数据管理等系统功能 |
 
-例如，Task Manager、Daily Focus、Quick Notes、Document Summary 和 Ideas & Writing 属于 `work-knowledge`；AI Assistant、Daily Planning 和 Task Organization 属于 `ai-intelligence`；Module Management Center 和 Data Center 属于 `system`。Knowledge Base 是未来可能新增的功能模块示例，并非当前已实现模块。
+**[已实现]** 当前各模块的实际分类归属（以 Registry 代码为准）：
+
+- `work-knowledge`：Task Manager、Daily Focus、Quick Notes
+- `ai-intelligence`：AI Assistant、Daily Planning、Task Organization、Document Summary、Ideas & Writing
+- `system`：Module Management Center、Data Center
 
 **[未来规划]** Knowledge Base 应拥有独立的数据模型和内容分类体系，至少为以下能力留出设计空间；这不代表现在已经创建了这些分类、数据库或知识库功能：
 
@@ -113,11 +119,11 @@ My Tech Lab 以个人使用为起点，长期演进为由用户自主掌握数�
 
 ### 5.3 模块类型
 
-**[未来规划]** 注册表应区分至少三种模块类型：
+**[已实现]** Registry 已通过 `type` 字段区分三种模块类型，并纳入注册校验（`standalone` / `embedded-workflow` / `system-management`）：
 
-1. **独立模块**：有清晰的功能入口和主要操作界面，例如 Quick Notes 或 Task Manager。
-2. **嵌入式工作流**：依附于父模块或工作区的子功能，例如 AI Assistant 中的 Daily Planning、Task Organization，以及 Ideas & Writing 内的不同创作工具。停用子工作流不应意外关闭父模块或影响共享界面。
-3. **系统管理模块**：管理数据、模块或系统偏好的功能，例如 Data Center 和未来的 Module Management Center。
+1. **独立模块（standalone）**：有清晰的功能入口和主要操作界面，例如 Quick Notes、Task Manager、Daily Focus、AI Assistant。
+2. **嵌入式工作流（embedded-workflow）**：依附于父模块或工作区的子功能，例如 AI Assistant 中的 Daily Planning、Task Organization、Document Summary 和 Ideas & Writing。停用子工作流不应意外关闭父模块或影响共享界面。
+3. **系统管理模块（system-management）**：管理数据、模块或系统偏好的功能，例如 Data Center 和 Module Management Center。
 
 类型只表达信息架构和生命周期关系，不要求立即拆分 HTML 或 JavaScript。
 
@@ -125,64 +131,96 @@ My Tech Lab 以个人使用为起点，长期演进为由用户自主掌握数�
 
 - 模块停用应控制入口和功能可用性，不是删除代码、卸载数据或重置配置。
 - 模块隐藏、排序或搬迁不能删除、覆盖或迁移用户业务数据。
-- 移除模块及其数据属于不同操作；任何数据删除必须遵循“先备份，再确认，后删除”及人工确认原则。
+- 移除模块及其数据属于不同操作；任何数据删除必须遵循“先备份，再确认，后删除”及人工确认原则（细则见 `DEVELOPMENT_RULES.md`）。
 - Data Center 的**备份数据注册表**与功能模块的 **Module Registry** 必须分离。两者目的、标识和生命周期不同；备份定义不能替代模块定义，模块注册也不能未经设计自动扩大备份或清理范围。
 
-## 6. 统一导航仪表盘与三级信息架构
+## 6. 模块运行时行为（启用与停用 · 第二阶段已实现）
 
-**[未来规划]** 随着模块增加，逐步形成以下三级结构，避免首页长期堆叠所有模块的完整界面：
+本节描述模块启用/停用的运行时语义。状态判断以 `getModuleRuntimeState(moduleId)` 为单一事实来源，所有写入路径与 UI 都复用同一份状态，避免「UI 层禁用」与「数据层守卫」不一致。
 
-### 一级：导航仪表盘
+### 6.1 状态模型
 
-展示今日概览、常用功能入口、模块分类、近期任务或工作重点及真实系统状态摘要。统计和状态应来自实际数据或明确的检查结果；没有数据或无法检测时，应如实显示未知或不可用，不能编造。
+`getModuleRuntimeState(moduleId)` 返回：
 
-### 二级：功能工作区
+- `exists`：模块是否存在于 Registry。
+- `protected`：是否为受保护模块（Data Center、Module Management Center）。
+- `selfEnabled` / `parentEnabled` / `effectiveEnabled`：自身启用、父链启用、最终有效启用。
+- `readonly`：是否只读（`!effectiveEnabled`，设置异常时 fail-closed 为只读）。
+- `state`：枚举 `enabled` / `disabled` / `parent-disabled` / `unknown-module` / 设置异常态（`corrupt`、`invalid`、`unsupported-version`、`storage-unavailable` 等）。
+- `message`：面向用户的说明文案。
 
-按实际功能逐步归类为：
+派生访问入口：`isModuleReadOnly`、`canModulePerformAction`、`getModuleAccessStatus`、`requireModuleAccess`、`isModuleEffectivelyEnabled`。其中 `requireModuleAccess(moduleId, statusElement)` 是所有数据写入守卫的公共入口。
 
-- AI 工作区
-- 个人效率工作区
-- 笔记与知识管理工作区
-- 其他未来扩展工作区
+### 6.2 启用与停用的含义
 
-用户进入具体模块或工作流后，再展示相应详细功能和操作界面。以上是目标分类，不代表这些工作区已在当前代码中独立存在。
+- **启用（默认）**：模块正常可操作，数据可新增、编辑、删除（在各自业务语义内），可发起 AI 请求。
+- **停用**：模块进入只读状态，具体规则见 §6.3。
 
-### 三级：模块管理与系统设置
+### 6.3 停用后的行为
 
-目标范围包括：
+停用模块后（无论停用的是模块自身还是其父模块）：
 
-- Module Management Center
-- Data Center
-- AI 模型和服务配置
-- 系统偏好
+1. **保留历史数据**：不删除、不重置任何已保存数据。
+2. **允许只读查看**：界面仍可查看已保存内容。
+3. **禁止新增 / 编辑 / 删除**：写入函数在入口处校验 `requireModuleAccess`，未通过即拒绝并返回，不触碰 `localStorage`。
+4. **禁止模块自身导入**：停用模块的数据不得通过模块自身的导入入口写入。
+5. **禁止发起 AI 请求**：各 AI 工作流入口校验访问状态，停用后拒绝发起新请求。
+6. **在途 AI 请求执行前端取消**：停用触发对应 `AbortController.abort()`，前端中止在途请求。
+7. **迟到响应不得覆盖页面状态**：通过 AccessVersion 计数丢弃迟到响应，避免停用后的旧响应回写界面。
+8. **AI Assistant 停用时四个子工作流级联停用**：Daily Planning、Task Organization、Document Summary、Ideas & Writing 的 `parentId` 均为 `ai-assistant`，父模块停用使子模块进入 `parent-disabled` 只读态；同样地，重新启用父模块即恢复子模块。
+9. **重新启用后恢复正常操作**：再次启用模块即解除只读，历史数据不变。
 
-**[已实现]** Data Center 当前存在；**[未来规划]** Module Management Center、集中式 AI 配置和通用系统偏好尚未实现。
+### 6.4 受保护模块
 
-### 导航与响应式原则
+**[已实现]** Data Center（`data-center`）与 Module Management Center（`module-management-center`）为**受保护模块**，恒为启用且非只读：Registry 校验拒绝为它们写入停用状态，运行时状态判定也直接返回 `enabled`。它们在 Module Management Center 中显示「系统保护」徽章，不提供启停开关。
 
-- 首页只展示必要信息、常用入口和摘要；不把所有模块完整操作界面长期放在首页。
-- 同一模块尽量使用统一入口和导航行为，避免重复、失效或绕过停用状态的入口。
-- 保留现有业务功能、数据键和数据结构，按阶段迁移。
-- iPhone、iPad 和 Mac 均需适配：移动端保持简洁，宽屏合理利用空间，避免横向溢出。
-- 沿用现有暗色视觉风格，不引入没有实际需求的第三方依赖。
-- Dashboard 是渐进式目标；在模块注册、父子入口和导航关系明确之前，不进行整体首页重构。
+### 6.5 写入守卫的覆盖范围
 
-**[已实现]** 当前 CSS 包含 600px、900px 和 1280px 等响应式断点；该实现是现有单页布局，不等同于未来 Dashboard 的完整响应式信息架构。
+**[已实现]** 五类业务数据写入均在函数首行守卫：
 
-## 7. 公共服务层
-
-当前公共能力尚未形成统一服务目录。下表区分已有代码与目标接口：
-
-| 服务 | 目标职责与边界 | 状态 |
+| 数据 | 写入函数 | 守卫模块 |
 |---|---|---|
-| AI Service | 为业务模块提供统一模型请求入口、请求/响应契约、错误处理和必要配置；供应商密钥留在受控后端，不进入前端。每个工作流仍保留自己的提示词和业务逻辑 | **[已实现]** 多个模块各自在页面脚本中请求同一 Worker；**[未来规划]** 统一 AI Service 和模型适配器 |
-| Storage Service | 封装业务数据的读取、写入、删除及存储故障反馈；业务模块不重复实现底层存储细节 | **[已实现]** 各模块直接访问 `localStorage`，尚无统一服务抽象；**[未来规划]** 逐步抽取 |
-| Data Service | 负责数据格式校验、schema 版本、迁移、兼容策略及安全写入 | **[已实现]** Daily Focus 和 Data Center 有相关校验/兼容逻辑；**[未来规划]** 形成可复用的通用数据服务 |
-| Module Service | 管理 Module Registry、模块状态、父子关系和统一导航入口 | **[未来规划]** 当前无统一功能模块注册服务 |
-| Export Service | 生成、校验、导入、备份、恢复和失败回滚；明确操作影响并保留用户确认 | **[已实现]** Data Center 已提供五类持久化数据的导出/导入、导入前备份和回滚保护；**[未来规划]** 从页面脚本中演进为共享服务 |
-| Notification Service | 未来统一管理提醒、通知权限、调度及用户偏好 | **[未来规划]** 当前未发现统一通知服务 |
+| Quick Notes | `persistNotes` | `quick-notes` |
+| Task Manager | `persistTasks` | `task-manager` |
+| Daily Focus | `persistDailyFocus` / `writeDailyFocusArchive` | `daily-focus` |
+| Ideas & Writing | `persistIdeas` | `ideas-writing` |
+| Document Summary 历史 | `persistDocumentHistory` | `document-summary` |
 
-服务拆分应由重复、复杂度或测试需求驱动。不得在抽取服务时改变现有 API 契约、localStorage 键、业务数据形状或已确认的用户交互。
+隐式写入路径（Daily Focus 输入自动保存、清空按钮、`startDailyFocus`、`toggleTask`/`deleteTask`、`importOrganizedTasks`）同样经过上述守卫。AI 的五个工作流（AI Assistant、Daily Planning、Task Organization、Document Summary、Ideas & Writing）各持有独立 `AbortController` 与 AccessVersion，入口校验访问状态、停用时中止在途请求并丢弃迟到响应。
+
+**已知边界（设计使然）**：Data Center 的全局导入恢复（`applyDataCenterData`）直接写 `localStorage`，**不经过**上述守卫，因此即使模块被停用，用户仍可通过 Data Center 执行全局恢复；恢复完成后被停用模块依旧保持只读。这是「数据恢复优先于模块停用」的刻意设计，而非缺陷。
+
+## 7. 模块设置数据契约（schema v2 · 第二阶段已实现）
+
+### 7.1 存储键与结构
+
+| 键 | 用途 |
+|---|---|
+| `my-tech-lab-module-settings` | 模块启停设置（有效数据） |
+| `my-tech-lab-module-settings-recovery` | 损坏设置的隔离记录（恢复隔离区） |
+
+模块设置结构为 `{ schemaVersion, enabledById }`：
+
+- `schemaVersion`：当前为 `2`，兼容读取 `1`（`legacyModuleSettingsSchemaVersion = 1`）。
+- `enabledById`：`{ [moduleId]: false }`，**仅保存显式停用的模块**；启用状态通过「键不存在」隐式表达。受保护模块不允许出现在该映射中。
+
+### 7.2 校验与迁移
+
+- `validateModuleSettings`：校验结构、版本、字段白名单、模块 ID 是否存在、布尔类型，并拒绝受保护模块被停用。
+- `parseModuleSettings` / `readModuleSettings`：读取并解析，返回状态 `available` / `legacy` / `corrupt` / `invalid` / `unsupported-version` / `storage-unavailable`。
+- `migrateModuleSettings`：v1 → v2 仅重写 `schemaVersion`（两版结构一致），写入前校验、写后回读、失败回滚，原始数据不受影响。
+- `writeModuleSettings`：采用乐观锁（`expectedRawValue`）防止跨标签页并发覆盖；写后回读校验，失败回滚。
+
+### 7.3 损坏检测与恢复
+
+- `recoverModuleSettings`：当设置损坏（`corrupt` / `invalid` / `unsupported-version`）时，先把原始字符串完整隔离到 `my-tech-lab-module-settings-recovery`（记录 `{ quarantinedAt, sourceKey, rawValue }`），再写入默认启用状态；隔离失败则中止，原数据不动。
+- 设置异常时所有受影响模块 fail-closed 为只读，Module Management Center 显示「恢复」面板，允许用户手动恢复到默认启用状态。
+
+### 7.4 Data Center 备份中的可选字段
+
+- Data Center 备份在顶层新增**可选字段** `moduleSettingsRecovery`：无隔离记录时为 `null`；有有效记录时保存记录对象；记录损坏但存在时原样保留为 `{ storageValue }`。
+- `dataCenterVersion` 仍为 `1`、`dataCenterModules` 仍为 5 项，旧版与新版本备份**双向兼容**：无 `moduleSettingsRecovery` 字段的旧备份仍可导入。
+- 导入时 `validateModuleSettingsRecoveryInBackup` 校验该字段，恢复隔离记录，但**不覆盖当前有效模块设置**；校验失败则中止导入并回滚。
 
 ## 8. 数据架构
 
@@ -198,11 +236,13 @@ My Tech Lab 以个人使用为起点，长期演进为由用户自主掌握数�
 | Ideas & Writing | `my-tech-lab-ideas` | 已保存的灵感记录 |
 | Document Summary 历史 | `my-tech-lab-document-summaries` | 已保存资料及总结历史 |
 
+除上述五类业务键外，另有 §7 所述的两个模块设置系统键（`my-tech-lab-module-settings` 与其 `-recovery` 隔离键），系统配置与业务数据分开管理。
+
 AI Assistant 对话和部分尚未保存的分析、草稿、预览是临时页面状态，不属于上述持久化备份范围。Data Center 当前的五类键是代码确认的备份范围，不应据此推断其他临时数据已经备份。
 
 ### 8.2 数据不变量
 
-1. 业务数据与系统配置必须分开管理；未来模块启停或排序偏好不得占用或改写上述业务键。
+1. 业务数据与系统配置必须分开管理；模块启停设置不得占用或改写上述业务键。
 2. 保留现有键名和数据格式，除非有经过审查的版本化迁移方案及兼容恢复路径。
 3. 新数据格式应有 schema 版本；迁移必须先验证并保证失败时旧数据仍可恢复。
 4. 隐藏界面、停用模块、调整分类或入口均不应删除数据。
@@ -217,6 +257,7 @@ AI Assistant 对话和部分尚未保存的分析、草稿、预览是临时页�
 - **[已实现]** 前端多个 AI 工作流把请求发送到 Cloudflare Worker 地址；代码中使用 `messages` 请求结构，并依赖 `{ reply, model }` 成功响应。
 - **[已实现（前端可确认范围）]** 当前主要模型服务为 DeepSeek，Worker 是前端与模型 API 之间的代理层。
 - **[已实现]** 工作流提示词、输入校验和结果处理分别位于各业务工作流代码中。
+- **[已实现]** 五个 AI 工作流各持独立 `AbortController` 与 AccessVersion，用于模块停用时中止在途请求并丢弃迟到响应（见 §6.3）。
 - **[无法从仓库确认]** Worker 源码、线上 Secret 配置、模型参数、请求限额及实际部署版本。
 
 ### 9.2 目标边界
@@ -272,23 +313,7 @@ AI Assistant 对话和部分尚未保存的分析、草稿、预览是临时页�
 - 涉及患者或其他敏感个人信息时，必须在输入和服务选择前评估隐私与合规要求；不得把可识别患者信息提交到公开网页或未经批准的第三方服务。
 - 新服务和基础设施应评估费用上限、滥用风险、故障影响及退出方式。
 
-## 12. 长期演进顺序
-
-依据 `ROADMAP.md`，v1.2.0 已发布，My Tech Lab 2.0 总体架构已记录于本文；**[未来规划]** 后续按以下顺序渐进推进：
-
-1. **[已完成]** 发布 v1.2.0，包含 Daily Focus History View。
-2. **[已完成]** 形成 My Tech Lab 2.0 总体架构设计，并持续维护本文。
-3. **[已完成]** 建立静态 Module Registry，并实现注册信息和 DOM 入口校验。
-4. **[已完成（只读阶段）]** 基于 Registry 实现 Module Management Center 的概览、分类/状态筛选和模块详情展示。
-5. **[已实现]** 当前代码已将功能模块分类统一为 `work-knowledge`、`ai-intelligence` 和 `system`，并明确与未来 Knowledge Taxonomy 独立；对应代码改动仍待提交。
-6. **[未来规划]** 根据实际需要定义模块运行时启停、排序及配置的数据边界；此类管理能力不能删除或重置业务数据。
-7. 逐步统一导航与模块入口，覆盖所有可到达路径。
-8. 在注册表和导航关系稳定后，规划并实施 Dashboard 信息架构和响应式界面。
-9. 在功能稳定后，逐步拆分公共服务层及独立模块。
-
-顺序可根据实际风险和验证结果调整；每阶段都应优先保持现有功能和数据兼容。
-
-## 13. 长期演进原则
+## 12. 长期演进原则
 
 1. 渐进式开发，不一次性大重构。
 2. 优先保持现有功能稳定。
@@ -301,13 +326,15 @@ AI Assistant 对话和部分尚未保存的分析、草稿、预览是临时页�
 9. 统计和服务状态必须有真实来源；无法确认时明确标注未知。
 10. 保持 iPhone、iPad 和 Mac 上的可用性与响应式体验。
 
-## 14. 后续需要明确的架构决策
+具体的阶段顺序与当前进度见 `ROADMAP.md`（进度与实施顺序的唯一来源）。
+
+## 13. 后续需要明确的架构决策
 
 以下事项在相关阶段开始前再确定，当前不预设唯一方案：
 
 - Module Registry 是静态代码定义、数据文件，还是未来由管理功能维护；应如何校验其 ID 稳定性。
-- 模块启停和排序偏好是否持久化、使用何种独立配置键，以及是否纳入 Data Center 备份。
-- Module Management Center 如何处理父子模块、共享工作区和禁用中模块正在进行的操作。
+- 模块启停和排序偏好是否持久化、使用何种独立配置键，以及是否纳入 Data Center 备份（启停已落 `my-tech-lab-module-settings`；排序偏好尚未引入）。
+- Module Management Center 如何处理父子模块、共享工作区和禁用中模块正在进行的操作（停用只读机制已实现，见 §6）。
 - AI Assistant 对话和其他临时 AI 结果是否需要持久化及纳入备份；若需要，需明确隐私、保留和导出规则。
 - Data Center 的备份格式如何演进以容纳未来的系统配置，同时保持旧版备份兼容。
 - 云同步是否属于近期需求；若启动，如何处理多设备冲突、认证、加密、离线写入和删除传播。
