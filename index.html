@@ -88,6 +88,93 @@
             gap: clamp(14px, 2.4vw, 28px);
         }
 
+        .nav-group {
+            position: relative;
+        }
+
+        .nav-group-toggle {
+            color: #b6c0cd;
+            font-size: 13px;
+            font-family: inherit;
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: color 160ms ease;
+        }
+
+        .nav-group-toggle:hover,
+        .nav-group-toggle:focus-visible {
+            color: var(--accent);
+        }
+
+        .nav-group-toggle::after {
+            content: "";
+            display: inline-block;
+            width: 5px;
+            height: 5px;
+            margin-left: 7px;
+            border-right: 1.5px solid currentColor;
+            border-bottom: 1.5px solid currentColor;
+            transform: translateY(-2px) rotate(45deg);
+            transition: transform 160ms ease;
+        }
+
+        .nav-group.open .nav-group-toggle::after {
+            transform: translateY(2px) rotate(225deg);
+        }
+
+        .nav-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            min-width: 208px;
+            margin-top: 10px;
+            padding: 6px;
+            background: var(--surface-raised);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            display: none;
+            z-index: 60;
+        }
+
+        .nav-group.open .nav-dropdown {
+            display: block;
+        }
+
+        .nav-group:last-child .nav-dropdown {
+            left: auto;
+            right: 0;
+        }
+
+        .nav-dropdown .header-link {
+            display: block;
+            padding: 9px 12px;
+            border-radius: 8px;
+            color: var(--text);
+        }
+
+        .nav-dropdown .header-link:hover,
+        .nav-dropdown .header-link:focus-visible {
+            background: var(--accent-soft);
+            color: var(--accent);
+        }
+
+        .nav-mobile-panels {
+            display: none;
+        }
+
+        .nav-mobile-panel {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .nav-mobile-panel[hidden] {
+            display: none;
+        }
+
         .header-link {
             color: #b6c0cd;
             font-size: 13px;
@@ -98,6 +185,20 @@
 
         .header-link:hover,
         .header-link:focus-visible {
+            color: var(--accent);
+        }
+
+        .header-link-ai {
+            color: var(--accent);
+            padding: 5px 12px;
+            border: 1px solid rgba(157, 232, 212, 0.28);
+            border-radius: 999px;
+            font-weight: 500;
+        }
+
+        .header-link-ai:hover,
+        .header-link-ai:focus-visible {
+            background: var(--accent-soft);
             color: var(--accent);
         }
 
@@ -2127,7 +2228,7 @@
         .task-input,
         .task-priority-select {
             width: 100%;
-            min-height: 42px;
+            height: 42px;
             padding: 0 12px;
             border: 1px solid var(--border);
             border-radius: 9px;
@@ -3149,6 +3250,18 @@
         @media (max-width: 900px) {
             .task-form {
                 grid-template-columns: minmax(0, 1fr) 120px;
+                align-items: start;
+            }
+
+            .task-priority-select {
+                appearance: none;
+                -webkit-appearance: none;
+                -moz-appearance: none;
+                padding-right: 32px;
+                background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5L6 8l3.5-3.5' fill='none' stroke='%238995a6' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+                background-repeat: no-repeat;
+                background-position: right 12px center;
+                background-size: 12px 12px;
             }
 
             .data-center-overview {
@@ -3190,13 +3303,54 @@
 
             .site-nav {
                 width: 100%;
-                justify-content: space-between;
+                justify-content: flex-start;
                 gap: 10px;
-                flex-wrap: wrap;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+            }
+
+            .site-nav > * {
+                flex-shrink: 0;
+            }
+
+            .site-nav::-webkit-scrollbar {
+                display: none;
             }
 
             .header-link {
                 font-size: 12px;
+            }
+
+            .nav-group-toggle {
+                font-size: 12px;
+            }
+
+            .nav-dropdown,
+            .nav-group:last-child .nav-dropdown {
+                display: none !important;
+            }
+
+            .nav-mobile-panels {
+                display: block;
+                width: 100%;
+            }
+
+            .nav-mobile-panel {
+                padding-top: 10px;
+                margin-top: 8px;
+                border-top: 1px solid var(--border);
+            }
+
+            .nav-mobile-panel .header-link {
+                padding: 7px 12px;
+                border-radius: 8px;
+                color: var(--text);
+            }
+
+            .nav-mobile-panel .header-link:active {
+                background: var(--accent-soft);
             }
 
             main {
@@ -3567,17 +3721,48 @@
                 <span>My Tech Lab</span>
             </a>
             <nav class="site-nav" aria-label="Dashboard modules">
-                <a class="header-link" href="#daily-focus-section">Focus</a>
-                <a class="header-link" href="#task-manager-section">Tasks</a>
-                <a class="header-link" href="#quick-notes-section">Notes</a>
-                <a class="header-link" href="#projects">Projects</a>
-                <a class="header-link" href="#module-management-center-section">Modules</a>
-                <a class="header-link" href="#data-center-section">Data</a>
+                <a class="header-link" href="#dashboard">Dashboard</a>
+                <div class="nav-group">
+                    <button class="nav-group-toggle" type="button" aria-expanded="false" aria-haspopup="true" data-mobile-panel="mobile-panel-productivity-knowledge">Productivity &amp; Knowledge</button>
+                    <div class="nav-dropdown">
+                        <a class="header-link" href="#daily-focus-section">Daily Focus</a>
+                        <a class="header-link" href="#task-manager-section">Tasks</a>
+                        <a class="header-link" href="#quick-notes-section">Notes</a>
+                    </div>
+                </div>
+                <div class="nav-group">
+                    <button class="nav-group-toggle" type="button" aria-expanded="false" aria-haspopup="true" data-mobile-panel="mobile-panel-projects-creation">Projects &amp; Creation</button>
+                    <div class="nav-dropdown">
+                        <a class="header-link" href="#projects">Projects</a>
+                    </div>
+                </div>
+                <a class="header-link header-link-ai" href="#ai-assistant-section">AI Assistant</a>
+                <div class="nav-group">
+                    <button class="nav-group-toggle" type="button" aria-expanded="false" aria-haspopup="true" data-mobile-panel="mobile-panel-system">System</button>
+                    <div class="nav-dropdown">
+                        <a class="header-link" href="#module-management-center-section">Module Management</a>
+                        <a class="header-link" href="#data-center-section">Data Center</a>
+                    </div>
+                </div>
             </nav>
+            <div class="nav-mobile-panels">
+                <div class="nav-mobile-panel" id="mobile-panel-productivity-knowledge" hidden>
+                    <a class="header-link" href="#daily-focus-section">Daily Focus</a>
+                    <a class="header-link" href="#task-manager-section">Tasks</a>
+                    <a class="header-link" href="#quick-notes-section">Notes</a>
+                </div>
+                <div class="nav-mobile-panel" id="mobile-panel-projects-creation" hidden>
+                    <a class="header-link" href="#projects">Projects</a>
+                </div>
+                <div class="nav-mobile-panel" id="mobile-panel-system" hidden>
+                    <a class="header-link" href="#module-management-center-section">Module Management</a>
+                    <a class="header-link" href="#data-center-section">Data Center</a>
+                </div>
+            </div>
         </header>
 
         <main>
-            <section class="ai-assistant-section" aria-labelledby="ai-assistant-title">
+            <section class="ai-assistant-section" id="ai-assistant-section" aria-labelledby="ai-assistant-title">
                 <div class="ai-assistant-panel">
                     <div class="ai-assistant-title-row">
                         <h2 class="ai-assistant-title" id="ai-assistant-title">AI Assistant</h2>
@@ -4050,7 +4235,7 @@
                 <p class="intro-copy">A little corner of the internet for exploring technology, building useful things, and following creative curiosity.</p>
             </section>
 
-            <section class="dashboard-section" aria-label="Dashboard summary">
+            <section class="dashboard-section" id="dashboard" aria-label="Dashboard summary">
                 <div class="dashboard-grid">
                     <article class="dashboard-stat">
                         <span class="dashboard-value" id="dashboard-pending-tasks">0</span>
@@ -4324,8 +4509,8 @@
         const moduleCategoryDefinitions = Object.freeze([
             Object.freeze({
                 id: "work-knowledge",
-                name: "Work & Knowledge",
-                description: "工作与知识"
+                name: "Productivity & Knowledge",
+                description: "效率与知识"
             }),
             Object.freeze({
                 id: "ai-intelligence",
@@ -6280,6 +6465,31 @@
             updateDocumentSummaryAccessUI();
             updateIdeasWritingAccessUI();
             updateModuleReadonlyBadges();
+            updateMobilePanelAccess();
+        }
+
+        function updateMobilePanelAccess() {
+            const navModules = [
+                { id: "quick-notes", href: "#quick-notes-section" },
+                { id: "task-manager", href: "#task-manager-section" },
+                { id: "daily-focus", href: "#daily-focus-section" }
+            ];
+            navModules.forEach(({ id, href }) => {
+                const access = getModuleAccessStatus(id);
+                document.querySelectorAll(`.nav-mobile-panel a[href="${href}"]`).forEach((link) => {
+                    if (access.enabled) {
+                        link.removeAttribute("aria-disabled");
+                        link.removeAttribute("title");
+                        delete link.dataset.moduleAccessLink;
+                        link.classList.remove("module-nav-link-unavailable");
+                    } else {
+                        link.dataset.moduleAccessLink = id;
+                        link.setAttribute("aria-disabled", "true");
+                        link.title = access.message;
+                        link.classList.add("module-nav-link-unavailable");
+                    }
+                });
+            });
         }
 
         function getModuleHeading(moduleId) {
@@ -6799,6 +7009,72 @@
                 return;
             }
             event.preventDefault();
+        });
+
+        document.querySelector(".nav-mobile-panels").addEventListener("click", (event) => {
+            const link = event.target.closest("[data-module-access-link]");
+            if (!link || !showUnavailableNavigationMessage(link.dataset.moduleAccessLink)) {
+                return;
+            }
+            event.preventDefault();
+        });
+
+        function closeNavDropdowns(exceptGroup) {
+            document.querySelectorAll(".nav-group").forEach((group) => {
+                if (group !== exceptGroup) {
+                    group.classList.remove("open");
+                    group.querySelector(".nav-group-toggle").setAttribute("aria-expanded", "false");
+                }
+            });
+            document.querySelectorAll(".nav-mobile-panel").forEach((panel) => {
+                panel.hidden = true;
+            });
+        }
+
+        document.querySelectorAll(".nav-group-toggle").forEach((toggle) => {
+            toggle.addEventListener("click", (event) => {
+                event.stopPropagation();
+                const group = toggle.closest(".nav-group");
+                const willOpen = !group.classList.contains("open");
+                closeNavDropdowns(null);
+                if (willOpen) {
+                    group.classList.add("open");
+                    toggle.setAttribute("aria-expanded", "true");
+                    const panelId = toggle.getAttribute("data-mobile-panel");
+                    if (panelId) {
+                        const panel = document.getElementById(panelId);
+                        if (panel) {
+                            panel.hidden = false;
+                        }
+                    }
+                }
+            });
+        });
+
+        window.addEventListener("click", (event) => {
+            if (!event.target.closest(".nav-group") &&
+                !event.target.closest(".nav-mobile-panels")) {
+                closeNavDropdowns(null);
+            }
+        });
+
+        window.addEventListener("keydown", (event) => {
+            if (event.key !== "Escape") {
+                return;
+            }
+            const openGroup = document.querySelector(".nav-group.open");
+            closeNavDropdowns(null);
+            if (openGroup) {
+                openGroup.querySelector(".nav-group-toggle").focus();
+            }
+        });
+
+        document.querySelectorAll(".nav-dropdown a").forEach((link) => {
+            link.addEventListener("click", () => closeNavDropdowns(null));
+        });
+
+        document.querySelectorAll(".nav-mobile-panel a").forEach((link) => {
+            link.addEventListener("click", () => closeNavDropdowns(null));
         });
 
         window.addEventListener("storage", (event) => {
