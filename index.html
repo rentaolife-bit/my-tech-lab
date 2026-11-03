@@ -4735,7 +4735,10 @@
         const moduleSettingsSchemaVersion = 2;
         const legacyModuleSettingsSchemaVersion = 1;
         const moduleSettingsRecoveryStorageKey = "my-tech-lab-module-settings-recovery";
+        const dataCenterRecoveryFailedKey = "my-tech-lab-data-center-recovery-failed";
         const protectedModuleIds = new Set(["data-center", "module-management-center"]);
+        let dataCenterRecoveryFailed = false;
+        let dataCenterRecoveryFailedKeys = [];
         function freezeModuleSettings(settings) {
             return Object.freeze({
                 schemaVersion: settings.schemaVersion,
@@ -4854,7 +4857,100 @@
             return parseModuleSettings(rawSettings);
         }
 
-        function writeModuleSettings(nextSettings, expectedRawValue) {
+        function isDataCenterRecoveryLocked() {
+            let raw;
+            try {
+                raw = localStorage.getItem(dataCenterRecoveryFailedKey);
+            } catch (error) {
+                dataCenterRecoveryFailed = true;
+                if (dataCenterRecoveryFailedKeys.length === 0) {
+                    dataCenterRecoveryFailedKeys = ["(存储不可用，无法确认恢复状态)"];
+                }
+                return true;
+            }
+            if (raw === null) {
+                dataCenterRecoveryFailed = false;
+                dataCenterRecoveryFailedKeys = [];
+                return false;
+            }
+            dataCenterRecoveryFailed = true;
+            try {
+                const parsed = JSON.parse(raw);
+                if (parsed && typeof parsed === "object" && !Array.isArray(parsed) &&
+                    Array.isArray(parsed.failedKeys)) {
+                    dataCenterRecoveryFailedKeys = parsed.failedKeys.slice();
+                } else {
+                    dataCenterRecoveryFailedKeys = ["(锁定标记损坏)"];
+                }
+            } catch (error) {
+                dataCenterRecoveryFailedKeys = ["(锁定标记损坏)"];
+            }
+            return true;
+        }
+
+        function checkDataCenterRecoveryFailureOnStartup() {
+            isDataCenterRecoveryLocked();
+        }
+
+        function lockDataCenterForRecoveryFailure(failedKeys) {
+            dataCenterRecoveryFailed = true;
+            dataCenterRecoveryFailedKeys = (failedKeys || []).slice();
+            const now = new Date().toISOString();
+            let originalCreatedAt = now;
+            try {
+                const existingRaw = localStorage.getItem(dataCenterRecoveryFailedKey);
+                if (existingRaw !== null) {
+                    try {
+                        const existing = JSON.parse(existingRaw);
+                        if (existing && typeof existing === "object" && !Array.isArray(existing) &&
+                            typeof existing.createdAt === "string" && existing.createdAt.length > 0) {
+                            originalCreatedAt = existing.createdAt;
+                        }
+                    } catch (parseError) {
+                        // 旧标记损坏：无法解析 createdAt，不假定旧标记不存在；原始字节保留在存储中
+                    }
+                }
+            } catch (readError) {
+                // getItem 抛错：无法读取旧标记，不假定其不存在；原始信息保留在存储中
+            }
+            const payload = JSON.stringify({
+                state: "recovery-required",
+                createdAt: originalCreatedAt,
+                lastFailureAt: now,
+                failedKeys: dataCenterRecoveryFailedKeys,
+                backupFormat: dataCenterFormat,
+                backupVersion: dataCenterVersion
+            });
+            try {
+                localStorage.setItem(dataCenterRecoveryFailedKey, payload);
+                if (localStorage.getItem(dataCenterRecoveryFailedKey) !== payload) {
+                    throw new Error("标记写入校验失败");
+                }
+                return true;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        function clearDataCenterRecoveryFailure() {
+            try {
+                localStorage.removeItem(dataCenterRecoveryFailedKey);
+            } catch (error) {
+                return false;
+            }
+            try {
+                if (localStorage.getItem(dataCenterRecoveryFailedKey) !== null) {
+                    return false;
+                }
+            } catch (error) {
+                return false;
+            }
+            dataCenterRecoveryFailed = false;
+            dataCenterRecoveryFailedKeys = [];
+            return true;
+        }
+
+        function writeModuleSettingsInternal(nextSettings, expectedRawValue) {
             const validationError = validateModuleSettings(nextSettings);
             if (validationError) {
                 return { ok: false, state: "invalid", message: validationError };
@@ -4915,7 +5011,21 @@
             };
         }
 
+        function writeModuleSettings(nextSettings, expectedRawValue) {
+            if (isDataCenterRecoveryLocked()) {
+                return {
+                    ok: false,
+                    state: "recovery-locked",
+                    message: "系统处于恢复失败保护状态，禁止修改模块设置。请在 Data Center 完成恢复。"
+                };
+            }
+            return writeModuleSettingsInternal(nextSettings, expectedRawValue);
+        }
+
         function migrateModuleSettings() {
+            if (isDataCenterRecoveryLocked()) {
+                return { ok: true, state: "skipped-locked", message: "恢复失败保护中，跳过模块设置迁移。", settings: null };
+            }
             const result = readModuleSettings();
             if (!result.ok) {
                 return result;
@@ -4944,6 +5054,9 @@
         }
 
         function recoverModuleSettings() {
+            if (isDataCenterRecoveryLocked()) {
+                return { ok: false, state: "recovery-locked", message: "系统处于恢复失败保护状态，禁止恢复模块设置。请在 Data Center 完成恢复。" };
+            }
             let rawSettings;
             try {
                 rawSettings = localStorage.getItem(moduleSettingsStorageKey);
@@ -5040,6 +5153,9 @@
             return false;
         }
         function setModuleEnabled(moduleId, enabled) {
+            if (isDataCenterRecoveryLocked()) {
+                return { ok: false, state: "recovery-locked", message: "系统处于恢复失败保护状态，禁止修改模块启停。请在 Data Center 完成恢复。" };
+            }
             if (!getModuleById(moduleId)) {
                 return { ok: false, state: "unknown-module", message: `未知模块 ID“${String(moduleId)}”。` };
             }
@@ -5218,6 +5334,13 @@
             };
         }
         function requireModuleAccess(moduleId, statusElement) {
+            if (isDataCenterRecoveryLocked()) {
+                if (statusElement) {
+                    statusElement.textContent = "系统处于恢复失败保护状态，已禁止写入。请在 Data Center 完成恢复。";
+                    statusElement.setAttribute("role", "alert");
+                }
+                return false;
+            }
             const access = getModuleAccessStatus(moduleId);
             if (!access.enabled && statusElement) {
                 setModuleAccessMessage(statusElement, access);
@@ -5784,8 +5907,10 @@
                 card.append(name, count, meta);
                 dataCenterOverview.append(card);
             });
-            dataCenterExportButton.disabled = hasInvalidData;
-            if (hasInvalidData) {
+            const recoveryLocked = dataCenterRecoveryFailed;
+            dataCenterExportButton.disabled = hasInvalidData && !recoveryLocked;
+            dataCenterExportButton.textContent = recoveryLocked ? "导出恢复快照" : "导出全部数据";
+            if (hasInvalidData && !recoveryLocked) {
                 setDataCenterStatus("检测到格式异常或损坏的数据。为避免导出不完整备份，已禁用导出；请勿导入覆盖。", true);
             }
         }
@@ -5856,6 +5981,45 @@
             throw new Error("备份中的模块设置隔离数据格式无效。");
         }
 
+        function validateModuleSettingsInBackup(value) {
+            if (value === undefined || value === null) {
+                return null;
+            }
+            if (value && typeof value === "object" && !Array.isArray(value) &&
+                value.schemaVersion === moduleSettingsSchemaVersion &&
+                !validateModuleSettings(value)) {
+                return { settings: value };
+            }
+            throw new Error("备份中的模块设置配置格式无效。");
+        }
+
+        const moduleSettingsRawMaxLength = 100000;
+
+        function validateModuleSettingsRawInBackup(value) {
+            if (value === undefined || value === null) {
+                return null;
+            }
+            if (typeof value === "string" && value.length <= moduleSettingsRawMaxLength) {
+                return { storageValue: value };
+            }
+            throw new Error("备份中的模块设置原始数据格式无效或超出长度限制。");
+        }
+
+        function getPreImportModuleSettingsValue(originalModuleSettings) {
+            if (!originalModuleSettings || !originalModuleSettings.present) {
+                return null;
+            }
+            const parsed = parseModuleSettings(originalModuleSettings.raw);
+            if (parsed.ok && !parsed.needsMigration &&
+                parsed.settings.schemaVersion === moduleSettingsSchemaVersion) {
+                return {
+                    schemaVersion: parsed.settings.schemaVersion,
+                    enabledById: { ...parsed.settings.enabledById }
+                };
+            }
+            return { storageValue: originalModuleSettings.raw };
+        }
+
         function writeModuleSettingsRecovery(payload) {
             if (!payload) {
                 return;
@@ -5883,7 +6047,26 @@
             }
         }
 
+        function restoreModuleSettings(originalModuleSettings) {
+            if (originalModuleSettings.present) {
+                localStorage.setItem(moduleSettingsStorageKey, originalModuleSettings.raw);
+                if (localStorage.getItem(moduleSettingsStorageKey) !== originalModuleSettings.raw) {
+                    throw new Error("模块设置回滚后校验失败。");
+                }
+            } else {
+                localStorage.removeItem(moduleSettingsStorageKey);
+                if (localStorage.getItem(moduleSettingsStorageKey) !== null) {
+                    throw new Error("模块设置回滚后校验失败。");
+                }
+            }
+        }
+
         function createDataCenterBackup() {
+            const readResult = readModuleSettings();
+            const moduleSettings = readResult.ok ? readResult.settings : null;
+            const moduleSettingsRaw = (!readResult.ok && readResult.rawValue !== undefined)
+                ? readResult.rawValue
+                : null;
             return {
                 format: dataCenterFormat,
                 version: dataCenterVersion,
@@ -5899,12 +6082,15 @@
                             : data
                     };
                 }),
+                moduleSettings,
+                moduleSettingsRaw,
                 moduleSettingsRecovery: getModuleSettingsRecoveryBackupValue()
             };
         }
 
-        function createDataCenterPreImportBackup(original) {
+        function createDataCenterPreImportBackup(original, originalModuleSettings) {
             const recoveryValue = getModuleSettingsRecoveryBackupValue();
+            const moduleSettingsValue = getPreImportModuleSettingsValue(originalModuleSettings);
             let hasInvalidData = false;
             const modules = original.map(({ definition, raw }) => {
                 let data = definition.emptyValue();
@@ -5937,6 +6123,7 @@
                         key: definition.key,
                         storageValue: raw
                     })),
+                    moduleSettings: moduleSettingsValue,
                     moduleSettingsRecovery: recoveryValue
                 };
             }
@@ -5945,6 +6132,7 @@
                 version: dataCenterVersion,
                 exportedAt: new Date().toISOString(),
                 modules,
+                moduleSettings: moduleSettingsValue,
                 moduleSettingsRecovery: recoveryValue
             };
         }
@@ -5977,10 +6165,95 @@
             }
         }
 
+        function readRawStorageStatus(key) {
+            try {
+                const raw = localStorage.getItem(key);
+                if (raw === null) {
+                    return { present: false, storageValue: null, readStatus: "missing" };
+                }
+                return { present: true, storageValue: raw, readStatus: "success" };
+            } catch (error) {
+                return { present: false, storageValue: null, readStatus: "error" };
+            }
+        }
+
+        function createDataCenterRecoverySnapshot() {
+            const now = new Date().toISOString();
+            const modules = dataCenterModules.map((module) => {
+                const status = readRawStorageStatus(module.key);
+                return {
+                    moduleId: module.id,
+                    name: module.name,
+                    storageKey: module.key,
+                    present: status.present,
+                    storageValue: status.storageValue,
+                    readStatus: status.readStatus
+                };
+            });
+            const moduleSettingsStatus = readRawStorageStatus(moduleSettingsStorageKey);
+            const recoveryStatus = readRawStorageStatus(moduleSettingsRecoveryStorageKey);
+            const recoveryFailureStatus = readRawStorageStatus(dataCenterRecoveryFailedKey);
+
+            let recoveryValid = null;
+            if (recoveryStatus.readStatus === "success") {
+                try {
+                    recoveryValid = isValidModuleSettingsRecoveryRecord(JSON.parse(recoveryStatus.storageValue));
+                } catch (parseError) {
+                    recoveryValid = false;
+                }
+            }
+
+            const readStatuses = [
+                ...modules.map((module) => module.readStatus),
+                moduleSettingsStatus.readStatus,
+                recoveryStatus.readStatus,
+                recoveryFailureStatus.readStatus
+            ];
+            const hasReadError = readStatuses.includes("error");
+            const consistencyWarning =
+                "这是恢复失败保护状态下的故障现场快照，不代表完整一致的数据备份；仅用于存档与分析，不可作为普通备份导入，也不可作为恢复输入。" +
+                (hasReadError ? " 部分存储键读取失败（详见各键 readStatus），快照不完整。" : "");
+
+            return {
+                format: "my-tech-lab-recovery-snapshot",
+                version: dataCenterVersion,
+                exportedAt: now,
+                snapshotType: "recovery-snapshot",
+                consistencyWarning,
+                readStatus: hasReadError ? "incomplete" : "complete",
+                recoveryFailure: {
+                    present: recoveryFailureStatus.present,
+                    storageValue: recoveryFailureStatus.storageValue,
+                    readStatus: recoveryFailureStatus.readStatus
+                },
+                modules,
+                moduleSettings: {
+                    present: moduleSettingsStatus.present,
+                    storageValue: moduleSettingsStatus.storageValue,
+                    readStatus: moduleSettingsStatus.readStatus
+                },
+                moduleSettingsRaw: {
+                    carriedBy: "moduleSettings.storageValue",
+                    note: "模块设置主键的原始字节（含可能的损坏数据）已由 moduleSettings.storageValue 承载，本字段不重复存储，仅作语义对齐说明。"
+                },
+                moduleSettingsRecovery: {
+                    present: recoveryStatus.present,
+                    storageValue: recoveryStatus.storageValue,
+                    readStatus: recoveryStatus.readStatus,
+                    valid: recoveryValid
+                }
+            };
+        }
+
         function exportDataCenterBackup() {
             try {
-                const filename = downloadDataCenterBackup(createDataCenterBackup());
-                setDataCenterStatus(`五类数据已导出为 JSON 备份（${filename}）。请妥善保存文件。`);
+                if (dataCenterRecoveryFailed) {
+                    const filename = downloadDataCenterBackup(createDataCenterRecoverySnapshot(), "recovery-snapshot");
+                    setDataCenterStatus(`已导出恢复快照（${filename}）。这是故障现场存档，不代表完整一致的数据，不可直接用于恢复。`);
+                } else {
+                    const filename = downloadDataCenterBackup(createDataCenterBackup());
+                    setDataCenterStatus(`五类数据已导出为 JSON 备份（${filename}）。请妥善保存文件。`);
+                }
             } catch (error) {
                 setDataCenterStatus(error.message || "导出失败，当前数据未更改。", true);
                 console.error("Data Center export failed:", error);
@@ -6005,6 +6278,9 @@
                 }
                 modulesById.set(entry.id, entry);
             });
+
+            validateModuleSettingsInBackup(backup.moduleSettings);
+            validateModuleSettingsRawInBackup(backup.moduleSettingsRaw);
 
             return dataCenterModules.map((module) => {
                 const entry = modulesById.get(module.id);
@@ -6061,6 +6337,12 @@
                     item.textContent = "模块设置隔离数据：将恢复隔离记录，不会覆盖当前有效模块设置。";
                     dataCenterPreviewList.append(item);
                 }
+                const moduleSettingsRaw = validateModuleSettingsRawInBackup(backup.moduleSettingsRaw);
+                if (moduleSettingsRaw) {
+                    const item = document.createElement("li");
+                    item.textContent = "该备份包含模块设置原始数据。原始数据仅作为存档保留，不会自动写入当前配置。如需恢复，请使用独立恢复操作。";
+                    dataCenterPreviewList.append(item);
+                }
                 dataCenterPendingBackup = backup;
                 dataCenterPreview.hidden = false;
                 dataCenterConfirmImportButton.disabled = false;
@@ -6110,53 +6392,36 @@
             refreshDailyPlanning(false);
         }
 
-        function confirmDataCenterImport() {
-            if (!dataCenterPendingBackup) {
-                setDataCenterStatus("请先选择并验证备份文件。", true);
-                return;
-            }
+        function runDataCenterRecoveryTransaction(backup) {
             let modules;
             let recovery;
+            let moduleSettings;
             try {
-                modules = validateDataCenterBackup(dataCenterPendingBackup);
-                recovery = validateModuleSettingsRecoveryInBackup(dataCenterPendingBackup.moduleSettingsRecovery);
+                modules = validateDataCenterBackup(backup);
+                recovery = validateModuleSettingsRecoveryInBackup(backup.moduleSettingsRecovery);
+                moduleSettings = validateModuleSettingsInBackup(backup.moduleSettings);
             } catch (error) {
-                dataCenterPendingBackup = null;
-                dataCenterPreview.hidden = true;
-                setDataCenterStatus(error.message || "备份文件校验失败，未修改任何数据。", true);
-                return;
-            }
-            const focusImport = modules.find(({ definition }) => definition.id === "daily-focus");
-            const warning = focusImport?.legacyDailyFocus
-                ? `\n\n此为旧版单日 Daily Focus 备份（日期：${focusImport.legacyDailyFocusDate || "无日期"}）。导入时会合并该日期；若与现有日期重合，该日内容将由备份替换，其他日期历史会保留。`
-                : focusImport && focusImport.data.activeDate !== getLocalDateKey(new Date())
-                    ? `\n\nDaily Focus 备份的当前日期为 ${focusImport.data.activeDate}。所有日期记录将按备份原样恢复，不会改成今天。`
-                    : "";
-            const importImpact = focusImport?.legacyDailyFocus
-                ? "其他四个模块将按备份覆盖；Daily Focus 将合并旧版单日记录，不删除其他日期历史。"
-                : "五个模块的本地数据将按备份覆盖。";
-            if (!window.confirm(`${importImpact} 导入前会自动下载当前数据备份；请确认已理解覆盖风险。${warning}\n\n继续导入？`)) {
-                setDataCenterStatus("已取消导入，当前数据未更改。");
-                return;
+                return { ok: false, phase: "validate", error };
             }
 
             let original;
             let originalRecovery;
+            let originalModuleSettings;
             try {
                 original = dataCenterModules.map((module) => {
                     const raw = localStorage.getItem(module.key);
                     return { definition: module, raw, present: raw !== null };
                 });
                 originalRecovery = readModuleSettingsRecovery();
-                const safetyBackup = createDataCenterPreImportBackup(original);
+                const moduleSettingsRaw = localStorage.getItem(moduleSettingsStorageKey);
+                originalModuleSettings = { raw: moduleSettingsRaw, present: moduleSettingsRaw !== null };
+                const safetyBackup = createDataCenterPreImportBackup(original, originalModuleSettings);
                 downloadDataCenterBackup(
                     safetyBackup,
                     safetyBackup.format === dataCenterFormat ? "pre-import-backup" : "pre-import-raw-snapshot"
                 );
             } catch (error) {
-                setDataCenterStatus(`无法创建导入前完整备份，已中止导入：${error.message || "本地数据不可读取"}`, true);
-                console.error("Data Center pre-import backup failed:", error);
-                return;
+                return { ok: false, phase: "snapshot", error };
             }
 
             try {
@@ -6188,18 +6453,41 @@
                         throw new Error(`${definition.name} 写入后校验失败。`);
                     }
                 });
+                if (moduleSettings) {
+                    const currentRawValue = localStorage.getItem(moduleSettingsStorageKey);
+                    const current = readModuleSettings();
+                    const mergedEnabledById = {
+                        ...moduleSettings.settings.enabledById,
+                        ...(current.ok ? current.settings.enabledById : {})
+                    };
+                    const mergedSettings = {
+                        schemaVersion: moduleSettingsSchemaVersion,
+                        enabledById: mergedEnabledById
+                    };
+                    const writeResult = writeModuleSettingsInternal(mergedSettings, currentRawValue);
+                    if (!writeResult.ok) {
+                        throw new Error(`模块设置恢复失败：${writeResult.message}`);
+                    }
+                }
                 writeModuleSettingsRecovery(recovery);
                 applyDataCenterData(restoreModules);
-                dataCenterPreview.hidden = true;
-                dataCenterFileInput.value = "";
-                dataCenterPendingBackup = null;
-                dataCenterConfirmImportButton.disabled = true;
-                renderDataCenterOverview();
-                setDataCenterStatus(
-                    `导入成功，五类数据已恢复。${recovery ? "模块设置隔离数据已恢复，未改动当前有效模块设置。" : ""}导入前数据备份已下载到浏览器的下载目录。`
-                );
+                return { ok: true, recovery, moduleSettings };
             } catch (error) {
                 const rollbackErrors = [];
+                if (originalRecovery) {
+                    try {
+                        restoreModuleSettingsRecovery(originalRecovery);
+                    } catch (rollbackError) {
+                        rollbackErrors.push(`模块设置隔离数据: ${rollbackError.message}`);
+                    }
+                }
+                if (originalModuleSettings) {
+                    try {
+                        restoreModuleSettings(originalModuleSettings);
+                    } catch (rollbackError) {
+                        rollbackErrors.push(`模块设置: ${rollbackError.message}`);
+                    }
+                }
                 original.forEach(({ definition, raw, present }) => {
                     try {
                         if (present) {
@@ -6214,13 +6502,6 @@
                         rollbackErrors.push(`${definition.name}: ${rollbackError.message}`);
                     }
                 });
-                if (originalRecovery) {
-                    try {
-                        restoreModuleSettingsRecovery(originalRecovery);
-                    } catch (rollbackError) {
-                        rollbackErrors.push(`模块设置隔离数据: ${rollbackError.message}`);
-                    }
-                }
                 if (rollbackErrors.length === 0) {
                     try {
                         const restoredModules = original.map(({ definition, raw, present }) => {
@@ -6240,12 +6521,129 @@
                         rollbackErrors.push(`页面状态：${runtimeRollbackError.message}`);
                     }
                 }
-                const rollbackMessage = rollbackErrors.length
-                    ? `自动回滚未能完整完成（${rollbackErrors.join("；")}）。请勿关闭页面，保留导出的导入前备份。`
-                    : "已尝试恢复导入前的本地数据。";
-                setDataCenterStatus(`导入失败：${error.message || "浏览器存储写入失败"}。${rollbackMessage}`, true);
-                console.error("Data Center import failed:", error, rollbackErrors);
-            } finally {
+                return { ok: false, phase: "write", error, rollbackErrors };
+            }
+        }
+
+        function confirmDataCenterImport() {
+            if (isDataCenterRecoveryLocked()) {
+                setDataCenterStatus("系统处于恢复失败保护状态，普通导入已禁止。请使用专用恢复流程。", true);
+                return;
+            }
+            if (!dataCenterPendingBackup) {
+                setDataCenterStatus("请先选择并验证备份文件。", true);
+                return;
+            }
+            let modules;
+            try {
+                modules = validateDataCenterBackup(dataCenterPendingBackup);
+            } catch (error) {
+                dataCenterPendingBackup = null;
+                dataCenterPreview.hidden = true;
+                setDataCenterStatus(error.message || "备份文件校验失败，未修改任何数据。", true);
+                return;
+            }
+            const focusImport = modules.find(({ definition }) => definition.id === "daily-focus");
+            const warning = focusImport?.legacyDailyFocus
+                ? `\n\n此为旧版单日 Daily Focus 备份（日期：${focusImport.legacyDailyFocusDate || "无日期"}）。导入时会合并该日期；若与现有日期重合，该日内容将由备份替换，其他日期历史会保留。`
+                : focusImport && focusImport.data.activeDate !== getLocalDateKey(new Date())
+                    ? `\n\nDaily Focus 备份的当前日期为 ${focusImport.data.activeDate}。所有日期记录将按备份原样恢复，不会改成今天。`
+                    : "";
+            const importImpact = focusImport?.legacyDailyFocus
+                ? "其他四个模块将按备份覆盖；Daily Focus 将合并旧版单日记录，不删除其他日期历史。"
+                : "五个模块的本地数据将按备份覆盖。";
+            if (!window.confirm(`${importImpact} 导入前会自动下载当前数据备份；请确认已理解覆盖风险。${warning}\n\n继续导入？`)) {
+                setDataCenterStatus("已取消导入，当前数据未更改。");
+                return;
+            }
+
+            const result = runDataCenterRecoveryTransaction(dataCenterPendingBackup);
+            if (result.ok) {
+                dataCenterPreview.hidden = true;
+                dataCenterFileInput.value = "";
+                dataCenterPendingBackup = null;
+                dataCenterConfirmImportButton.disabled = true;
+                renderDataCenterOverview();
+                setDataCenterStatus(
+                    `导入成功，五类数据已恢复。${result.recovery ? "模块设置隔离数据已恢复，未改动当前有效模块设置。" : ""}导入前数据备份已下载到浏览器的下载目录。`
+                );
+            } else if (result.phase === "validate") {
+                dataCenterPendingBackup = null;
+                dataCenterPreview.hidden = true;
+                setDataCenterStatus(result.error.message || "备份文件校验失败，未修改任何数据。", true);
+            } else if (result.phase === "snapshot") {
+                setDataCenterStatus(`无法创建导入前完整备份，已中止导入：${result.error.message || "本地数据不可读取"}`, true);
+                console.error("Data Center pre-import backup failed:", result.error);
+            } else {
+                if (result.rollbackErrors.length > 0) {
+                    lockDataCenterForRecoveryFailure(result.rollbackErrors);
+                    setDataCenterStatus(
+                        `导入失败：${result.error.message || "浏览器存储写入失败"}。` +
+                        `自动回滚未完整完成（${result.rollbackErrors.join("；")}）。` +
+                        "Data Center 已进入恢复失败锁定状态，请通过专用恢复流程处理，勿继续普通数据操作。",
+                        true
+                    );
+                } else {
+                    setDataCenterStatus(
+                        `导入失败：${result.error.message || "浏览器存储写入失败"}。已尝试恢复导入前的本地数据。`,
+                        true
+                    );
+                }
+                console.error("Data Center import failed:", result.error, result.rollbackErrors);
+                renderDataCenterOverview();
+            }
+        }
+
+        function confirmDataCenterRecovery() {
+            if (!isDataCenterRecoveryLocked()) {
+                setDataCenterStatus("系统未处于恢复失败保护状态，无需执行专用恢复。", true);
+                return;
+            }
+            if (!dataCenterPendingBackup) {
+                setDataCenterStatus("请先选择并验证恢复备份文件。", true);
+                return;
+            }
+            let modules;
+            try {
+                modules = validateDataCenterBackup(dataCenterPendingBackup);
+            } catch (error) {
+                dataCenterPendingBackup = null;
+                dataCenterPreview.hidden = true;
+                setDataCenterStatus(error.message || "备份文件校验失败，未修改任何数据。", true);
+                return;
+            }
+            const focusImport = modules.find(({ definition }) => definition.id === "daily-focus");
+            const importImpact = focusImport?.legacyDailyFocus
+                ? "其他四个模块将按备份覆盖；Daily Focus 将合并旧版单日记录，不删除其他日期历史。"
+                : "五个模块的本地数据将按备份覆盖。";
+            if (!window.confirm(`恢复失败保护状态下，将用所选备份恢复数据并解除锁定。${importImpact}\n\n恢复前会自动下载当前数据安全快照。继续恢复？`)) {
+                setDataCenterStatus("已取消恢复，仍保持保护锁定。");
+                return;
+            }
+
+            const originalFailedKeys = dataCenterRecoveryFailedKeys.slice();
+            const result = runDataCenterRecoveryTransaction(dataCenterPendingBackup);
+            if (result.ok) {
+                if (clearDataCenterRecoveryFailure()) {
+                    dataCenterPreview.hidden = true;
+                    dataCenterFileInput.value = "";
+                    dataCenterPendingBackup = null;
+                    dataCenterConfirmImportButton.disabled = true;
+                    renderDataCenterOverview();
+                    updateModuleAccessUI();
+                    setDataCenterStatus("恢复成功，保护锁定已解除。");
+                } else {
+                    setDataCenterStatus("恢复数据已写入，但恢复失败标记未能清除，仍保持保护锁定。请重试或手动处理标记。", true);
+                }
+            } else {
+                const combinedFailedKeys = originalFailedKeys.slice();
+                combinedFailedKeys.push(`恢复失败(${new Date().toISOString()})：${result.error.message || "浏览器存储写入失败"}`);
+                if (result.rollbackErrors && result.rollbackErrors.length > 0) {
+                    combinedFailedKeys.push(`回滚失败：${result.rollbackErrors.join("；")}`);
+                }
+                lockDataCenterForRecoveryFailure(combinedFailedKeys);
+                setDataCenterStatus(`恢复失败，仍保持保护锁定：${result.error.message || "浏览器存储写入失败"}。`, true);
+                console.error("Data Center recovery failed:", result.error, result.rollbackErrors);
                 renderDataCenterOverview();
             }
         }
@@ -6292,6 +6690,10 @@
         }
 
         function confirmDataCenterClear() {
+            if (isDataCenterRecoveryLocked()) {
+                setDataCenterStatus("系统处于恢复失败保护状态，禁止清空数据。请先完成恢复。", true);
+                return;
+            }
             updateDataCenterClearButton();
             if (dataCenterConfirmClearButton.disabled) {
                 setDataCenterStatus("请先生成备份、确认已下载备份文件，并准确输入 DELETE。", true);
@@ -7093,6 +7495,11 @@
         });
 
         window.addEventListener("storage", (event) => {
+            if (event.key === dataCenterRecoveryFailedKey) {
+                isDataCenterRecoveryLocked();
+                updateModuleAccessUI();
+                return;
+            }
             if (event.key !== moduleSettingsStorageKey && event.key !== moduleSettingsRecoveryStorageKey && event.key !== null) {
                 return;
             }
@@ -7114,7 +7521,13 @@
             dataCenterClearResult.hidden = true;
             void previewDataCenterImport(dataCenterFileInput.files?.[0]);
         });
-        dataCenterConfirmImportButton.addEventListener("click", confirmDataCenterImport);
+        dataCenterConfirmImportButton.addEventListener("click", () => {
+            if (isDataCenterRecoveryLocked()) {
+                confirmDataCenterRecovery();
+            } else {
+                confirmDataCenterImport();
+            }
+        });
         dataCenterPrepareClearButton.addEventListener("click", prepareDataCenterClear);
         dataCenterBackupConfirmed.addEventListener("change", updateDataCenterClearButton);
         dataCenterClearPhrase.addEventListener("input", updateDataCenterClearButton);
@@ -8917,7 +9330,7 @@
             try {
                 const { archive: savedArchive, rawValue, needsMigration } = readDailyFocusArchive();
                 const access = getModuleAccessStatus("daily-focus");
-                if (!access.enabled) {
+                if (!access.enabled || isDataCenterRecoveryLocked()) {
                     dailyFocus = {
                         date: dateKey,
                         priorities: savedArchive?.records[dateKey]
@@ -10917,8 +11330,11 @@
         planningCopyButton.addEventListener("click", copyDailyPlanningResult);
         planningProposalForm.addEventListener("submit", confirmDailyPlan);
 
+        checkDataCenterRecoveryFailureOnStartup();
         validateModuleRegistry();
-        migrateModuleSettings();
+        if (!isDataCenterRecoveryLocked()) {
+            migrateModuleSettings();
+        }
         renderModuleManagementCenter();
         loadDailyFocus();
         updateClock();
