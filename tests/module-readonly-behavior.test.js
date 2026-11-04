@@ -163,7 +163,7 @@ function makeMockFetch() {
             const entry = { url, opts, resolve, reject, signal: opts?.signal };
             pending.push(entry);
             if (opts?.signal && fn.rejectOnAbort !== false) {
-                const onAbort = () => reject(new Error("AbortError"));
+                const onAbort = () => reject(Object.assign(new Error("The operation was aborted."), { name: "AbortError" }));
                 if (opts.signal.aborted) onAbort();
                 else opts.signal.addEventListener("abort", onAbort, { once: true });
             }
@@ -175,14 +175,29 @@ function makeMockFetch() {
     return fn;
 }
 
+// ---------- 4.5 可捕获的定时器（测试可读取/手动触发 setTimeout 回调）----------
+function makeTimers() {
+    const map = new Map();
+    return {
+        setTimeout(fn, delay) {
+            const id = map.size + 1;
+            map.set(id, { fn, delay });
+            return id;
+        },
+        clearTimeout(id) { map.delete(id); },
+        _map: map,
+    };
+}
+
 // ---------- 5. 组装环境并加载真实脚本 ----------
 function loadApi(options = {}) {
     const localStorage = options.localStorage || makeStorage(options.seed || {});
     const fetchMock = options.fetch || makeMockFetch();
+    const timers = options.timers || makeTimers();
     const document = makeDocument();
     const window = {
-        setTimeout: () => 0,
-        clearTimeout: () => {},
+        setTimeout: (fn, delay) => timers.setTimeout(fn, delay),
+        clearTimeout: (id) => timers.clearTimeout(id),
         setInterval: () => 0,
         clearInterval: () => {},
         confirm: () => true,
@@ -213,6 +228,7 @@ function loadApi(options = {}) {
     getAiRequestController: () => aiRequestController,
     // --- AI：Daily Planning ---
     runDailyPlanningAnalysis, updateDailyPlanningAccessUI, planningAIStatus, planningAnalysisMode,
+    confirmDailyPlan,
     getDailyPlanningPending: () => dailyPlanningAIRequestPending,
     getDailyPlanningController: () => dailyPlanningRequestController,
     getDailyPlanningAnalysis: () => dailyPlanningAnalysis,
@@ -253,7 +269,10 @@ function loadApi(options = {}) {
     dataCenterRecoveryFailedKey,
     getRecoveryLocked: () => dataCenterRecoveryFailed,
     getRecoveryFailedKeys: () => dataCenterRecoveryFailedKeys,
-    aiWorkerEndpoint,
+    // --- Dashboard ---
+    renderDashboard, updateDashboardStats, bindDashboardQuickActions,
+    dashboardSortedPendingTasks, dashboardRecentNotes, dashboardTruncate,
+    aiWorkerEndpoint, requestAI,
 };`;
 
     const fn = new Function(
@@ -268,6 +287,7 @@ function loadApi(options = {}) {
     api._fetch = fetchMock;
     api._document = document;
     api._window = window;
+    api._timers = timers;
     return api;
 }
 
@@ -433,12 +453,46 @@ async function main() {
     }
 
     // ---- persistDailyFocus（结构不同，单独覆盖）----
-    await check("persistDailyFocus：启用时正常写入", () => {
+    await check("persistDailyFocus：启用时正常写入（完整归档字段）", () => {
         const api = loadReadyApi();
-        const r = api.persistDailyFocus({ date: api.getDailyFocus().date, priorities: ["a", "", ""] });
+        const date = api.getDailyFocus().date;
+        const priorities = ["首要任务", "第二重点", "第三重点"];
+        const r = api.persistDailyFocus({ date, priorities });
         assert.strictEqual(r, true);
         const stored = JSON.parse(api._localStorage.getItem(KEYS.dailyFocus));
-        assert.strictEqual(stored.records[api.getDailyFocus().date].priorities[0], "a");
+
+        // 1. schemaVersion 正确
+        assert.strictEqual(stored.schemaVersion, api.dailyFocusSchemaVersion, "schemaVersion 应保持正确");
+        // 2. activeDate 正确
+        assert.strictEqual(stored.activeDate, date, "activeDate 应更新为保存日期");
+        // 3. records 对象存在且非数组
+        assert.ok(
+            stored.records && typeof stored.records === "object" && !Array.isArray(stored.records),
+            "records 应为对象"
+        );
+        // 4. 当前日期记录存在
+        assert.ok(stored.records[date], "当前日期记录应存在");
+        // 5. priorities 为长度 3 的数组
+        assert.ok(Array.isArray(stored.records[date].priorities), "priorities 应为数组");
+        assert.strictEqual(stored.records[date].priorities.length, 3, "priorities 长度应为 3");
+        // 6. 三项内容均与输入一致
+        assert.deepStrictEqual(
+            stored.records[date].priorities,
+            priorities,
+            "三项 priorities 应与输入完全一致"
+        );
+        // 7. 顶层无意外多余字段（仅 schemaVersion/activeDate/records）
+        assert.deepStrictEqual(
+            Object.keys(stored).sort(),
+            ["activeDate", "records", "schemaVersion"],
+            "归档顶层不应出现意外字段"
+        );
+        // 8. 记录项无意外多余字段
+        assert.deepStrictEqual(
+            Object.keys(stored.records[date]).sort(),
+            ["priorities"],
+            "记录项不应出现意外字段"
+        );
     });
 
     await check("persistDailyFocus：停用时拒绝写入，历史记录不变", () => {
@@ -2062,6 +2116,1391 @@ async function main() {
         const api2 = loadApi({ seed: { ...seededStore(), [KEYS.notes]: storedRaw } });
         api2.loadNotes();
         assert.deepStrictEqual(api2.getNotes(), [note], "重新加载后字段应完整一致");
+    });
+
+    // ============================================================
+    // Task 14：Dashboard 统一总览
+    // ============================================================
+    console.log("\n=== Task 14: Dashboard 统一总览 ===");
+
+    const localDateKey = () => {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    };
+    const focusArchive = (priorities) => JSON.stringify({
+        schemaVersion: 1,
+        activeDate: localDateKey(),
+        records: { [localDateKey()]: { priorities } }
+    });
+    const dashFocusTexts = (api) => api._document.getElementById("dashboard-focus-list").children
+        .map((item) => item.children[1].textContent);
+    const dashTaskTexts = (api) => api._document.getElementById("dashboard-task-list").children
+        .map((item) => item.children[1].textContent);
+    const dashNoteTexts = (api) => api._document.getElementById("dashboard-notes-list").children
+        .map((item) => item.children[0].textContent);
+    const dashEl = (api, id) => api._document.getElementById(id);
+
+    await check("今日重点正常展示（仅非空项）", () => {
+        const api = loadReadyApi({ [KEYS.dailyFocus]: focusArchive(["AAA", "BBB", ""]) });
+        api.renderDashboard();
+        assert.deepStrictEqual(dashFocusTexts(api), ["AAA", "BBB"], "应只展示非空重点");
+        assert.strictEqual(dashEl(api, "dashboard-focus-empty").hidden, true, "非空时不应显示空态");
+    });
+
+    await check("今日重点为空时显示空态", () => {
+        const api = loadReadyApi({ [KEYS.dailyFocus]: focusArchive(["", "", ""]) });
+        api.renderDashboard();
+        assert.strictEqual(dashEl(api, "dashboard-focus-list").children.length, 0, "列表应为空");
+        assert.strictEqual(dashEl(api, "dashboard-focus-empty").hidden, false, "空时应显示空态提示");
+    });
+
+    await check("Tasks 三类统计正确（高优待办只计未完成）", () => {
+        const tasks = [
+            { id: "a", text: "h1", priority: "high", completed: false, createdAt: "2026-11-01T00:00:00.000Z" },
+            { id: "b", text: "h2", priority: "high", completed: false, createdAt: "2026-11-02T00:00:00.000Z" },
+            { id: "c", text: "m1", priority: "medium", completed: false, createdAt: "2026-11-03T00:00:00.000Z" },
+            { id: "d", text: "done-high", priority: "high", completed: true, createdAt: "2026-11-01T00:00:00.000Z" },
+            { id: "e", text: "l1", priority: "low", completed: false, createdAt: "2026-11-04T00:00:00.000Z" }
+        ];
+        const api = loadReadyApi({ [KEYS.tasks]: JSON.stringify(tasks) });
+        api.renderDashboard();
+        assert.strictEqual(dashEl(api, "dashboard-pending-tasks").textContent, "4", "待办 4");
+        assert.strictEqual(dashEl(api, "dashboard-completed-tasks").textContent, "1", "已完成 1");
+        assert.strictEqual(dashEl(api, "dashboard-high-priority-tasks").textContent, "2", "高优待办 2（不含已完成）");
+    });
+
+    await check("未完成任务排序正确（high→medium→low，同优先级按创建时间降序）", () => {
+        const tasks = [
+            { id: "a", text: "high-old", priority: "high", completed: false, createdAt: "2026-11-01T00:00:00.000Z" },
+            { id: "b", text: "medium", priority: "medium", completed: false, createdAt: "2026-11-02T00:00:00.000Z" },
+            { id: "c", text: "high-new", priority: "high", completed: false, createdAt: "2026-11-03T00:00:00.000Z" },
+            { id: "d", text: "low", priority: "low", completed: false, createdAt: "2026-11-04T00:00:00.000Z" }
+        ];
+        const api = loadReadyApi({ [KEYS.tasks]: JSON.stringify(tasks) });
+        const sorted = api.dashboardSortedPendingTasks(10);
+        assert.deepStrictEqual(sorted.map((t) => t.text), ["high-new", "high-old", "medium", "low"], "纯函数排序");
+        api.renderDashboard();
+        assert.deepStrictEqual(dashTaskTexts(api), ["high-new", "high-old", "medium", "low"], "渲染列表排序一致");
+    });
+
+    await check("最近 Notes 按创建时间降序", () => {
+        const notes = [
+            { id: "1", text: "one", createdAt: "2026-11-01T00:00:00.000Z" },
+            { id: "2", text: "three", createdAt: "2026-11-03T00:00:00.000Z" },
+            { id: "3", text: "two", createdAt: "2026-11-02T00:00:00.000Z" },
+            { id: "4", text: "four", createdAt: "2026-11-04T00:00:00.000Z" }
+        ];
+        const api = loadReadyApi({ [KEYS.notes]: JSON.stringify(notes) });
+        const recent = api.dashboardRecentNotes(3);
+        assert.deepStrictEqual(recent.map((n) => n.text), ["four", "three", "two"], "纯函数排序");
+        api.renderDashboard();
+        assert.deepStrictEqual(dashNoteTexts(api), ["four", "three", "two"], "渲染列表仅最近 3 条");
+    });
+
+    await check("Notes 内容摘要截断正确", () => {
+        const api = loadReadyApi();
+        assert.strictEqual(api.dashboardTruncate("short text", 80), "short text", "短文本不截断");
+        const truncated = api.dashboardTruncate("x".repeat(100), 80);
+        assert.strictEqual(Array.from(truncated).length, 81, "80 字符 + 省略号");
+        assert.ok(truncated.endsWith("…"), "应以省略号结尾");
+    });
+
+    await check("模块停用时保留历史数据并显示只读状态", () => {
+        const tasks = [{ id: "a", text: "keep", priority: "high", completed: false, createdAt: "2026-11-01T00:00:00.000Z" }];
+        const api = loadReadyApi({ [KEYS.tasks]: JSON.stringify(tasks) });
+        api.setModuleEnabled("task-manager", false);
+        api.loadTasks();
+        api.renderDashboard();
+        assert.strictEqual(dashEl(api, "dashboard-pending-tasks").textContent, "1", "停用后仍展示历史数据");
+        assert.strictEqual(dashEl(api, "dashboard-tasks-readonly").hidden, false, "应显示只读徽标");
+    });
+
+    await check("数据损坏时显示不可用，不显示虚假零值", () => {
+        const api = loadReadyApi({ [KEYS.tasks]: "{ bad json" });
+        api.renderDashboard();
+        assert.strictEqual(dashEl(api, "dashboard-pending-tasks").textContent, "", "不应显示 0");
+        assert.strictEqual(dashEl(api, "dashboard-tasks-empty").hidden, false, "应显示不可用提示");
+        assert.strictEqual(dashEl(api, "dashboard-tasks-empty").textContent, "数据不可用");
+    });
+
+    await check("单个模块异常不影响其他区域", () => {
+        const notes = JSON.stringify([{ id: "n", text: "note", createdAt: "2026-11-01T00:00:00.000Z" }]);
+        const api = loadReadyApi({ [KEYS.tasks]: "{ bad", [KEYS.notes]: notes, [KEYS.dailyFocus]: focusArchive(["F", "", ""]) });
+        api.renderDashboard();
+        assert.strictEqual(dashEl(api, "dashboard-tasks-empty").textContent, "数据不可用", "tasks 不可用");
+        assert.deepStrictEqual(dashNoteTexts(api), ["note"], "notes 仍正常展示");
+        assert.deepStrictEqual(dashFocusTexts(api), ["F"], "focus 仍正常展示");
+    });
+
+    await check("快捷入口绑定且重复绑定幂等", () => {
+        const api = loadReadyApi();
+        api.bindDashboardQuickActions();
+        api.bindDashboardQuickActions();
+        assert.strictEqual(dashEl(api, "dashboard-action-note")._listeners["click"].length, 1, "重复调用不应重复绑定");
+        assert.strictEqual(dashEl(api, "dashboard-action-task")._listeners["click"].length, 1);
+        assert.strictEqual(dashEl(api, "dashboard-action-ai")._listeners["click"].length, 1);
+    });
+
+    await check("快捷入口触发正确", () => {
+        const api = loadReadyApi();
+        api.bindDashboardQuickActions();
+        let scrolled = false;
+        let focused = false;
+        dashEl(api, "quick-notes-section").scrollIntoView = () => { scrolled = true; };
+        dashEl(api, "note-input").focus = () => { focused = true; };
+        dashEl(api, "dashboard-action-note").dispatchEvent({ type: "click" });
+        assert.ok(scrolled && focused, "记录笔记应滚动并聚焦输入框");
+
+        let aiScrolled = false;
+        let aiFocused = false;
+        dashEl(api, "ai-assistant-title").scrollIntoView = () => { aiScrolled = true; };
+        dashEl(api, "ai-assistant-prompt").focus = () => { aiFocused = true; };
+        dashEl(api, "dashboard-action-ai").dispatchEvent({ type: "click" });
+        assert.ok(aiScrolled && aiFocused, "AI Assistant 应进入主页面并聚焦输入框");
+    });
+
+    await check("Dashboard 不写入业务数据", () => {
+        const tasks = JSON.stringify([{ id: "a", text: "t", priority: "high", completed: false, createdAt: "2026-11-01T00:00:00.000Z" }]);
+        const api = loadReadyApi({ [KEYS.tasks]: tasks });
+        const beforeTasks = api._localStorage.getItem(KEYS.tasks);
+        const beforeNotes = api._localStorage.getItem(KEYS.notes);
+        const beforeFocus = api._localStorage.getItem(KEYS.dailyFocus);
+        api.renderDashboard();
+        assert.strictEqual(api._localStorage.getItem(KEYS.tasks), beforeTasks, "tasks 不得变化");
+        assert.strictEqual(api._localStorage.getItem(KEYS.notes), beforeNotes, "notes 不得变化");
+        assert.strictEqual(api._localStorage.getItem(KEYS.dailyFocus), beforeFocus, "dailyFocus 不得变化");
+    });
+
+    await check("恢复锁定期间 Dashboard 仍遵守只读原则", () => {
+        const tasks = JSON.stringify([{ id: "a", text: "t", priority: "high", completed: false, createdAt: "2026-11-01T00:00:00.000Z" }]);
+        const api = loadReadyApi({ [KEYS.tasks]: tasks });
+        api.lockDataCenterForRecoveryFailure(["x"]);
+        const before = api._localStorage.getItem(KEYS.tasks);
+        api.renderDashboard();
+        assert.strictEqual(api._localStorage.getItem(KEYS.tasks), before, "锁定期间不得写入");
+        assert.strictEqual(dashEl(api, "dashboard-status").hidden, false, "应显示系统状态");
+        assert.ok(dashEl(api, "dashboard-status").textContent.includes("恢复保护状态"), "状态应提示恢复保护");
+    });
+
+    // ============================================================
+    // Task 9：AI Assistant 超时保护 + AI Request Runner 契约
+    // ============================================================
+    console.log("\n=== Task 9: AI Assistant 超时保护与 Request Runner 契约 ===");
+
+    const snapshotTimers = (api) => [...api._timers._map.entries()];
+
+    await check("AI Assistant：注册 90000ms 超时，触发后请求中止并清理状态", async () => {
+        const api = loadReadyApi();
+        api.aiConversation.push({ role: "user", content: "slow" });
+        const timerBefore = snapshotTimers(api);
+        const p = api.requestAssistantReply();
+        const added = snapshotTimers(api).slice(timerBefore.length);
+        assert.strictEqual(added.length, 1, "应注册且仅注册 1 个超时定时器");
+        assert.strictEqual(added[0][1].delay, 90000, "超时时长应为 90000ms，与其余四个工作流一致");
+        assert.strictEqual(api._fetch.pending.length, 1);
+        added[0][1].fn(); // 模拟 90 秒到期
+        await p;
+        assert.strictEqual(api.getAiRequestPending(), false, "pending 状态应清理");
+        assert.strictEqual(api.getAiRequestController(), null, "controller 应释放");
+        assert.strictEqual(api._timers._map.has(added[0][0]), false, "超时定时器应清理");
+        const chat = api._document.getElementById("ai-chat-log");
+        const texts = [];
+        const walk = (node) => {
+            node.children.forEach((child) => {
+                if (child.tagName === "P") texts.push(String(child.textContent));
+                walk(child);
+            });
+        };
+        walk(chat);
+        assert.ok(
+            texts.some((text) => text.includes("AI 请求等待超时")),
+            "应显示超时提示，实际：" + JSON.stringify(texts)
+        );
+        assert.ok(
+            api.aiConversation.every((m) => m.role !== "assistant" || m.content !== undefined),
+            "对话数组结构完整"
+        );
+        const assistantReplies = api.aiConversation.filter((m) => m.role === "assistant").length;
+        assert.strictEqual(assistantReplies, 0, "超时失败不得写入 AI 回复");
+    });
+
+    await check("AI Assistant：超时不影响后续新请求", async () => {
+        const api = loadReadyApi();
+        api.aiConversation.push({ role: "user", content: "first" });
+        const timerBefore = snapshotTimers(api);
+        const p1 = api.requestAssistantReply();
+        snapshotTimers(api).slice(timerBefore.length)[0][1].fn();
+        await p1;
+        api.aiConversation.push({ role: "user", content: "second" });
+        const p2 = api.requestAssistantReply();
+        assert.strictEqual(api._fetch.pending.length, 2, "超时后应可发起新请求");
+        api._fetch.last().resolve({ ok: true, status: 200, json: async () => ({ reply: "recovered", model: "x" }) });
+        await p2;
+        assert.ok(api.aiConversation.some((m) => m.role === "assistant" && m.content === "recovered"), "新请求应正常完成");
+    });
+
+    await check("Runner：成功返回 {reply, model}，请求体仅含 messages，默认超时 90000ms", async () => {
+        const api = loadReadyApi();
+        const messages = [{ role: "user", content: "hi" }];
+        const timerBefore = snapshotTimers(api);
+        const p = api.requestAI({ messages });
+        assert.strictEqual(api._fetch.pending.length, 1, "应发出 1 个请求");
+        const entry = api._fetch.last();
+        assert.strictEqual(entry.url, api.aiWorkerEndpoint, "应请求统一端点");
+        assert.deepStrictEqual(JSON.parse(entry.opts.body), { messages }, "请求体应只含 messages 契约字段");
+        const added = snapshotTimers(api).slice(timerBefore.length);
+        assert.strictEqual(added.length, 1, "Runner 应注册 1 个超时定时器");
+        assert.strictEqual(added[0][1].delay, 90000, "默认超时应为 90000ms");
+        entry.resolve({ ok: true, status: 200, json: async () => ({ reply: "ok", model: "m1" }) });
+        const result = await p;
+        assert.deepStrictEqual(result, { reply: "ok", model: "m1" });
+        assert.strictEqual(api._timers._map.size, timerBefore.length, "完成后定时器应清理");
+    });
+
+    await check("Runner：支持调用方自定义超时时长，超时触发 → TimeoutError", async () => {
+        const api = loadReadyApi();
+        const timerBefore = snapshotTimers(api);
+        const p = api.requestAI({ messages: [{ role: "user", content: "x" }], timeoutMs: 5000 });
+        const added = snapshotTimers(api).slice(timerBefore.length);
+        assert.strictEqual(added[0][1].delay, 5000, "应使用调用方传入的超时时长");
+        added[0][1].fn();
+        await assert.rejects(p, (error) => error.name === "TimeoutError", "超时应抛 TimeoutError");
+        assert.strictEqual(api._timers._map.size, timerBefore.length, "定时器应清理");
+    });
+
+    await check("Runner：调用方 signal 中止 → AbortError（不误报为超时）", async () => {
+        const api = loadReadyApi();
+        const caller = new AbortController();
+        const p = api.requestAI({ messages: [{ role: "user", content: "x" }], signal: caller.signal });
+        assert.strictEqual(api._fetch.pending.length, 1);
+        caller.abort();
+        await assert.rejects(p, (error) => error.name === "AbortError");
+    });
+
+    await check("Runner：signal 已预先中止 → 直接 AbortError，不发出请求", async () => {
+        const api = loadReadyApi();
+        const caller = new AbortController();
+        caller.abort();
+        await assert.rejects(
+            api.requestAI({ messages: [], signal: caller.signal }),
+            (error) => error.name === "AbortError"
+        );
+        assert.strictEqual(api._fetch.pending.length, 0, "不应发出任何请求");
+    });
+
+    await check("Runner：迟到响应守卫 isAllowed()=false → AbortError，结果不外泄", async () => {
+        const api = loadReadyApi();
+        const p = api.requestAI({ messages: [{ role: "user", content: "x" }], isAllowed: () => false });
+        const entry = api._fetch.last();
+        entry.resolve({ ok: true, status: 200, json: async () => ({ reply: "stale", model: "m" }) });
+        await assert.rejects(p, (error) => error.name === "AbortError", "权限/版本失效应丢弃结果");
+        const result = await p.catch(() => null);
+        assert.strictEqual(result, null, "迟到结果不得返回给调用方");
+    });
+
+    await check("Runner：HTTP 非 2xx → HTTPError（含状态码）", async () => {
+        const api = loadReadyApi();
+        const p = api.requestAI({ messages: [{ role: "user", content: "x" }] });
+        api._fetch.last().resolve({ ok: false, status: 502, json: async () => ({}) });
+        await assert.rejects(p, (error) => error.name === "HTTPError" && error.message.includes("502"));
+    });
+
+    await check("Runner：响应 JSON 无效 → InvalidResponseError", async () => {
+        const api = loadReadyApi();
+        const p = api.requestAI({ messages: [{ role: "user", content: "x" }] });
+        api._fetch.last().resolve({ ok: true, status: 200, json: async () => { throw new Error("bad json"); } });
+        await assert.rejects(p, (error) => error.name === "InvalidResponseError");
+    });
+
+    await check("Runner：reply 缺失/为空 → InvalidResponseError", async () => {
+        const api = loadReadyApi();
+        const p = api.requestAI({ messages: [{ role: "user", content: "x" }] });
+        api._fetch.last().resolve({ ok: true, status: 200, json: async () => ({ model: "m" }) });
+        await assert.rejects(p, (error) => error.name === "InvalidResponseError");
+    });
+
+    await check("Runner：网络异常（TypeError）→ NetworkError", async () => {
+        const api = loadReadyApi();
+        const p = api.requestAI({ messages: [{ role: "user", content: "x" }] });
+        api._fetch.last().reject(new TypeError("fetch failed"));
+        await assert.rejects(p, (error) => error.name === "NetworkError");
+    });
+
+    await check("Runner：纯传输 —— 不写入任何业务存储键", async () => {
+        const api = loadReadyApi();
+        const before = [...api._localStorage._store.entries()].map(([k, v]) => `${k}:${v}`);
+        const p = api.requestAI({ messages: [{ role: "user", content: "x" }] });
+        api._fetch.last().resolve({ ok: true, status: 200, json: async () => ({ reply: "r", model: "m" }) });
+        await p;
+        const after = [...api._localStorage._store.entries()].map(([k, v]) => `${k}:${v}`);
+        assert.deepStrictEqual(after, before, "Runner 不得写入业务数据");
+    });
+
+    // ============================================================
+    // Task 11：Task Organization 迁移至统一 Request Runner
+    // ============================================================
+    console.log("\n=== Task 11: Task Organization → Request Runner 迁移 ===");
+
+    const VALID_ORG_REPLY = () => ({
+        reply: JSON.stringify({
+            tasks: [{
+                title: "买牛奶", content: "", priority: "medium", prioritySource: "default",
+                priorityEvidence: "", category: "", dueDate: "", dueTime: "",
+                dateEvidence: "", timeEvidence: "", sourceExcerpt: "买牛奶",
+                needsConfirmation: true, confirmationReason: "原文未标优先级，使用默认中优先级"
+            }],
+            notes: ""
+        }),
+        model: "test-model"
+    });
+
+    await check("Task Org 迁移后：成功请求 → Prompt 契约、解析与预览均保持一致", async () => {
+        const api = loadReadyApi();
+        const timerBefore = snapshotTimers(api).length;
+        api.taskOrganizerInput.value = "买牛奶（明天）";
+        const p = api.organizeTasks({ preventDefault() {} });
+        await flush();
+        assert.strictEqual(api._fetch.pending.length, 1, "应发出 1 个请求");
+        const entry = api._fetch.last();
+        assert.strictEqual(entry.url, api.aiWorkerEndpoint, "应请求统一端点");
+        const body = JSON.parse(entry.opts.body);
+        assert.strictEqual(body.messages.length, 1, "请求体应符合 messages 契约");
+        const prompt = body.messages[0].content;
+        assert.ok(prompt.includes("你是任务整理助手"), "Prompt 开场白应保持一致");
+        assert.ok(prompt.includes("买牛奶（明天）"), "Prompt 应原样携带用户原文");
+        assert.ok(prompt.includes("needsConfirmation") && prompt.includes("confirmationReason"), "Prompt 应保留待确认配对规则");
+        assert.ok(prompt.includes('{"tasks":[{"title"'), "Prompt 应保留字段契约");
+        assert.ok(prompt.includes("用户原文："), "Prompt 应保留原文分隔约定");
+        entry.resolve({ ok: true, status: 200, json: VALID_ORG_REPLY });
+        await p;
+        assert.ok(
+            api.taskOrganizerStatus.textContent.includes("已生成 1 项 AI 任务预览"),
+            "成功响应应生成预览，实际：" + api.taskOrganizerStatus.textContent
+        );
+        assert.ok(api.taskOrganizerStatus.textContent.includes("test-model"), "应显示模型名");
+        assert.ok(!api.taskOrganizerStatus.textContent.includes("失败"), "不应出现失败提示");
+        assert.strictEqual(api.getTaskOrganizerPending(), false, "pending 应清理");
+        assert.strictEqual(api.getTaskOrganizerController(), null, "controller 应释放");
+        assert.strictEqual(snapshotTimers(api).length, timerBefore, "Runner 定时器应清理");
+    });
+
+    await check("Task Org 迁移后：HTTP 错误文案与迁移前逐字一致", async () => {
+        const api = loadReadyApi();
+        api.taskOrganizerInput.value = "写周报（周五）";
+        const p = api.organizeTasks({ preventDefault() {} });
+        await flush();
+        api._fetch.last().resolve({ ok: false, status: 500, json: async () => ({}) });
+        await p;
+        assert.strictEqual(
+            api.taskOrganizerStatus.textContent,
+            "AI 服务暂时不可用（HTTP 500），请稍后重试。",
+            "HTTP 错误文案应保持迁移前原文"
+        );
+        assert.strictEqual(api.getTaskOrganizerPending(), false, "失败后 pending 应恢复");
+    });
+
+    await check("Task Org 迁移后：网络错误文案保持一致", async () => {
+        const api = loadReadyApi();
+        api.taskOrganizerInput.value = "写周报（周五）";
+        const p = api.organizeTasks({ preventDefault() {} });
+        await flush();
+        api._fetch.last().reject(new TypeError("fetch failed"));
+        await p;
+        assert.strictEqual(
+            api.taskOrganizerStatus.textContent,
+            "无法连接 AI 服务，请检查网络或稍后重试。",
+            "网络错误文案应保持迁移前原文"
+        );
+    });
+
+    await check("Task Org 迁移后：无效 JSON 响应文案保持一致", async () => {
+        const api = loadReadyApi();
+        api.taskOrganizerInput.value = "写周报（周五）";
+        const p = api.organizeTasks({ preventDefault() {} });
+        await flush();
+        api._fetch.last().resolve({ ok: true, status: 200, json: async () => { throw new Error("bad json"); } });
+        await p;
+        assert.strictEqual(
+            api.taskOrganizerStatus.textContent,
+            "AI 服务返回了无效响应（HTTP 200）。",
+            "无效 JSON 文案应保持迁移前原文"
+        );
+    });
+
+    await check("Task Org 迁移后：reply 为空时文案保持一致", async () => {
+        const api = loadReadyApi();
+        api.taskOrganizerInput.value = "写周报（周五）";
+        const p = api.organizeTasks({ preventDefault() {} });
+        await flush();
+        api._fetch.last().resolve({ ok: true, status: 200, json: async () => ({ model: "x" }) });
+        await p;
+        assert.strictEqual(
+            api.taskOrganizerStatus.textContent,
+            "AI 服务返回内容为空或格式不正确。",
+            "空 reply 文案应保持迁移前原文"
+        );
+    });
+
+    await check("Task Org 显式分支：JSON 无效与空 reply 文案不再依赖 Runner message", async () => {
+        const api = loadReadyApi();
+        api.taskOrganizerInput.value = "写周报（周五）";
+        const p = api.organizeTasks({ preventDefault() {} });
+        await flush();
+        api._fetch.last().resolve({ ok: true, status: 502, json: async () => { throw new Error("bad json"); } });
+        await p;
+        assert.strictEqual(
+            api.taskOrganizerStatus.textContent,
+            "AI 服务返回了无效响应（HTTP 502）。",
+            "JSON 无效文案应来自 Task Organization 显式分支（含 Runner 传入的真实 status）"
+        );
+    });
+
+    await check("Task Org 显式分支：解析阶段业务错误仍显示原始 message", async () => {
+        const api = loadReadyApi();
+        api.taskOrganizerInput.value = "写周报（周五）";
+        const p = api.organizeTasks({ preventDefault() {} });
+        await flush();
+        api._fetch.last().resolve({ ok: true, status: 200, json: async () => ({ reply: "这是一段非 JSON 的任务预览", model: "x" }) });
+        await p;
+        assert.strictEqual(
+            api.taskOrganizerStatus.textContent,
+            "AI 返回的任务预览格式无法识别，请重新分析。",
+            "解析阶段业务错误应显示业务层原始提示，而非 Runner 或兜底文案"
+        );
+    });
+
+    await check("Task Org 显式分支：未知异常仍显示原始 message", async () => {
+        const api = loadReadyApi();
+        api.taskOrganizerInput.value = "写周报（周五）";
+        const p = api.organizeTasks({ preventDefault() {} });
+        await flush();
+        api._fetch.last().reject(Object.assign(new Error("自定义异常信息"), { name: "CustomError" }));
+        await p;
+        assert.strictEqual(
+            api.taskOrganizerStatus.textContent,
+            "自定义异常信息",
+            "未知异常应回显 error.message，不受新增显式分支影响"
+        );
+    });
+
+    await check("Task Org 迁移后：90 秒超时 → 超时文案 + 资源清理", async () => {
+        const api = loadReadyApi();
+        const timerBefore = snapshotTimers(api);
+        api.taskOrganizerInput.value = "整理发票（周一）";
+        const p = api.organizeTasks({ preventDefault() {} });
+        await flush();
+        const added = snapshotTimers(api).slice(timerBefore.length);
+        assert.strictEqual(added.length, 1, "Runner 应注册 1 个超时定时器");
+        assert.strictEqual(added[0][1].delay, 90000, "超时应为 90000ms");
+        added[0][1].fn(); // 模拟 90 秒到期
+        await p;
+        assert.strictEqual(
+            api.taskOrganizerStatus.textContent,
+            "AI 请求等待超时。原文和 Task Manager 均未更改，请稍后重试。",
+            "超时文案应保持迁移前原文"
+        );
+        assert.strictEqual(api.getTaskOrganizerPending(), false, "超时后 pending 应恢复");
+        assert.strictEqual(api.getTaskOrganizerController(), null, "controller 应释放");
+        assert.strictEqual(snapshotTimers(api).length, timerBefore.length, "定时器应清理");
+    });
+
+    await check("Task Org 迁移后：用户主动取消 → AbortError 文案 + 状态恢复", async () => {
+        const api = loadReadyApi();
+        api.taskOrganizerInput.value = "整理发票（周一）";
+        const p = api.organizeTasks({ preventDefault() {} });
+        await flush();
+        api.getTaskOrganizerController().abort(); // 模拟用户主动取消（版本未变）
+        await p;
+        assert.strictEqual(
+            api.taskOrganizerStatus.textContent,
+            "AI 请求等待超时。原文和 Task Manager 均未更改，请稍后重试。",
+            "取消文案应与迁移前 AbortError 映射一致"
+        );
+        assert.strictEqual(api.getTaskOrganizerPending(), false, "取消后 pending 应恢复");
+        assert.strictEqual(api.getTaskOrganizerController(), null, "controller 应释放");
+    });
+
+    await check("Task Org 迁移后：AI 总开关关闭 → 在途 abort 且不误报超时", async () => {
+        const api = loadReadyApi();
+        api.taskOrganizerInput.value = "整理发票（周一）";
+        const p = api.organizeTasks({ preventDefault() {} });
+        await flush();
+        const entry = api._fetch.last();
+        api.setModuleEnabled("ai-assistant", false);
+        api.updateTaskOrganizationAccessUI();
+        assert.strictEqual(entry.signal.aborted, true, "在途请求应被 abort");
+        await p;
+        assert.ok(
+            !api.taskOrganizerStatus.textContent.includes("AI 请求等待超时"),
+            "权限拦截不应显示超时文案，实际：" + api.taskOrganizerStatus.textContent
+        );
+        assert.strictEqual(api.getTaskOrganizerPending(), false, "pending 应清理");
+        assert.strictEqual(api.getTaskOrganizerController(), null, "controller 应释放");
+    });
+
+    await check("Task Org 迁移后：请求失败后可立即重新发起并成功", async () => {
+        const api = loadReadyApi();
+        api.taskOrganizerInput.value = "任务甲";
+        const p1 = api.organizeTasks({ preventDefault() {} });
+        await flush();
+        api._fetch.last().resolve({ ok: false, status: 503, json: async () => ({}) });
+        await p1;
+        assert.strictEqual(api.getTaskOrganizerPending(), false, "失败后 pending 应恢复");
+        api.taskOrganizerInput.value = "任务乙";
+        const p2 = api.organizeTasks({ preventDefault() {} });
+        await flush();
+        assert.strictEqual(api._fetch.pending.length, 2, "应可立即发起新请求");
+        const prompt2 = JSON.parse(api._fetch.last().opts.body).messages[0].content;
+        assert.ok(prompt2.includes("任务乙") && !prompt2.includes("任务甲"), "新请求应携带新输入");
+        api._fetch.last().resolve({ ok: true, status: 200, json: () => {
+            const parsed = JSON.parse(VALID_ORG_REPLY().reply);
+            parsed.tasks[0].sourceExcerpt = "任务乙";
+            return Promise.resolve({ reply: JSON.stringify(parsed), model: "m" });
+        } });
+        await p2;
+        assert.ok(api.taskOrganizerStatus.textContent.includes("已生成 1 项"), "第二次请求应成功");
+    });
+
+    await check("Task Org 迁移后：分析期间输入被修改 → 旧结果丢弃文案一致", async () => {
+        const api = loadReadyApi();
+        api.taskOrganizerInput.value = "原始输入";
+        const p = api.organizeTasks({ preventDefault() {} });
+        await flush();
+        api.taskOrganizerInput.value = "输入已变化"; // 模拟分析期间用户改动
+        api._fetch.last().resolve({ ok: true, status: 200, json: VALID_ORG_REPLY });
+        await p;
+        assert.strictEqual(
+            api.taskOrganizerStatus.textContent,
+            "分析期间原始输入发生变化；旧结果已丢弃，请重新分析。",
+            "输入变化守卫文案应保持迁移前原文"
+        );
+    });
+
+    // ============================================================
+    // Task 14：Runner 资源清理专项（8 条路径监听器与定时器释放）
+    // ============================================================
+    console.log("\n=== Task 14: Runner 资源清理专项 ===");
+
+    const makeSpySignal = () => ({
+        aborted: false,
+        listeners: [],
+        addEventListener(type, fn) { this.listeners.push(fn); },
+        removeEventListener(type, fn) {
+            const index = this.listeners.indexOf(fn);
+            if (index >= 0) this.listeners.splice(index, 1);
+        },
+    });
+    const RUNNER_MSG = () => [{ role: "user", content: "x" }];
+
+    await check("Runner 资源清理：8 条路径结束后监听器与定时器均释放", async () => {
+        const paths = [
+            ["正常完成", async (api, spy) => {
+                const p = api.requestAI({ messages: RUNNER_MSG(), signal: spy });
+                api._fetch.last().resolve({ ok: true, status: 200, json: async () => ({ reply: "r", model: "m" }) });
+                const result = await p;
+                assert.deepStrictEqual(result, { reply: "r", model: "m" }, "正常完成应返回契约结果");
+            }],
+            ["用户主动取消", async (api, spy) => {
+                const p = api.requestAI({ messages: RUNNER_MSG(), signal: spy });
+                spy.listeners[0](); // 调用方触发 abort
+                await assert.rejects(p, (e) => e.name === "AbortError");
+            }],
+            ["请求超时", async (api, spy) => {
+                const p = api.requestAI({ messages: RUNNER_MSG(), signal: spy });
+                [...api._timers._map.values()].slice(-1)[0].fn();
+                await assert.rejects(p, (e) => e.name === "TimeoutError");
+            }],
+            ["网络异常", async (api, spy) => {
+                const p = api.requestAI({ messages: RUNNER_MSG(), signal: spy });
+                api._fetch.last().reject(new TypeError("fetch failed"));
+                await assert.rejects(p, (e) => e.name === "NetworkError");
+            }],
+            ["HTTP 异常", async (api, spy) => {
+                const p = api.requestAI({ messages: RUNNER_MSG(), signal: spy });
+                api._fetch.last().resolve({ ok: false, status: 502, json: async () => ({}) });
+                await assert.rejects(p, (e) => e.name === "HTTPError");
+            }],
+            ["无效 JSON", async (api, spy) => {
+                const p = api.requestAI({ messages: RUNNER_MSG(), signal: spy });
+                api._fetch.last().resolve({ ok: true, status: 200, json: async () => { throw new Error("bad json"); } });
+                await assert.rejects(p, (e) => e.name === "InvalidResponseError");
+            }],
+            ["reply 为空", async (api, spy) => {
+                const p = api.requestAI({ messages: RUNNER_MSG(), signal: spy });
+                api._fetch.last().resolve({ ok: true, status: 200, json: async () => ({ model: "m" }) });
+                await assert.rejects(p, (e) => e.name === "InvalidResponseError");
+            }],
+            ["AccessVersion 变化（迟到守卫丢弃）", async (api, spy) => {
+                const p = api.requestAI({ messages: RUNNER_MSG(), signal: spy, isAllowed: () => false });
+                api._fetch.last().resolve({ ok: true, status: 200, json: async () => ({ reply: "stale", model: "m" }) });
+                await assert.rejects(p, (e) => e.name === "AbortError");
+            }],
+        ];
+        for (const [name, run] of paths) {
+            const api = loadReadyApi();
+            const baseTimers = snapshotTimers(api).length;
+            const spy = makeSpySignal();
+            await run(api, spy);
+            assert.strictEqual(spy.listeners.length, 0, name + "：调用方 signal 监听器应全部移除");
+            assert.strictEqual(snapshotTimers(api).length, baseTimers, name + "：超时定时器应清理");
+        }
+    });
+
+    // ============================================================
+    // Task 15：Daily Planning 迁移至统一 Request Runner + 跨模块安全
+    // ============================================================
+    console.log("\n=== Task 15: Daily Planning → Request Runner 迁移与跨模块安全 ===");
+
+    const VALID_PLAN_REPLY = () => ({
+        reply: JSON.stringify({
+            overview: "今日共 1 项待办。",
+            priorityTasks: [{ id: "t1", reason: "唯一待办任务" }],
+            focusSuggestions: ["完成待办", "保持节奏", "留出缓冲"],
+            priorityAdvice: "维持现有优先级。",
+            scheduleAdvice: "上午集中处理。",
+            watchouts: "任务没有明确截止日期。",
+            rhythmAdvice: "先难后易。",
+            rationale: "基于真实任务数据。"
+        }),
+        model: "plan-model"
+    });
+    const setupPlanningMode = (api) => {
+        const modeEl = api._document.getElementById("planning-analysis-mode");
+        modeEl.selectedOptions = [{ textContent: "智能规划" }];
+        modeEl.value = "smart";
+        return modeEl;
+    };
+
+    await check("Daily Planning 迁移后：成功请求 → Prompt 契约、结果结构与资源清理", async () => {
+        const api = loadReadyApi();
+        setupPlanningMode(api);
+        const timerBefore = snapshotTimers(api).length;
+        const tasksBefore = api._localStorage.getItem(KEYS.tasks);
+        const focusBefore = api._localStorage.getItem(KEYS.dailyFocus);
+        const p = api.runDailyPlanningAnalysis();
+        await flush();
+        assert.strictEqual(api._fetch.pending.length, 1, "应发出 1 个请求");
+        const entry = api._fetch.last();
+        const prompt = JSON.parse(entry.opts.body).messages[0].content;
+        assert.ok(prompt.includes("你是个人每日计划助手"), "Prompt 开场白应保持一致");
+        assert.ok(prompt.includes("智能规划：概括今日工作"), "Prompt 应包含所选模式指令");
+        assert.ok(prompt.includes("待分析数据 JSON："), "Prompt 应保留数据 JSON 约定");
+        assert.ok(prompt.includes('"t1"'), "Prompt 应携带真实任务 id");
+        assert.ok(prompt.includes('"id"') && prompt.includes('"completed"'), "Prompt 应保留任务事实字段契约");
+        entry.resolve({ ok: true, status: 200, json: VALID_PLAN_REPLY });
+        await p;
+        assert.ok(api.planningAIStatus.textContent.includes("分析完成"), "应显示分析完成");
+        assert.ok(api.planningAIStatus.textContent.includes("plan-model"), "应显示模型名");
+        assert.ok(api.getDailyPlanningAnalysis(), "分析结果应保留原有结构");
+        assert.strictEqual(api.getDailyPlanningPending(), false, "pending 应清理");
+        assert.strictEqual(api.getDailyPlanningController(), null, "controller 应释放");
+        assert.strictEqual(snapshotTimers(api).length, timerBefore, "Runner 定时器应清理");
+        assert.strictEqual(api._localStorage.getItem(KEYS.tasks), tasksBefore, "分析不得写入 tasks");
+        assert.strictEqual(api._localStorage.getItem(KEYS.dailyFocus), focusBefore, "分析阶段不得直接写入 daily-focus");
+    });
+
+    await check("Daily Planning 迁移后：HTTP 错误文案与迁移前逐字一致", async () => {
+        const api = loadReadyApi();
+        const p = api.runDailyPlanningAnalysis();
+        await flush();
+        api._fetch.last().resolve({ ok: false, status: 500, json: async () => ({}) });
+        await p;
+        assert.strictEqual(api.planningAIStatus.textContent, "AI 服务暂时不可用（HTTP 500），请稍后重试。");
+        assert.strictEqual(api.getDailyPlanningPending(), false, "失败后 pending 应恢复");
+    });
+
+    await check("Daily Planning 迁移后：网络错误文案保持一致", async () => {
+        const api = loadReadyApi();
+        const p = api.runDailyPlanningAnalysis();
+        await flush();
+        api._fetch.last().reject(new TypeError("fetch failed"));
+        await p;
+        assert.strictEqual(api.planningAIStatus.textContent, "无法连接 AI 服务，请检查网络或稍后重试。");
+    });
+
+    await check("Daily Planning 迁移后：无效 JSON 文案保持一致", async () => {
+        const api = loadReadyApi();
+        const p = api.runDailyPlanningAnalysis();
+        await flush();
+        api._fetch.last().resolve({ ok: true, status: 200, json: async () => { throw new Error("bad json"); } });
+        await p;
+        assert.strictEqual(api.planningAIStatus.textContent, "AI 服务返回了无效响应（HTTP 200）。");
+    });
+
+    await check("Daily Planning 显式分支：json 分支透传真实 HTTP status", async () => {
+        const api = loadReadyApi();
+        const p = api.runDailyPlanningAnalysis();
+        await flush();
+        api._fetch.last().resolve({ ok: true, status: 502, json: async () => { throw new Error("bad json"); } });
+        await p;
+        assert.strictEqual(
+            api.planningAIStatus.textContent,
+            "AI 服务返回了无效响应（HTTP 502）。",
+            "json 显式分支应使用 Runner 传入的真实 status，而非硬编码"
+        );
+    });
+
+    await check("Daily Planning 显式分支：空 reply 文案逐字一致", async () => {
+        const api = loadReadyApi();
+        const p = api.runDailyPlanningAnalysis();
+        await flush();
+        api._fetch.last().resolve({ ok: true, status: 200, json: async () => ({ model: "x" }) });
+        await p;
+        assert.strictEqual(
+            api.planningAIStatus.textContent,
+            "AI 服务返回内容为空或格式不正确。",
+            "空 reply 文案应来自 Daily Planning 显式分支，与此前 Runner message 回显逐字一致"
+        );
+    });
+
+    await check("Daily Planning 显式分支：解析阶段业务错误显示原始业务提示", async () => {
+        const api = loadReadyApi();
+        const p = api.runDailyPlanningAnalysis();
+        await flush();
+        api._fetch.last().resolve({ ok: true, status: 200, json: async () => ({ reply: "这是一段非 JSON 的规划报告", model: "x" }) });
+        await p;
+        assert.strictEqual(
+            api.planningAIStatus.textContent,
+            "AI 返回的规划格式无法识别，请重新生成。",
+            "解析阶段业务错误应显示业务层原始提示，不受显式分支影响"
+        );
+    });
+
+    await check("Daily Planning 显式分支：未知异常仍显示原始 message", async () => {
+        const api = loadReadyApi();
+        const p = api.runDailyPlanningAnalysis();
+        await flush();
+        api._fetch.last().reject(Object.assign(new Error("自定义规划异常"), { name: "CustomError" }));
+        await p;
+        assert.strictEqual(
+            api.planningAIStatus.textContent,
+            "自定义规划异常",
+            "未知异常应回显 error.message，兜底行为不变"
+        );
+    });
+
+    await check("Daily Planning 迁移后：90 秒超时 → 超时文案 + 资源清理", async () => {
+        const api = loadReadyApi();
+        const timerBefore = snapshotTimers(api);
+        const p = api.runDailyPlanningAnalysis();
+        await flush();
+        const added = snapshotTimers(api).slice(timerBefore.length);
+        assert.strictEqual(added.length, 1, "Runner 应注册 1 个超时定时器");
+        assert.strictEqual(added[0][1].delay, 90000, "超时应为 90000ms");
+        added[0][1].fn();
+        await p;
+        assert.strictEqual(api.planningAIStatus.textContent, "规划请求等待超时。任务和每日重点未更改，请稍后重试。");
+        assert.strictEqual(api.getDailyPlanningPending(), false, "超时后 pending 应恢复");
+        assert.strictEqual(api.getDailyPlanningController(), null, "controller 应释放");
+        assert.strictEqual(snapshotTimers(api).length, timerBefore.length, "定时器应清理");
+    });
+
+    await check("Daily Planning 迁移后：主动取消 → AbortError 文案 + 状态恢复", async () => {
+        const api = loadReadyApi();
+        const p = api.runDailyPlanningAnalysis();
+        await flush();
+        api.getDailyPlanningController().abort(); // 版本未变，模拟用户主动取消
+        await p;
+        assert.strictEqual(api.planningAIStatus.textContent, "规划请求等待超时。任务和每日重点未更改，请稍后重试。", "取消文案应与迁移前 AbortError 映射一致");
+        assert.strictEqual(api.getDailyPlanningPending(), false);
+        assert.strictEqual(api.getDailyPlanningController(), null);
+    });
+
+    await check("Daily Planning 迁移后：AI 总开关关闭 → 在途 abort 且不误报超时", async () => {
+        const api = loadReadyApi();
+        const p = api.runDailyPlanningAnalysis();
+        await flush();
+        const entry = api._fetch.last();
+        api.setModuleEnabled("ai-assistant", false);
+        api.updateDailyPlanningAccessUI();
+        assert.strictEqual(entry.signal.aborted, true, "在途请求应被 abort");
+        await p;
+        assert.ok(!api.planningAIStatus.textContent.includes("超时"), "权限拦截不应显示超时文案");
+        assert.strictEqual(api.getDailyPlanningPending(), false);
+        assert.strictEqual(api.getDailyPlanningController(), null);
+    });
+
+    await check("Daily Planning 迁移后：请求失败后可立即重新请求并成功", async () => {
+        const api = loadReadyApi();
+        setupPlanningMode(api);
+        const p1 = api.runDailyPlanningAnalysis();
+        await flush();
+        api._fetch.last().resolve({ ok: false, status: 503, json: async () => ({}) });
+        await p1;
+        assert.strictEqual(api.getDailyPlanningPending(), false, "失败后 pending 应恢复");
+        const p2 = api.runDailyPlanningAnalysis();
+        await flush();
+        assert.strictEqual(api._fetch.pending.length, 2, "应可立即发起新请求");
+        api._fetch.last().resolve({ ok: true, status: 200, json: VALID_PLAN_REPLY });
+        await p2;
+        assert.ok(api.planningAIStatus.textContent.includes("分析完成"), "第二次请求应成功");
+    });
+
+    await check("跨模块安全：Task Manager 停用不阻断无关 Notes 功能", () => {
+        const api = loadReadyApi();
+        api.setModuleEnabled("task-manager", false);
+        const ok = api.persistNotes([{ ...VALID_NOTE, id: "n9", text: "notes ok" }]);
+        assert.strictEqual(ok, true, "Task Manager 停用不应影响 Notes 写入");
+        assert.deepStrictEqual(JSON.parse(api._localStorage.getItem(KEYS.notes))[0].text, "notes ok");
+    });
+
+    await check("跨模块安全：Task Manager 停用时 Daily Planning 只读分析、不写 tasks", async () => {
+        const api = loadReadyApi();
+        setupPlanningMode(api);
+        api.setModuleEnabled("task-manager", false);
+        const tasksBefore = api._localStorage.getItem(KEYS.tasks);
+        const p = api.runDailyPlanningAnalysis();
+        await flush();
+        assert.strictEqual(api._fetch.pending.length, 1, "Task Manager 停用时数据仍可只读分析（与迁移前一致）");
+        api._fetch.last().resolve({ ok: true, status: 200, json: VALID_PLAN_REPLY });
+        await p;
+        assert.strictEqual(api._localStorage.getItem(KEYS.tasks), tasksBefore, "分析全程不得写入 tasks");
+    });
+
+    await check("跨模块安全：daily-focus 停用时确认入口被守卫拦截", () => {
+        const api = loadReadyApi();
+        const focusBefore = api._localStorage.getItem(KEYS.dailyFocus);
+        api.setModuleEnabled("daily-focus", false);
+        api.confirmDailyPlan({ preventDefault() {} });
+        assert.strictEqual(api._localStorage.getItem(KEYS.dailyFocus), focusBefore, "停用时不得经确认入口写入 daily-focus");
+    });
+
+    await check("跨模块安全：Daily Planning 确认更新只经 persistDailyFocus 入口写入 daily-focus", () => {
+        const api = loadReadyApi();
+        const focusBefore = api._localStorage.getItem(KEYS.dailyFocus);
+        api.confirmDailyPlan({ preventDefault() {} }); // 无分析结果 → 不得写入
+        assert.strictEqual(api._localStorage.getItem(KEYS.dailyFocus), focusBefore, "无分析结果时确认不得写入");
+    });
+
+    await check("跨模块安全：Task Organization 取消/超时不影响在途 Daily Planning", async () => {
+        const api = loadReadyApi();
+        setupPlanningMode(api);
+        api.taskOrganizerInput.value = "任务甲";
+        const planP = api.runDailyPlanningAnalysis();
+        await flush();
+        const orgP = api.organizeTasks({ preventDefault() {} });
+        await flush();
+        assert.strictEqual(api._fetch.pending.length, 2, "两个工作流应同时在途");
+        const planEntry = api._fetch.pending[0];
+        api.getTaskOrganizerController().abort(); // Task Organization 主动取消
+        await orgP;
+        assert.strictEqual(planEntry.signal.aborted, false, "取消 Task Organization 不得波及 Daily Planning");
+        assert.strictEqual(api.getDailyPlanningPending(), true, "Daily Planning 应保持 pending");
+        // Daily Planning 正常完成（注意：pending[1] 是已取消的 org 条目，须显式用 pending[0]）
+        planEntry.resolve({ ok: true, status: 200, json: VALID_PLAN_REPLY });
+        await planP;
+        assert.ok(api.planningAIStatus.textContent.includes("分析完成"), "Daily Planning 应不受干扰地完成");
+    });
+
+    // ============================================================
+    // Task 16：Document Summary → Request Runner 迁移
+    // ============================================================
+    console.log("\n=== Task 16: Document Summary → Request Runner 迁移 ===");
+
+    const VALID_DOC_REPLY = () => ({
+        reply: JSON.stringify({
+            executive: "资料核心摘要。",
+            keyPoints: "要点一。",
+            important: "重要数据。",
+            actions: "行动项。",
+            deepAnalysis: "深度分析。"
+        }),
+        model: "doc-model"
+    });
+
+    await check("Doc Summary 迁移后：成功请求 → Prompt 契约、解析与资源清理", async () => {
+        const api = loadReadyApi();
+        const timerBefore = snapshotTimers(api).length;
+        const docsBefore = api._localStorage.getItem(KEYS.documents);
+        api.documentSourceInput.value = "这是一段需要整理的资料。";
+        const p = api.organizeCurrentDocument();
+        await flush();
+        assert.strictEqual(api._fetch.pending.length, 1, "应发出 1 个请求");
+        const entry = api._fetch.last();
+        const prompt = JSON.parse(entry.opts.body).messages[0].content;
+        assert.ok(prompt.includes("这是一段需要整理的资料。"), "Prompt 应原样携带用户原文");
+        assert.ok(prompt.includes("executive") || prompt.includes("核心摘要"), "Prompt 应保留五部分字段契约");
+        entry.resolve({ ok: true, status: 200, json: VALID_DOC_REPLY });
+        const ok = await p;
+        assert.strictEqual(ok, true, "成功分析应返回 true");
+        assert.ok(api.documentInputStatus.textContent.includes("AI 分析完成"), "应显示分析完成");
+        assert.ok(api.documentInputStatus.textContent.includes("核对原文"), "应保留核对提醒文案");
+        assert.strictEqual(api.getDocumentPending(), false, "pending 应清理");
+        assert.strictEqual(api.getDocumentController(), null, "controller 应释放");
+        assert.strictEqual(snapshotTimers(api).length, timerBefore, "Runner 定时器应清理");
+        assert.strictEqual(api._localStorage.getItem(KEYS.documents), docsBefore, "分析阶段不得直接写入历史");
+    });
+
+    await check("Doc Summary 迁移后：HTTP/网络/JSON/空 reply 文案与迁移前逐字一致", async () => {
+        const cases = [
+            ["HTTP 错误", (api) => api._fetch.last().resolve({ ok: false, status: 500, json: async () => ({}) }),
+                "AI 分析服务暂时不可用（HTTP 500）。请稍后重试。"],
+            ["网络错误", (api) => api._fetch.last().reject(new TypeError("fetch failed")),
+                "无法连接资料分析服务，请检查网络或稍后重试。"],
+            ["无效 JSON", (api) => api._fetch.last().resolve({ ok: true, status: 200, json: async () => { throw new Error("bad"); } }),
+                "Worker 返回了无效的 JSON 响应（HTTP 200）。"],
+            ["空 reply", (api) => api._fetch.last().resolve({ ok: true, status: 200, json: async () => ({ model: "x" }) }),
+                "AI 分析服务返回的数据格式不正确。请稍后重试。"],
+        ];
+        for (const [name, act, expected] of cases) {
+            const api = loadReadyApi();
+            api.documentSourceInput.value = "格式校验资料。";
+            const p = api.organizeCurrentDocument();
+            await flush();
+            act(api);
+            await p;
+            assert.strictEqual(api.documentInputStatus.textContent, expected, name + "：文案应与迁移前逐字一致");
+            assert.strictEqual(api.getDocumentPending(), false, name + "：失败后 pending 应恢复");
+        }
+    });
+
+    await check("Doc Summary 迁移后：90 秒超时 → 超时文案 + 资源清理", async () => {
+        const api = loadReadyApi();
+        const timerBefore = snapshotTimers(api);
+        api.documentSourceInput.value = "超时测试资料。";
+        const p = api.organizeCurrentDocument();
+        await flush();
+        const added = snapshotTimers(api).slice(timerBefore.length);
+        assert.strictEqual(added.length, 1, "Runner 应注册 1 个超时定时器");
+        assert.strictEqual(added[0][1].delay, 90000, "超时应为 90000ms");
+        added[0][1].fn();
+        assert.strictEqual(await p, false, "超时应返回 false");
+        assert.strictEqual(api.documentInputStatus.textContent, "资料分析等待超时。原始资料未更改，请稍后重试或分段分析。");
+        assert.strictEqual(api.getDocumentPending(), false);
+        assert.strictEqual(api.getDocumentController(), null);
+        assert.strictEqual(snapshotTimers(api).length, timerBefore.length, "定时器应清理");
+    });
+
+    await check("Doc Summary 迁移后：主动取消 → AbortError 文案 + 状态恢复", async () => {
+        const api = loadReadyApi();
+        api.documentSourceInput.value = "取消测试资料。";
+        const p = api.organizeCurrentDocument();
+        await flush();
+        api.getDocumentController().abort();
+        assert.strictEqual(await p, false);
+        assert.strictEqual(api.documentInputStatus.textContent, "资料分析等待超时。原始资料未更改，请稍后重试或分段分析。", "取消文案应与迁移前 AbortError 映射一致");
+        assert.strictEqual(api.getDocumentPending(), false);
+        assert.strictEqual(api.getDocumentController(), null);
+    });
+
+    await check("Doc Summary 迁移后：AI 总开关关闭 → 在途 abort 且不误报超时", async () => {
+        const api = loadReadyApi();
+        api.documentSourceInput.value = "总开关测试资料。";
+        const p = api.organizeCurrentDocument();
+        await flush();
+        const entry = api._fetch.last();
+        api.setModuleEnabled("ai-assistant", false);
+        api.updateDocumentSummaryAccessUI();
+        assert.strictEqual(entry.signal.aborted, true, "在途请求应被 abort");
+        await p;
+        assert.ok(!api.documentInputStatus.textContent.includes("超时"), "权限拦截不应显示超时文案");
+        assert.strictEqual(api.getDocumentPending(), false);
+        assert.strictEqual(api.getDocumentController(), null);
+    });
+
+    await check("Doc Summary 迁移后：失败后可立即重新请求并成功", async () => {
+        const api = loadReadyApi();
+        api.documentSourceInput.value = "重试资料。";
+        const p1 = api.organizeCurrentDocument();
+        await flush();
+        api._fetch.last().resolve({ ok: false, status: 503, json: async () => ({}) });
+        assert.strictEqual(await p1, false);
+        const p2 = api.organizeCurrentDocument();
+        await flush();
+        assert.strictEqual(api._fetch.pending.length, 2, "应可立即发起新请求");
+        api._fetch.last().resolve({ ok: true, status: 200, json: VALID_DOC_REPLY });
+        assert.strictEqual(await p2, true, "第二次请求应成功");
+    });
+
+    // ============================================================
+    // Task 17：Ideas & Writing → Request Runner 迁移 + 跨工作流独立性
+    // ============================================================
+    console.log("\n=== Task 17: Ideas & Writing → Request Runner 迁移与跨工作流独立性 ===");
+
+    await check("Ideas 迁移后：成功请求 → Prompt 契约、返回结构与资源清理", async () => {
+        const api = loadReadyApi();
+        const timerBefore = snapshotTimers(api).length;
+        const ideasBefore = api._localStorage.getItem(KEYS.ideas);
+        const status = makeElement();
+        const button = makeElement();
+        const originalLabel = button.textContent;
+        const p = api.requestIdeasAI("灵感整理提示词", button, status, "处理中……");
+        await flush();
+        assert.strictEqual(api._fetch.pending.length, 1, "应发出 1 个请求");
+        const entry = api._fetch.last();
+        assert.strictEqual(JSON.parse(entry.opts.body).messages[0].content, "灵感整理提示词", "Prompt 应原样传递（构造在调用方）");
+        entry.resolve({ ok: true, status: 200, json: async () => ({ reply: "AI 结果内容", model: "idea-model" }) });
+        const result = await p;
+        assert.deepStrictEqual(result, { reply: "AI 结果内容", model: "idea-model" }, "返回结构应保持 {reply, model}");
+        assert.ok(status.textContent.includes("已收到 DeepSeek 结果（idea-model）"), "应显示成功状态与模型名");
+        assert.strictEqual(button.textContent, originalLabel, "按钮文案应由 finally 恢复");
+        assert.strictEqual(api.getIdeasAIRequestPending(), false, "pending 应清理");
+        assert.strictEqual(api.getIdeasAIRequestController(), null, "controller 应释放");
+        assert.strictEqual(snapshotTimers(api).length, timerBefore, "Runner 定时器应清理");
+        assert.strictEqual(api._localStorage.getItem(KEYS.ideas), ideasBefore, "AI 请求阶段不得直接写入灵感数据");
+    });
+
+    await check("Ideas 迁移后：HTTP/网络/JSON/空 reply 文案与迁移前逐字一致", async () => {
+        const cases = [
+            ["HTTP 错误", (api) => api._fetch.last().resolve({ ok: false, status: 500, json: async () => ({}) }),
+                "AI 服务暂时不可用（HTTP 500），请稍后重试。"],
+            ["网络错误", (api) => api._fetch.last().reject(new TypeError("fetch failed")),
+                "无法连接 AI 服务，请检查网络或稍后重试。"],
+            ["无效 JSON", (api) => api._fetch.last().resolve({ ok: true, status: 200, json: async () => { throw new Error("bad"); } }),
+                "AI 服务返回了无效响应（HTTP 200）。"],
+            ["空 reply", (api) => api._fetch.last().resolve({ ok: true, status: 200, json: async () => ({ model: "x" }) }),
+                "AI 服务返回内容为空或格式不正确，请稍后重试。"],
+        ];
+        for (const [name, act, expected] of cases) {
+            const api = loadReadyApi();
+            const status = makeElement();
+            const p = api.requestIdeasAI("prompt", makeElement(), status, "处理中……");
+            await flush();
+            act(api);
+            const result = await p;
+            assert.strictEqual(result, null, name + "：失败应返回 null");
+            assert.strictEqual(status.textContent, expected, name + "：文案应与迁移前逐字一致");
+            assert.strictEqual(api.getIdeasAIRequestPending(), false, name + "：失败后 pending 应恢复");
+        }
+    });
+
+    await check("Ideas 迁移后：90 秒超时 → 超时文案 + 资源清理", async () => {
+        const api = loadReadyApi();
+        const timerBefore = snapshotTimers(api);
+        const status = makeElement();
+        const p = api.requestIdeasAI("prompt", makeElement(), status, "处理中……");
+        await flush();
+        const added = snapshotTimers(api).slice(timerBefore.length);
+        assert.strictEqual(added.length, 1, "Runner 应注册 1 个超时定时器");
+        assert.strictEqual(added[0][1].delay, 90000, "超时应为 90000ms");
+        added[0][1].fn();
+        assert.strictEqual(await p, null, "超时应返回 null");
+        assert.strictEqual(status.textContent, "请求等待超时。输入内容未更改，请稍后重试。");
+        assert.strictEqual(api.getIdeasAIRequestPending(), false);
+        assert.strictEqual(api.getIdeasAIRequestController(), null);
+        assert.strictEqual(snapshotTimers(api).length, timerBefore.length, "定时器应清理");
+    });
+
+    await check("Ideas 迁移后：主动取消 → AbortError 文案 + 状态恢复", async () => {
+        const api = loadReadyApi();
+        const status = makeElement();
+        const p = api.requestIdeasAI("prompt", makeElement(), status, "处理中……");
+        await flush();
+        api.getIdeasAIRequestController().abort();
+        assert.strictEqual(await p, null);
+        assert.strictEqual(status.textContent, "请求等待超时。输入内容未更改，请稍后重试。", "取消文案应与迁移前 AbortError 映射一致");
+        assert.strictEqual(api.getIdeasAIRequestPending(), false);
+        assert.strictEqual(api.getIdeasAIRequestController(), null);
+    });
+
+    await check("Ideas 迁移后：AI 总开关关闭 → 在途 abort 且不误报超时", async () => {
+        const api = loadReadyApi();
+        const status = makeElement();
+        const p = api.requestIdeasAI("prompt", makeElement(), status, "处理中……");
+        await flush();
+        const entry = api._fetch.last();
+        api.setModuleEnabled("ai-assistant", false);
+        api.updateIdeasWritingAccessUI();
+        assert.strictEqual(entry.signal.aborted, true, "在途请求应被 abort");
+        assert.strictEqual(await p, null);
+        assert.ok(!status.textContent.includes("超时"), "权限拦截不应显示超时文案");
+        assert.strictEqual(api.getIdeasAIRequestPending(), false);
+        assert.strictEqual(api.getIdeasAIRequestController(), null);
+    });
+
+    await check("Ideas 迁移后：失败后可立即重新请求并成功", async () => {
+        const api = loadReadyApi();
+        const p1 = api.requestIdeasAI("prompt1", makeElement(), makeElement(), "处理中……");
+        await flush();
+        api._fetch.last().resolve({ ok: false, status: 503, json: async () => ({}) });
+        assert.strictEqual(await p1, null);
+        const status = makeElement();
+        const p2 = api.requestIdeasAI("prompt2", makeElement(), status, "处理中……");
+        await flush();
+        assert.strictEqual(api._fetch.pending.length, 2, "应可立即发起新请求");
+        api._fetch.last().resolve({ ok: true, status: 200, json: async () => ({ reply: "ok", model: "m" }) });
+        const result = await p2;
+        assert.deepStrictEqual(result, { reply: "ok", model: "m" }, "第二次请求应成功");
+    });
+
+    await check("跨工作流独立性：Document 取消不影响在途 Ideas", async () => {
+        const api = loadReadyApi();
+        api.documentSourceInput.value = "独立性资料。";
+        const docP = api.organizeCurrentDocument();
+        await flush();
+        const ideasStatus = makeElement();
+        const ideasP = api.requestIdeasAI("prompt", makeElement(), ideasStatus, "处理中……");
+        await flush();
+        assert.strictEqual(api._fetch.pending.length, 2, "两个工作流应同时在途");
+        const ideasEntry = api._fetch.pending[1];
+        api.getDocumentController().abort(); // Document 主动取消
+        await docP;
+        assert.strictEqual(ideasEntry.signal.aborted, false, "取消 Document 不得波及 Ideas");
+        ideasEntry.resolve({ ok: true, status: 200, json: async () => ({ reply: "ok", model: "m" }) });
+        const result = await ideasP;
+        assert.deepStrictEqual(result, { reply: "ok", model: "m" }, "Ideas 应不受干扰地完成");
+    });
+
+    await check("跨工作流独立性：Ideas 超时不影响在途 Document", async () => {
+        const api = loadReadyApi();
+        const timerBefore = snapshotTimers(api).length;
+        api.documentSourceInput.value = "超时独立性资料。";
+        const docP = api.organizeCurrentDocument();
+        await flush();
+        const ideasP = api.requestIdeasAI("prompt", makeElement(), makeElement(), "处理中……");
+        await flush();
+        const added = snapshotTimers(api).slice(timerBefore.length);
+        assert.strictEqual(added.length, 2, "两个工作流各自注册定时器");
+        added[1][1].fn(); // 触发 Ideas 的超时定时器
+        assert.strictEqual(await ideasP, null, "Ideas 应超时失败");
+        assert.strictEqual(api.getDocumentPending(), true, "Document 应保持 pending 不受影响");
+        api._fetch.pending[0].resolve({ ok: true, status: 200, json: VALID_DOC_REPLY });
+        assert.strictEqual(await docP, true, "Document 应不受干扰地完成");
+    });
+
+    await check("跨工作流独立性：document-summary 停用不误阻断 Ideas 与 Notes", async () => {
+        const api = loadReadyApi();
+        api.setModuleEnabled("document-summary", false);
+        const notesOk = api.persistNotes([{ ...VALID_NOTE, id: "n10", text: "notes fine" }]);
+        assert.strictEqual(notesOk, true, "Notes 不应受 document-summary 停用影响");
+        const status = makeElement();
+        const p = api.requestIdeasAI("prompt", makeElement(), status, "处理中……");
+        await flush();
+        assert.strictEqual(api._fetch.pending.length, 1, "Ideas 应可正常发起请求");
+        api._fetch.last().resolve({ ok: true, status: 200, json: async () => ({ reply: "ok", model: "m" }) });
+        assert.deepStrictEqual(await p, { reply: "ok", model: "m" }, "Ideas 应正常完成");
+    });
+
+    // ============================================================
+    // Task 18：AI Assistant 迁移至统一 Request Runner（聊天/错误文案/重试专项）
+    // ============================================================
+    console.log("\n=== Task 18: AI Assistant → Request Runner 迁移 ===");
+
+    const chatTexts = (api) => {
+        const chat = api._document.getElementById("ai-chat-log");
+        const texts = [];
+        const walk = (node) => {
+            node.children.forEach((child) => {
+                if (child.tagName === "P") texts.push(String(child.textContent));
+                walk(child);
+            });
+        };
+        walk(chat);
+        return texts;
+    };
+    const findRetryButtons = (api) => {
+        const chat = api._document.getElementById("ai-chat-log");
+        const buttons = [];
+        const walk = (node) => {
+            node.children.forEach((child) => {
+                if (child.tagName === "BUTTON" && String(child.className).includes("ai-chat-retry")) {
+                    buttons.push(child);
+                }
+                walk(child);
+            });
+        };
+        walk(chat);
+        return buttons;
+    };
+
+    await check("Assistant 迁移：首次请求成功 + 历史传递 + 消息无重复", async () => {
+        const api = loadReadyApi();
+        api.aiConversation.push({ role: "user", content: "第一问" });
+        const p1 = api.requestAssistantReply();
+        assert.strictEqual(api._fetch.pending.length, 1);
+        assert.deepStrictEqual(
+            JSON.parse(api._fetch.last().opts.body).messages,
+            [{ role: "user", content: "第一问" }],
+            "请求体应为完整对话历史（messages 契约）"
+        );
+        api._fetch.last().resolve({ ok: true, status: 200, json: async () => ({ reply: "第一答", model: "m1" }) });
+        await p1;
+        assert.deepStrictEqual(
+            api.aiConversation,
+            [{ role: "user", content: "第一问" }, { role: "assistant", content: "第一答" }],
+            "成功后应恰好追加一条 assistant 消息"
+        );
+        assert.strictEqual(chatTexts(api).filter((t) => t === "第一答").length, 1, "AI 回复不得重复显示");
+        assert.strictEqual(api.getAiRequestPending(), false);
+        assert.strictEqual(api.getAiRequestController(), null, "controller 应释放");
+
+        // 连续对话：第二轮请求应携带完整上下文
+        api.aiConversation.push({ role: "user", content: "第二问" });
+        const p2 = api.requestAssistantReply();
+        assert.deepStrictEqual(
+            JSON.parse(api._fetch.last().opts.body).messages,
+            [
+                { role: "user", content: "第一问" },
+                { role: "assistant", content: "第一答" },
+                { role: "user", content: "第二问" }
+            ],
+            "连续对话应传递完整历史上下文"
+        );
+        api._fetch.last().resolve({ ok: true, status: 200, json: async () => ({ reply: "第二答", model: "m1" }) });
+        await p2;
+        assert.strictEqual(api.aiConversation.filter((m) => m.role === "user").length, 2, "用户消息不得重复追加");
+        assert.strictEqual(api.aiConversation.length, 4, "对话长度应为 4");
+    });
+
+    await check("Assistant 迁移：HTTP 异常文案逐字一致", async () => {
+        const api = loadReadyApi();
+        api.aiConversation.push({ role: "user", content: "http" });
+        const p = api.requestAssistantReply();
+        api._fetch.last().resolve({ ok: false, status: 503, json: async () => ({}) });
+        await p;
+        assert.ok(
+            chatTexts(api).includes("AI 服务暂时不可用（HTTP 503）。请稍后重试。"),
+            "HTTP 文案应逐字一致，实际：" + JSON.stringify(chatTexts(api))
+        );
+        assert.strictEqual(findRetryButtons(api).length, 1, "失败消息应带重试入口");
+        assert.strictEqual(api.getAiRequestPending(), false, "失败后 pending 应恢复");
+    });
+
+    await check("Assistant 迁移：网络异常文案逐字一致（句号变体）", async () => {
+        const api = loadReadyApi();
+        api.aiConversation.push({ role: "user", content: "net" });
+        const p = api.requestAssistantReply();
+        api._fetch.last().reject(new TypeError("Failed to fetch"));
+        await p;
+        assert.ok(
+            chatTexts(api).includes("无法连接 AI 服务。请检查网络或稍后重试。"),
+            "网络文案应保持 Assistant 原句号变体，实际：" + JSON.stringify(chatTexts(api))
+        );
+    });
+
+    await check("Assistant 迁移：无效 JSON 与空 reply 文案分别逐字一致", async () => {
+        const api = loadReadyApi();
+        api.aiConversation.push({ role: "user", content: "badjson" });
+        const p1 = api.requestAssistantReply();
+        api._fetch.last().resolve({ ok: true, status: 200, json: async () => { throw new Error("bad json"); } });
+        await p1;
+        assert.ok(
+            chatTexts(api).includes("Worker 返回了无效的 JSON 响应（HTTP 200）。"),
+            "无效 JSON 文案应逐字一致，实际：" + JSON.stringify(chatTexts(api))
+        );
+
+        api.aiConversation.push({ role: "user", content: "empty" });
+        const p2 = api.requestAssistantReply();
+        api._fetch.last().resolve({ ok: true, status: 200, json: async () => ({ model: "m1" }) });
+        await p2;
+        assert.ok(
+            chatTexts(api).includes("AI 服务返回的数据格式不正确。请稍后重试。"),
+            "空 reply 文案应逐字一致，实际：" + JSON.stringify(chatTexts(api))
+        );
+        assert.strictEqual(api.aiConversation.filter((m) => m.role === "assistant").length, 0, "两类失败均不得写入 AI 回复");
+    });
+
+    await check("Assistant 重试：失败 → 点击重试 → 成功，历史正确且无重复请求", async () => {
+        const api = loadReadyApi();
+        api.aiConversation.push({ role: "user", content: "重试问题" });
+        const p1 = api.requestAssistantReply();
+        api._fetch.pending[0].resolve({ ok: false, status: 500, json: async () => ({}) });
+        await p1;
+        const retryButtons = findRetryButtons(api);
+        assert.strictEqual(retryButtons.length, 1, "失败后应出现一个重试按钮");
+        assert.strictEqual(api.getAiRequestPending(), false, "失败后 pending 应恢复，允许重试");
+
+        // 重试发起 1 个新请求；在途时再次发起应受互斥保护（不产生第 3 个请求）
+        const guardP = api.requestAssistantReply();
+        const guardExtra = api.requestAssistantReply();
+        await guardExtra;
+        assert.strictEqual(api._fetch.pending.length, 2, "互斥保护：在途时再次发起不得产生重复请求");
+
+        api._fetch.pending[1].resolve({ ok: true, status: 200, json: async () => ({ reply: "重试成功", model: "m1" }) });
+        await guardP;
+        assert.deepStrictEqual(
+            JSON.parse(api._fetch.pending[1].opts.body).messages,
+            [{ role: "user", content: "重试问题" }],
+            "重试应使用原有对话历史（用户消息不重复 push）"
+        );
+        assert.deepStrictEqual(
+            api.aiConversation,
+            [{ role: "user", content: "重试问题" }, { role: "assistant", content: "重试成功" }],
+            "重试成功后对话应为 1 问 1 答"
+        );
+        assert.strictEqual(chatTexts(api).filter((t) => t === "重试成功").length, 1, "回复不得重复显示");
+    });
+
+    await check("Assistant 重试：连续失败可再次重试，重试按钮语义保持", async () => {
+        const api = loadReadyApi();
+        api.aiConversation.push({ role: "user", content: "再试一次" });
+        const p1 = api.requestAssistantReply();
+        api._fetch.pending[0].reject(new TypeError("down"));
+        await p1;
+        // 第一次重试
+        const p2 = api.requestAssistantReply();
+        api._fetch.pending[1].resolve({ ok: true, status: 200, json: async () => { throw new Error("bad"); } });
+        await p2;
+        // 第二次重试
+        const p3 = api.requestAssistantReply();
+        api._fetch.pending[2].resolve({ ok: true, status: 200, json: async () => ({ reply: "终于成功", model: "m" }) });
+        await p3;
+        assert.ok(api.aiConversation.some((m) => m.role === "assistant" && m.content === "终于成功"), "连续失败后仍可重试成功");
+        assert.strictEqual(api.aiConversation.filter((m) => m.role === "user").length, 1, "全程用户消息只入列一次");
+        // retry 按钮点击应真正绑定到 requestAssistantReply
+        const buttons = findRetryButtons(api);
+        assert.ok(buttons.length >= 1, "失败消息应保留重试入口");
+        assert.ok(buttons[0]._listeners.click && buttons[0]._listeners.click.length >= 1, "重试按钮应绑定 click 处理函数");
+    });
+
+    await check("Assistant 重试：retry 按钮点击链路真实生效", async () => {
+        const api = loadReadyApi();
+        api.aiConversation.push({ role: "user", content: "按钮链路" });
+        const p1 = api.requestAssistantReply();
+        api._fetch.pending[0].resolve({ ok: false, status: 500, json: async () => ({}) });
+        await p1;
+        const button = findRetryButtons(api)[0];
+        const p2 = button._listeners.click[0]();
+        await flush();
+        assert.strictEqual(api._fetch.pending.length, 2, "点击重试按钮应重新发起请求");
+        api._fetch.pending[1].resolve({ ok: true, status: 200, json: async () => ({ reply: "按钮重试成功", model: "m" }) });
+        await p2;
+        assert.ok(api.aiConversation.some((m) => m.role === "assistant" && m.content === "按钮重试成功"), "按钮重试应成功");
+    });
+
+    await check("Assistant 迁移：在途停用静默丢弃（不误报超时、不写对话）", async () => {
+        const api = loadReadyApi();
+        api.aiConversation.push({ role: "user", content: "停用中" });
+        const p = api.requestAssistantReply();
+        api.setModuleEnabled("ai-assistant", false);
+        api.updateAssistantAccessUI();
+        const textsBefore = chatTexts(api).length;
+        api._fetch.last().resolve({ ok: true, status: 200, json: async () => ({ reply: "不应出现", model: "m" }) });
+        await p;
+        const textsAfter = chatTexts(api);
+        assert.ok(
+            !textsAfter.some((t) => t.includes("AI 请求等待超时")),
+            "停用导致的 abort 不得误报超时文案"
+        );
+        assert.ok(
+            !textsAfter.slice(textsBefore).some((t) => t === "不应出现"),
+            "迟到响应不得写入聊天"
+        );
+        assert.strictEqual(api.aiConversation.filter((m) => m.role === "assistant").length, 0, "停用后不得写入对话历史");
+        assert.strictEqual(api.getAiRequestPending(), false);
+    });
+
+    await check("Assistant 迁移：与其他工作流经同一 Runner 互不污染", async () => {
+        const api = loadReadyApi();
+        api.aiConversation.push({ role: "user", content: "共存" });
+        const assistantP = api.requestAssistantReply();
+        const planningP = api.runDailyPlanningAnalysis();
+        await flush();
+        assert.strictEqual(api._fetch.pending.length, 2, "两条链路应各有一个在途请求");
+        const entries = api._fetch.pending.slice();
+        entries[0].resolve({ ok: true, status: 200, json: async () => ({ reply: "答", model: "m" }) });
+        entries[1].resolve({ ok: true, status: 200, json: async () => ({ reply: "", model: "" }) });
+        await assistantP;
+        assert.ok(api.aiConversation.some((m) => m.role === "assistant" && m.content === "答"), "Assistant 应正常完成");
+        assert.strictEqual(api.getAiRequestController(), null, "Assistant controller 应独立释放");
+        assert.strictEqual(
+            JSON.parse(entries[1].opts.body).messages.some((m) => m.content === "共存"),
+            false,
+            "Planning 请求不得混入 Assistant 对话内容"
+        );
+        await planningP;
+        assert.strictEqual(api.getDailyPlanningPending(), false, "Planning 结束后应清理自身状态");
+        assert.strictEqual(api.getDailyPlanningController(), null, "Planning controller 应独立释放");
     });
 
     // ============================================================
