@@ -675,6 +675,51 @@
             background: rgba(7, 10, 15, 0.3);
         }
 
+        .task-organizer-header {
+            margin: 0;
+        }
+
+        .task-organizer-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            width: 100%;
+            padding: 0;
+            border: none;
+            background: transparent;
+            color: var(--text);
+            font: inherit;
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .task-organizer-toggle:hover .task-organizer-heading,
+        .task-organizer-toggle:focus-visible .task-organizer-heading {
+            color: var(--accent);
+        }
+
+        .task-organizer-toggle-icon {
+            flex: 0 0 auto;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1;
+            transition: transform 160ms ease;
+        }
+
+        .task-organizer-toggle[aria-expanded="false"] .task-organizer-toggle-icon {
+            transform: rotate(-90deg);
+        }
+
+        .task-organizer-body {
+            margin-top: 14px;
+        }
+
+        .task-organizer:has(.task-organizer-body[hidden]) {
+            margin-top: 14px;
+            padding: 14px 20px;
+        }
+
         .task-organizer-heading {
             margin: 0;
             color: var(--text);
@@ -851,6 +896,9 @@
             display: grid;
             grid-template-columns: minmax(0, 1fr) 86px;
             gap: 6px;
+            /* 作为 .task-preview-field 的 grid 子项，默认 min-width:auto 会按内容
+               （iOS 原生 date/time 控件的固有宽度）撑宽，需显式允许收缩。 */
+            min-width: 0;
         }
 
         .task-preview-remove {
@@ -2368,23 +2416,42 @@
             color: #aab5c3;
             font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
             font-size: 10px;
+            line-height: 1.4;
+        }
+
+        select.task-priority {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            cursor: pointer;
+            padding-right: 20px;
+            text-align: left;
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M2 3.5L5 6.5L8 3.5' fill='none' stroke='%238995a6' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 6px center;
+            background-size: 10px 10px;
+        }
+
+        .task-priority-edit:disabled {
+            cursor: not-allowed;
+            opacity: 0.55;
         }
 
         .task-priority-high {
             border-color: rgba(239, 133, 133, 0.24);
-            background: rgba(239, 133, 133, 0.08);
+            background-color: rgba(239, 133, 133, 0.08);
             color: #f0a2a2;
         }
 
         .task-priority-medium {
             border-color: rgba(236, 194, 119, 0.22);
-            background: rgba(236, 194, 119, 0.07);
+            background-color: rgba(236, 194, 119, 0.07);
             color: #e6c47f;
         }
 
         .task-priority-low {
             border-color: rgba(157, 232, 212, 0.18);
-            background: var(--accent-soft);
+            background-color: var(--accent-soft);
             color: var(--accent);
         }
 
@@ -3227,7 +3294,7 @@
             overflow-wrap: anywhere;
         }
 
-        @media (min-width: 601px) {
+        @media (min-width: 900px) {
             .workspace-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
                 column-gap: 24px;
@@ -3253,6 +3320,7 @@
             .task-form {
                 grid-template-columns: minmax(0, 1fr) 120px;
                 align-items: stretch;
+                gap: 8px;
             }
 
             .task-field {
@@ -3276,6 +3344,7 @@
 
             .task-add {
                 grid-column: 1 / -1;
+                min-height: 36px;
             }
 
             .ai-shortcut-grid {
@@ -3451,6 +3520,10 @@
                 padding: 16px 13px;
             }
 
+            .task-organizer:has(.task-organizer-body[hidden]) {
+                padding: 14px 13px;
+            }
+
             .ideas-workspace {
                 padding: 16px 13px;
             }
@@ -3574,6 +3647,58 @@
 
             .project-card h3 {
                 margin-top: 25px;
+            }
+        }
+
+        /* 手机与平板（≤1279px，含 iPhone 竖屏/横屏、iPad mini 竖屏 768px、横屏 1024px）：
+           任务预览从桌面四列降为两列，日期/时间上下堆叠（单列），
+           避免四列网格在窄卡片内溢出、标题被压到近 0 宽、iOS 日期/时间控件重叠，
+           并保持标题框与优先级框等高。 */
+        @media (max-width: 1279px) {
+            .task-preview-item {
+                grid-template-columns: minmax(0, 1fr) 120px;
+            }
+
+            .task-preview-date-field,
+            .task-preview-note,
+            .task-preview-wide-field,
+            .task-preview-confirm {
+                grid-column: 1 / -1;
+            }
+
+            .task-preview-remove {
+                grid-column: 2;
+                justify-self: end;
+            }
+
+            .task-preview-date-group {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            /* iOS Safari 原生 date/time 控件固有最小宽度会忽略 width:100%，
+               需移除原生外观（-webkit-appearance）才能真正收缩；
+               max-width:100% 兜底防止任何超出。仅手机/平板生效，Mac 桌面(≥1280px)不受影响。 */
+            .task-preview-date {
+                max-width: 100%;
+                -webkit-appearance: none;
+                appearance: none;
+            }
+
+            .task-preview-name,
+            .task-preview-priority {
+                height: 38px;
+            }
+
+            .task-preview-priority {
+                appearance: none;
+                -webkit-appearance: none;
+                -moz-appearance: none;
+                padding-right: 28px;
+                line-height: 20px;
+                background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M2 3.5L5 6.5L8 3.5' fill='none' stroke='%238995a6' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+                background-repeat: no-repeat;
+                background-position: right 9px center;
+                background-size: 10px 10px;
             }
         }
 
@@ -3826,26 +3951,6 @@
                             </button>
                         </div>
                     </div>
-
-                    <section class="task-organizer" id="task-organizer" aria-labelledby="task-organizer-title" hidden>
-                        <h3 class="task-organizer-heading" id="task-organizer-title">Task Organization｜任务整理</h3>
-                        <p class="task-organizer-description">通过项目现有 Cloudflare Worker 调用 DeepSeek，识别任务并提出拆分、标题、优先级和分类建议。结果仅供预览；请勿输入可识别患者身份的信息。</p>
-                        <form id="task-organizer-form">
-                            <label class="sr-only" for="task-organizer-input">描述需要整理的任务</label>
-                            <textarea class="notes-input task-organizer-input" id="task-organizer-input" placeholder="例如：明天下午3点前提交报告，优先级高&#10;周五完成设计评审；下周整理项目资料"></textarea>
-                            <div class="task-organizer-actions">
-                                <button class="task-organize-button" id="task-organize-button" type="submit">AI 分析并生成预览</button>
-                                <button class="task-organize-button task-organize-secondary" id="task-organizer-copy" type="button" disabled>复制分析结果</button>
-                                <p class="task-organizer-status" id="task-organizer-status" role="status" aria-live="polite"></p>
-                            </div>
-                        </form>
-                        <section class="task-preview" id="task-organizer-preview" aria-labelledby="task-preview-heading" hidden>
-                            <h4 class="task-preview-heading" id="task-preview-heading">AI 任务建议｜逐项核对后导入</h4>
-                            <p class="task-organizer-description">标题、内容、日期、优先级及分类都可能包含 AI 建议。每项必须勾选确认；日期、分类和说明不会新增到存储字段，导入时会合并进现有任务名称。</p>
-                            <ol class="task-preview-list" id="task-preview-list"></ol>
-                            <button class="task-import-button" id="task-import-button" type="button" disabled>确认并添加到 Task Manager</button>
-                        </section>
-                    </section>
 
                     <section class="daily-planning" aria-labelledby="daily-planning-title">
                         <div class="daily-planning-header">
@@ -4320,6 +4425,32 @@
                         </label>
                         <button class="task-add" id="task-add" type="submit">Add task</button>
                     </form>
+                    <section class="task-organizer" id="task-organizer" aria-labelledby="task-organizer-title">
+                        <div class="task-organizer-header">
+                            <button class="task-organizer-toggle" id="task-organizer-toggle" type="button" aria-expanded="false" aria-controls="task-organizer-body">
+                                <span class="task-organizer-heading" id="task-organizer-title">AI 整理任务</span>
+                                <span class="task-organizer-toggle-icon" aria-hidden="true">▾</span>
+                            </button>
+                        </div>
+                        <div class="task-organizer-body" id="task-organizer-body" hidden>
+                            <p class="task-organizer-description">通过项目现有 Cloudflare Worker 调用 DeepSeek，识别任务并提出拆分、标题、优先级和分类建议。结果仅供预览；请勿输入可识别患者身份的信息。</p>
+                            <form id="task-organizer-form">
+                                <label class="sr-only" for="task-organizer-input">描述需要整理的任务</label>
+                                <textarea class="notes-input task-organizer-input" id="task-organizer-input" placeholder="例如：明天下午3点前提交报告，优先级高&#10;周五完成设计评审；下周整理项目资料"></textarea>
+                                <div class="task-organizer-actions">
+                                    <button class="task-organize-button" id="task-organize-button" type="submit">AI 分析并生成预览</button>
+                                    <button class="task-organize-button task-organize-secondary" id="task-organizer-copy" type="button" disabled>复制分析结果</button>
+                                    <p class="task-organizer-status" id="task-organizer-status" role="status" aria-live="polite"></p>
+                                </div>
+                            </form>
+                            <section class="task-preview" id="task-organizer-preview" aria-labelledby="task-preview-heading" hidden>
+                                <h4 class="task-preview-heading" id="task-preview-heading">AI 任务建议｜逐项核对后导入</h4>
+                                <p class="task-organizer-description">标题、内容、日期、优先级及分类都可能包含 AI 建议。每项必须勾选确认；日期、分类和说明不会新增到存储字段，导入时会合并进现有任务名称。</p>
+                                <ol class="task-preview-list" id="task-preview-list"></ol>
+                                <button class="task-import-button" id="task-import-button" type="button" disabled>确认并添加到 Task Manager</button>
+                            </section>
+                        </div>
+                    </section>
                     <p class="tasks-status" id="tasks-status" role="status" aria-live="polite"></p>
 
                     <section class="task-group" aria-labelledby="pending-title">
@@ -5521,6 +5652,8 @@
         let dailyPlanningAccessVersion = 0;
         let dailyPlanningAnalysis = null;
         const taskOrganizerPanel = document.getElementById("task-organizer");
+        const taskOrganizerToggle = document.getElementById("task-organizer-toggle");
+        const taskOrganizerBody = document.getElementById("task-organizer-body");
         const taskOrganizerForm = document.getElementById("task-organizer-form");
         const taskOrganizerInput = document.getElementById("task-organizer-input");
         const taskOrganizeButton = document.getElementById("task-organize-button");
@@ -6872,7 +7005,7 @@
             taskInput.disabled = !tasksAccess.enabled || !tasksStorageReady;
             taskPriority.disabled = !tasksAccess.enabled || !tasksStorageReady;
             taskAdd.disabled = !tasksAccess.enabled || !tasksStorageReady;
-            document.querySelectorAll(".task-checkbox, .task-delete").forEach((control) => {
+            document.querySelectorAll(".task-checkbox, .task-delete, .task-priority-edit").forEach((control) => {
                 control.disabled = !tasksAccess.enabled || !tasksStorageReady;
             });
             updateDailyFocusControls();
@@ -7868,15 +8001,20 @@
                 confirmCheckbox,
                 document.createTextNode("我已核对并确认这项任务及其日期、优先级等信息；分类仅供参考。")
             );
-            confirmCheckbox.addEventListener("change", updateTaskImportButton);
+            confirmCheckbox.addEventListener("change", () => {
+                updateTaskImportButton();
+                updateTaskImportSelectionHint();
+            });
             [nameInput, contentInput, prioritySelect, categoryInput, dateInput, timeInput].forEach((control) => {
                 control.addEventListener("input", () => {
                     confirmCheckbox.checked = false;
                     updateTaskImportButton();
+                    updateTaskImportSelectionHint();
                 });
                 control.addEventListener("change", () => {
                     confirmCheckbox.checked = false;
                     updateTaskImportButton();
+                    updateTaskImportSelectionHint();
                 });
             });
 
@@ -7892,6 +8030,7 @@
                 }
                 item.remove();
                 updateTaskImportButton();
+                updateTaskImportSelectionHint();
                 if (!taskPreviewList.children.length) taskOrganizerStatus.textContent = "预览已清空。";
             });
 
@@ -7910,8 +8049,7 @@
 
         function updateTaskImportButton() {
             const items = [...taskPreviewList.querySelectorAll(".task-preview-item")];
-            const allConfirmed = items.length > 0 &&
-                items.every((item) => item.querySelector(".task-preview-confirm-checkbox").checked);
+            const hasSelection = items.some((item) => item.querySelector(".task-preview-confirm-checkbox").checked);
             const organizationEnabled = getModuleAccessStatus("ai-assistant").enabled &&
                 getModuleAccessStatus("task-organization").enabled;
             const taskManagerAccess = getModuleAccessStatus("task-manager");
@@ -7920,9 +8058,8 @@
                 !tasksStorageReady ||
                 taskOrganizerAIRequestPending ||
                 !taskOrganizerPreviewVersion ||
-                taskOrganizerImportedVersion === taskOrganizerPreviewVersion ||
                 taskOrganizerPreviewSource !== taskOrganizerInput.value.trim() ||
-                !allConfirmed;
+                !hasSelection;
             taskOrganizerCopyButton.disabled = !organizationEnabled ||
                 taskOrganizerAIRequestPending || items.length === 0;
             if (organizationEnabled && !taskManagerAccess.enabled) {
@@ -7930,6 +8067,20 @@
             } else if (organizationEnabled) {
                 clearModuleAccessMessage(taskOrganizerStatus);
             }
+        }
+
+        function updateTaskImportSelectionHint() {
+            const items = [...taskPreviewList.querySelectorAll(".task-preview-item")];
+            if (!items.length) return;
+            const organizationEnabled = getModuleAccessStatus("ai-assistant").enabled &&
+                getModuleAccessStatus("task-organization").enabled;
+            const taskManagerAccess = getModuleAccessStatus("task-manager");
+            if (!organizationEnabled || !taskManagerAccess.enabled || taskOrganizerAIRequestPending) return;
+            const selectedCount = items.filter((item) => item.querySelector(".task-preview-confirm-checkbox").checked).length;
+            taskOrganizerStatus.setAttribute("role", "status");
+            taskOrganizerStatus.textContent = selectedCount === 0
+                ? "请选择需要导入的任务。"
+                : `已选择 ${selectedCount} 项，将导入这 ${selectedCount} 项。`;
         }
 
         function renderTaskOrganizationPreview(parsedTasks) {
@@ -8104,10 +8255,10 @@
                 `当前本地日期为 ${today}。只有在原文明确表达具体且可可靠计算的日期时才填写 ISO 日期；相对日期可以依据当前日期换算，但必须把原文日期用作 dateEvidence，并将 needsConfirmation 设为 true。诸如“有空”“最近”“下周三”等模糊时间，若无法唯一确定具体日期，dueDate 留空，并在 confirmationReason 说明待确认。不得凭空补充截止日期或时间。时间不明确时 dueTime 留空并附上原文时间证据（若存在）。`,
                 "拆分复合事项为多个独立任务，但每项必须能在原文中找到 sourceExcerpt（必须逐字复制原文中的连续片段）。标题可规范化，content 可概括原文已有内容，不得添加未经提供的事实。不要将一个意图重复拆成多条。",
                 "priority 仅有 high、medium、low。原文明确写出优先级时 prioritySource=explicit，priorityEvidence 必须是原文逐字片段；模型只是建议时标为 suggested，并在 confirmationReason 说明这是 AI 建议；无法判断时 prioritySource=default 且 priority=medium（Task Manager 当前默认值），在确认原因说明原文未标优先级。不得将建议伪装成用户确认的信息。",
-                "category 是分类建议，不保证准确，允许为空；不会作为独立字段保存。needsConfirmation 对所有模糊日期、AI 优先级建议、默认优先级、信息不足或其他不确定内容设为 true。所有预览都由用户逐项确认。",
+                "category 是分类建议，不保证准确，允许为空；不会作为独立字段保存。needsConfirmation 对所有模糊日期、AI 优先级建议、默认优先级、信息不足或其他不确定内容设为 true。confirmationReason 与 needsConfirmation 必须严格配对：needsConfirmation=true 时 confirmationReason 必须是非空字符串，具体说明待确认原因（不得写“无”“待确认”等空泛内容）；needsConfirmation=false 时 confirmationReason 可为空字符串。所有预览都由用户逐项确认。",
                 "title 最多 240 字，content 最多 1000 字，category 最多 80 字。最多返回 30 项。原文没有明确可执行任务时，返回 tasks=[]，notes 说明原因；不得编造任务。医疗、科研任务只能整理原文，不要生成任何临床事实或建议。",
                 "仅返回合法 JSON，不要 Markdown 代码围栏。格式：",
-                '{"tasks":[{"title":"任务标题","content":"任务内容，可为空","priority":"high|medium|low","prioritySource":"explicit|suggested|default","priorityEvidence":"原文依据，可为空","category":"分类建议，可为空","dueDate":"YYYY-MM-DD 或空字符串","dueTime":"HH:MM 或空字符串","dateEvidence":"日期原文依据，可为空","timeEvidence":"时间原文依据，可为空","sourceExcerpt":"原文中的连续片段","needsConfirmation":true,"confirmationReason":"待确认原因，可为空"}],"notes":"遗漏信息或拆分说明"}',
+                '{"tasks":[{"title":"任务标题","content":"任务内容，可为空","priority":"high|medium|low","prioritySource":"explicit|suggested|default","priorityEvidence":"原文依据，可为空","category":"分类建议，可为空","dueDate":"YYYY-MM-DD 或空字符串","dueTime":"HH:MM 或空字符串","dateEvidence":"日期原文依据，可为空","timeEvidence":"时间原文依据，可为空","sourceExcerpt":"原文中的连续片段","needsConfirmation":true,"confirmationReason":"needsConfirmation=true 时必填：具体待确认原因；needsConfirmation=false 时可为空字符串"}],"notes":"遗漏信息或拆分说明"}',
                 "用户原文：",
                 source
             ].join("\n\n");
@@ -8262,8 +8413,7 @@
                 updateTaskOrganizationAccessUI();
                 return;
             }
-            if (taskOrganizerSubmitting || !taskOrganizerPreviewVersion ||
-                taskOrganizerImportedVersion === taskOrganizerPreviewVersion) {
+            if (taskOrganizerSubmitting || !taskOrganizerPreviewVersion) {
                 return;
             }
             if (!tasksStorageReady) {
@@ -8277,23 +8427,24 @@
                 taskOrganizerStatus.textContent = "预览中没有可添加的任务。";
                 return;
             }
+            const selectedItems = previewItems.filter((item) => item.querySelector(".task-preview-confirm-checkbox").checked);
+            if (!selectedItems.length) {
+                taskOrganizerStatus.textContent = "请选择需要导入的任务。";
+                taskOrganizerStatus.setAttribute("role", "status");
+                updateTaskImportButton();
+                return;
+            }
             const importedAt = new Date().toISOString();
             const additions = [];
-            for (const item of previewItems) {
+            for (const item of selectedItems) {
                 const title = item.querySelector(".task-preview-name").value.trim();
                 const content = item.querySelector(".task-preview-content").value.trim();
                 const priority = item.querySelector(".task-preview-priority").value;
                 const date = item.querySelector('input[type="date"]').value;
                 const time = item.querySelector('input[type="time"]').value;
-                const confirmed = item.querySelector(".task-preview-confirm-checkbox").checked;
                 const titleAndContent = content ? `${title}：${content}` : title;
                 if (!title || !["high", "medium", "low"].includes(priority)) {
-                    taskOrganizerStatus.textContent = "请为每条预览任务填写有效标题并确认优先级。";
-                    taskOrganizerStatus.setAttribute("role", "alert");
-                    return;
-                }
-                if (!confirmed) {
-                    taskOrganizerStatus.textContent = "请逐项核对并勾选确认后，再添加任务。";
+                    taskOrganizerStatus.textContent = "请为每条待导入任务填写有效标题并确认优先级。";
                     taskOrganizerStatus.setAttribute("role", "alert");
                     return;
                 }
@@ -8339,15 +8490,18 @@
                     return;
                 }
                 if (persistTasks([...latestTasks, ...additions])) {
-                    taskOrganizerImportedVersion = taskOrganizerPreviewVersion;
-                    taskOrganizerImportedSources.add(taskOrganizerInput.value.trim());
-                    taskOrganizerStatus.textContent = `已成功添加 ${additions.length} 项任务到 Task Manager。`;
+                    selectedItems.forEach((item) => item.remove());
+                    const remainingCount = taskPreviewList.querySelectorAll(".task-preview-item").length;
+                    updateTaskImportButton();
                     taskOrganizerStatus.setAttribute("role", "status");
-                    taskPreviewList.querySelectorAll("input, textarea, select, button").forEach((control) => {
-                        control.disabled = true;
-                    });
-                    taskImportButton.textContent = "已添加";
-                    taskOrganizerCopyButton.disabled = true;
+                    if (remainingCount === 0) {
+                        taskOrganizerImportedVersion = taskOrganizerPreviewVersion;
+                        taskOrganizerImportedSources.add(taskOrganizerPreviewSource);
+                        taskOrganizerPreview.hidden = true;
+                        taskOrganizerStatus.textContent = "所有任务已导入。";
+                    } else {
+                        taskOrganizerStatus.textContent = `已导入 ${additions.length} 项，剩余 ${remainingCount} 项待确认。`;
+                    }
                 } else {
                     taskOrganizerStatus.textContent = "保存失败，任务未确认添加。请检查浏览器存储设置后重试。";
                     taskOrganizerStatus.setAttribute("role", "alert");
@@ -9618,9 +9772,21 @@
                 name.className = "task-name";
                 name.textContent = task.text;
 
-                const priority = document.createElement("span");
-                priority.className = `task-priority task-priority-${task.priority}`;
-                priority.textContent = task.priority[0].toUpperCase() + task.priority.slice(1);
+                const priority = document.createElement("select");
+                priority.className = `task-priority task-priority-edit task-priority-${task.priority}`;
+                priority.setAttribute("aria-label", `修改任务优先级：${task.text}`);
+                [
+                    ["high", "High"],
+                    ["medium", "Medium"],
+                    ["low", "Low"]
+                ].forEach(([value, label]) => {
+                    const option = document.createElement("option");
+                    option.value = value;
+                    option.textContent = label;
+                    priority.append(option);
+                });
+                priority.value = task.priority;
+                priority.addEventListener("change", () => changeTaskPriority(task.id, priority.value));
 
                 const deleteButton = document.createElement("button");
                 deleteButton.className = "task-delete";
@@ -9675,6 +9841,28 @@
                 task.id === taskId ? { ...task, completed: !task.completed } : task
             );
             persistTasks(nextTasks);
+        }
+
+        function changeTaskPriority(taskId, newPriority) {
+            if (!["high", "medium", "low"].includes(newPriority)) {
+                renderTasks();
+                return;
+            }
+            if (!requireModuleAccess("task-manager", tasksStatus)) {
+                renderTasks();
+                updateModuleAccessUI();
+                return;
+            }
+            if (!tasksStorageReady) {
+                renderTasks();
+                return;
+            }
+            const nextTasks = tasks.map((task) =>
+                task.id === taskId ? { ...task, priority: newPriority } : task
+            );
+            if (!persistTasks(nextTasks)) {
+                renderTasks();
+            }
         }
 
         function deleteTask(taskId) {
@@ -11296,10 +11484,14 @@
                         updateTaskOrganizationAccessUI();
                         return;
                     }
-                    taskOrganizerPanel.hidden = false;
+                    if (taskOrganizerBody.hidden) {
+                        taskOrganizerBody.hidden = false;
+                        taskOrganizerToggle.setAttribute("aria-expanded", "true");
+                    }
+                    taskOrganizerPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
                     taskOrganizerStatus.textContent = "AI 任务整理已就绪；分析结果仅供预览，逐项检查并确认后才会添加任务。";
                     aiAssistantStatus.textContent = "任务整理已启用。DeepSeek 只提供建议，不会自动添加或修改任务。";
-                    taskOrganizerInput.focus();
+                    taskOrganizerInput.focus({ preventScroll: true });
                     return;
                 }
                 const message = aiShortcutMessages[button.dataset.aiFeature];
@@ -11307,6 +11499,12 @@
                     aiAssistantStatus.textContent = message;
                 }
             });
+        });
+
+        taskOrganizerToggle.addEventListener("click", () => {
+            const willExpand = taskOrganizerBody.hidden;
+            taskOrganizerBody.hidden = !willExpand;
+            taskOrganizerToggle.setAttribute("aria-expanded", String(willExpand));
         });
 
         taskOrganizerForm.addEventListener("submit", organizeTasks);

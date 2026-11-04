@@ -28,11 +28,17 @@ if (initIdx > 0) {
 function makeElement(tagName = "div") {
     const el = {
         tagName: String(tagName).toUpperCase(),
+        type: "",
+        className: "",
         children: [],
         dataset: {},
         style: {},
         classList: {
-            add() {}, remove() {}, toggle() {}, contains() { return false; }
+            _set: new Set(),
+            add(...c) { c.forEach((x) => this._set.add(x)); },
+            remove(...c) { c.forEach((x) => this._set.delete(x)); },
+            toggle(c, force) { if (force === undefined ? !this._set.has(c) : force) this._set.add(c); else this._set.delete(c); },
+            contains(c) { return this._set.has(c); }
         },
         textContent: "",
         value: "",
@@ -43,17 +49,39 @@ function makeElement(tagName = "div") {
         download: "",
         isConnected: true,
         parentElement: null,
-        setAttribute(k, v) { this[k] = v; },
+        setAttribute(k, v) { this[k] = v; if (k === "class") { this.className = v; this.classList._set = new Set(String(v).split(/\s+/).filter(Boolean)); } },
         getAttribute(k) { return this[k] !== undefined ? this[k] : null; },
         removeAttribute(k) { delete this[k]; },
         hasAttribute(k) { return this[k] !== undefined; },
-        addEventListener() {},
-        removeEventListener() {},
-        dispatchEvent() {},
+        _listeners: {},
+        addEventListener(type, handler) {
+            if (typeof handler !== "function") return;
+            (this._listeners[type] = this._listeners[type] || []).push(handler);
+        },
+        removeEventListener(type, handler) {
+            const handlers = this._listeners[type];
+            if (!handlers) return;
+            const index = handlers.indexOf(handler);
+            if (index >= 0) handlers.splice(index, 1);
+        },
+        dispatchEvent(event) {
+            const type = typeof event === "string" ? event : event.type;
+            const payload = typeof event === "string" ? { type } : event;
+            if (!payload.target) payload.target = this;
+            payload.currentTarget = this;
+            (this._listeners[type] || []).slice().forEach((handler) => handler.call(this, payload));
+            return true;
+        },
         append(...nodes) { for (const n of nodes) { this.children.push(n); n.parentElement = this; } },
         appendChild(n) { this.children.push(n); n.parentElement = this; return n; },
-        replaceChildren(...nodes) { this.children = nodes.slice(); },
-        remove() {},
+        replaceChildren(...nodes) { this.children = nodes.slice(); for (const n of this.children) { n.parentElement = this; } },
+        remove() {
+            if (this.parentElement) {
+                const i = this.parentElement.children.indexOf(this);
+                if (i >= 0) this.parentElement.children.splice(i, 1);
+                this.parentElement = null;
+            }
+        },
         focus() {},
         scrollIntoView() {},
         click() {},
@@ -61,8 +89,34 @@ function makeElement(tagName = "div") {
         after() {},
         closest() { return null; },
         requestSubmit() {},
-        querySelector(sel) { const e = makeElement(); e.parentElement = this; return e; },
-        querySelectorAll() { return []; },
+        _matches(sel) {
+            if (sel.startsWith(".")) {
+                const cls = sel.slice(1);
+                return (this.className || "").split(/\s+/).includes(cls) || this.classList.contains(cls);
+            }
+            const typeMatch = sel.match(/^input\[type="([^"]+)"\]$/);
+            if (typeMatch) return this.tagName === "INPUT" && this.type === typeMatch[1];
+            return false;
+        },
+        querySelector(sel) {
+            const stack = [...this.children];
+            while (stack.length) {
+                const node = stack.pop();
+                if (node._matches(sel)) return node;
+                stack.push(...node.children);
+            }
+            return null;
+        },
+        querySelectorAll(sel) {
+            const out = [];
+            const stack = [...this.children];
+            while (stack.length) {
+                const node = stack.pop();
+                if (node._matches(sel)) out.push(node);
+                stack.push(...node.children);
+            }
+            return out;
+        },
     };
     return el;
 }
@@ -82,6 +136,11 @@ function makeDocument() {
         },
         querySelectorAll() { return []; },
         createElement(tag) { return makeElement(tag); },
+        createTextNode(text) {
+            const node = makeElement("#text");
+            node.textContent = String(text);
+            return node;
+        },
     };
 }
 
@@ -139,7 +198,7 @@ function loadApi(options = {}) {
     // --- 持久化函数 ---
     persistNotes, persistTasks, persistDailyFocus, writeDailyFocusArchive,
     persistIdeas, persistDocumentHistory,
-    toggleTask, deleteTask, startDailyFocus,
+    toggleTask, deleteTask, changeTaskPriority, startDailyFocus,
     notesStorageKey, tasksStorageKey, dailyFocusStorageKey, ideasStorageKey, documentStorageKey,
     dailyFocusSchemaVersion,
     // --- 数据加载（用于构造真实内存态）---
@@ -159,6 +218,18 @@ function loadApi(options = {}) {
     getDailyPlanningAnalysis: () => dailyPlanningAnalysis,
     // --- AI：Task Organization ---
     organizeTasks, updateTaskOrganizationAccessUI, taskOrganizerInput, taskOrganizerStatus,
+    updateTaskImportButton, updateTaskImportSelectionHint,
+    taskPreviewList, taskImportButton, taskOrganizerPreview, taskOrganizerCopyButton,
+    createTaskPreviewItem,
+    setTaskOrganizerPreviewActive: (source) => {
+        taskOrganizerPreviewVersion += 1;
+        taskOrganizerImportedVersion = 0;
+        taskOrganizerPreviewSource = source;
+        taskOrganizerInput.value = source;
+        taskOrganizerPreview.hidden = false;
+    },
+    getTaskOrganizerPreviewVersion: () => taskOrganizerPreviewVersion,
+    getTaskOrganizerImportedVersion: () => taskOrganizerImportedVersion,
     getTaskOrganizerPending: () => taskOrganizerAIRequestPending,
     getTaskOrganizerController: () => taskOrganizerRequestController,
     // --- AI：Document Summary ---
@@ -1608,6 +1679,389 @@ async function main() {
         assert.strictEqual(snapshot.moduleSettingsRecovery.present, true);
         assert.strictEqual(snapshot.moduleSettingsRecovery.valid, false, "损坏数据应标记 valid=false");
         assert.strictEqual(snapshot.moduleSettingsRecovery.storageValue, "{ bad json", "应保留原始字节");
+    });
+
+    // ============================================================
+    // Task 10：AI 任务整理 — 选择性导入
+    // ============================================================
+    console.log("\n=== Task 10: AI 任务整理选择性导入 ===");
+
+    function buildTaskOrganizerPreview(api, items) {
+        const list = api.taskPreviewList;
+        list.replaceChildren();
+        const mkInput = (cls, type, value) => {
+            const el = api._document.createElement("input");
+            el.className = cls;
+            if (type) el.type = type;
+            el.value = value === undefined ? "" : value;
+            return el;
+        };
+        for (const it of items) {
+            const item = api._document.createElement("li");
+            item.className = "task-preview-item";
+            const checkbox = mkInput("task-preview-confirm-checkbox", "checkbox", "");
+            checkbox.checked = !!it.checked;
+            item.append(
+                mkInput("task-preview-name", "text", it.title),
+                mkInput("task-preview-content", "", it.content || ""),
+                mkInput("task-preview-priority", "select", it.priority || "medium"),
+                mkInput("task-preview-date", "date", it.date || ""),
+                mkInput("task-preview-date", "time", it.time || ""),
+                checkbox
+            );
+            list.appendChild(item);
+        }
+        return list;
+    }
+
+    await check("未勾选任何项时导入按钮禁用", () => {
+        const api = loadReadyApi({ [KEYS.tasks]: "[]" });
+        api.setTaskOrganizerPreviewActive("abc");
+        buildTaskOrganizerPreview(api, [{ title: "A" }, { title: "B" }]);
+        api.updateTaskImportButton();
+        assert.strictEqual(api.taskImportButton.disabled, true, "未勾选应禁用按钮");
+    });
+
+    await check("勾选一项时按钮启用且仅导入该项", () => {
+        const api = loadReadyApi({ [KEYS.tasks]: "[]" });
+        api.setTaskOrganizerPreviewActive("abc");
+        buildTaskOrganizerPreview(api, [{ title: "A", checked: true }, { title: "B" }]);
+        api.updateTaskImportButton();
+        assert.strictEqual(api.taskImportButton.disabled, false, "勾选一项应启用按钮");
+        api.importOrganizedTasks();
+        const tasks = JSON.parse(api._localStorage.getItem(KEYS.tasks));
+        assert.strictEqual(tasks.length, 1, "应只导入 1 项");
+        assert.ok(tasks[0].text.includes("A"), "导入项应为 A");
+        assert.strictEqual(api.taskPreviewList.querySelectorAll(".task-preview-item").length, 1, "剩余 1 项");
+    });
+
+    await check("勾选两项只导入这两项，未勾选项不进入正式列表", () => {
+        const api = loadReadyApi({ [KEYS.tasks]: "[]" });
+        api.setTaskOrganizerPreviewActive("abc");
+        buildTaskOrganizerPreview(api, [{ title: "A", checked: true }, { title: "B", checked: true }, { title: "C" }]);
+        api.importOrganizedTasks();
+        const tasks = JSON.parse(api._localStorage.getItem(KEYS.tasks));
+        assert.strictEqual(tasks.length, 2, "应导入 2 项");
+        assert.ok(tasks.some((t) => t.text.includes("A")) && tasks.some((t) => t.text.includes("B")));
+        assert.ok(!tasks.some((t) => t.text.includes("C")), "未勾选项 C 不应写入");
+        assert.strictEqual(api.taskPreviewList.querySelectorAll(".task-preview-item").length, 1, "剩余 C 项");
+    });
+
+    await check("剩余未勾选项可再次勾选并导入，全部导入后结束预览", () => {
+        const api = loadReadyApi({ [KEYS.tasks]: "[]" });
+        api.setTaskOrganizerPreviewActive("abc");
+        buildTaskOrganizerPreview(api, [{ title: "A", checked: true }, { title: "B" }]);
+        api.importOrganizedTasks();
+        const remaining = api.taskPreviewList.querySelectorAll(".task-preview-item");
+        assert.strictEqual(remaining.length, 1, "剩余 1 项 B");
+        remaining[0].querySelector(".task-preview-confirm-checkbox").checked = true;
+        api.updateTaskImportButton();
+        assert.strictEqual(api.taskImportButton.disabled, false, "剩余项勾选后应启用按钮");
+        api.importOrganizedTasks();
+        const tasks = JSON.parse(api._localStorage.getItem(KEYS.tasks));
+        assert.strictEqual(tasks.length, 2, "两次共导入 2 项");
+        assert.strictEqual(api.taskPreviewList.querySelectorAll(".task-preview-item").length, 0, "全部导入后预览为空");
+        assert.strictEqual(api.taskOrganizerPreview.hidden, true, "全部导入后预览结束");
+    });
+
+    await check("日期有值、时间为空仍可导入", () => {
+        const api = loadReadyApi({ [KEYS.tasks]: "[]" });
+        api.setTaskOrganizerPreviewActive("abc");
+        buildTaskOrganizerPreview(api, [{ title: "A", checked: true, date: "2026-11-05", time: "" }]);
+        api.updateTaskImportButton();
+        assert.strictEqual(api.taskImportButton.disabled, false, "日期有值、时间为空不应禁用按钮");
+        api.importOrganizedTasks();
+        const tasks = JSON.parse(api._localStorage.getItem(KEYS.tasks));
+        assert.strictEqual(tasks.length, 1);
+        assert.ok(tasks[0].text.includes("截止: 2026-11-05"), "应含日期后缀且无时间");
+    });
+
+    await check("重复任务去重仍有效且不移除预览项", () => {
+        const api = loadReadyApi({ [KEYS.tasks]: JSON.stringify([{ id: "t0", text: "A", priority: "medium", completed: false, createdAt: "2026-01-01T00:00:00.000Z" }]) });
+        api.setTaskOrganizerPreviewActive("abc");
+        buildTaskOrganizerPreview(api, [{ title: "A", checked: true }]);
+        api.importOrganizedTasks();
+        const tasks = JSON.parse(api._localStorage.getItem(KEYS.tasks));
+        assert.strictEqual(tasks.length, 1, "重复任务不应重复导入");
+        assert.strictEqual(api.taskPreviewList.querySelectorAll(".task-preview-item").length, 1, "去重失败应保留预览项");
+    });
+
+    await check("保存失败时不丢失预览项", () => {
+        const localStorage = makeFailingStorage({ [KEYS.tasks]: "[]" }, "set", KEYS.tasks);
+        const api = loadApi({ localStorage });
+        api.loadTasks();
+        api.setTaskOrganizerPreviewActive("abc");
+        buildTaskOrganizerPreview(api, [{ title: "A", checked: true }, { title: "B" }]);
+        api.importOrganizedTasks();
+        assert.strictEqual(api.taskPreviewList.querySelectorAll(".task-preview-item").length, 2, "保存失败不应移除预览项");
+        assert.strictEqual(api.taskImportButton.disabled, false, "失败后按钮恢复可点");
+    });
+
+    await check("勾选提示与按钮状态同步", () => {
+        const api = loadReadyApi({ [KEYS.tasks]: "[]" });
+        api.setTaskOrganizerPreviewActive("abc");
+        buildTaskOrganizerPreview(api, [{ title: "A" }, { title: "B" }]);
+        api.updateTaskImportSelectionHint();
+        assert.ok(api.taskOrganizerStatus.textContent.includes("请选择"), "未勾选应提示请选择");
+        api.taskPreviewList.querySelectorAll(".task-preview-item")[0].querySelector(".task-preview-confirm-checkbox").checked = true;
+        api.updateTaskImportSelectionHint();
+        assert.ok(api.taskOrganizerStatus.textContent.includes("已选择 1 项"), "勾选 1 项应提示已选择 1 项");
+    });
+
+    // ============================================================
+    // Task 10 补充：编辑预览项后自动取消确认
+    // ============================================================
+    console.log("\n=== Task 10 补充: 编辑预览项取消确认 ===");
+
+    const previewTaskFixture = (overrides = {}) => ({
+        title: "任务 A",
+        content: "",
+        priority: "medium",
+        prioritySource: "default",
+        priorityEvidence: "",
+        category: "",
+        dueDate: "",
+        dueTime: "",
+        dateEvidence: "",
+        timeEvidence: "",
+        sourceExcerpt: "任务 A",
+        needsConfirmation: true,
+        confirmationReason: "原文未明确优先级，按默认值预览",
+        ...overrides
+    });
+
+    await check("编辑任一预览字段后自动取消该项确认，且不影响其他项", () => {
+        const api = loadReadyApi({ [KEYS.tasks]: "[]" });
+        api.setTaskOrganizerPreviewActive("abc");
+        const item1 = api.createTaskPreviewItem(previewTaskFixture(), 0);
+        const item2 = api.createTaskPreviewItem(previewTaskFixture({ title: "任务 B", sourceExcerpt: "任务 B" }), 1);
+        api.taskPreviewList.append(item1, item2);
+
+        const checkbox1 = item1.querySelector(".task-preview-confirm-checkbox");
+        const checkbox2 = item2.querySelector(".task-preview-confirm-checkbox");
+        assert.strictEqual(checkbox1.checked, false, "真实预览项初始应为未勾选");
+        assert.strictEqual(checkbox2.checked, false, "真实预览项初始应为未勾选");
+
+        checkbox1.checked = true;
+        checkbox2.checked = true;
+        api.updateTaskImportButton();
+        assert.strictEqual(api.taskImportButton.disabled, false, "两项勾选后应可导入");
+
+        const editableSelectors = [
+            ".task-preview-name",
+            ".task-preview-content",
+            ".task-preview-priority",
+            ".task-preview-category",
+            'input[type="date"]',
+            'input[type="time"]'
+        ];
+
+        editableSelectors.forEach((selector) => {
+            checkbox1.checked = true;
+            item1.querySelector(selector).dispatchEvent({ type: "input" });
+            assert.strictEqual(checkbox1.checked, false, `${selector} 编辑后应取消确认`);
+            assert.strictEqual(checkbox2.checked, true, `${selector} 编辑不应影响未编辑的其他项`);
+        });
+
+        // 下拉框通过 change 事件触发，同样应取消确认
+        checkbox1.checked = true;
+        item1.querySelector(".task-preview-priority").dispatchEvent({ type: "change" });
+        assert.strictEqual(checkbox1.checked, false, "优先级 change 后应取消确认");
+        assert.strictEqual(checkbox2.checked, true, "change 不应影响其他项");
+
+        // 重新勾选后仍可正常导入
+        checkbox1.checked = true;
+        api.updateTaskImportButton();
+        assert.strictEqual(api.taskImportButton.disabled, false, "重新勾选后按钮应可用");
+        api.importOrganizedTasks();
+        const imported = JSON.parse(api._localStorage.getItem(KEYS.tasks));
+        assert.strictEqual(imported.length, 2, "重新勾选后两项均应导入");
+        assert.ok(imported.some((task) => task.text === "任务 A"), "应导入任务 A");
+        assert.ok(imported.some((task) => task.text === "任务 B"), "应导入任务 B");
+        assert.strictEqual(api.taskPreviewList.querySelectorAll(".task-preview-item").length, 0, "导入后预览应清空");
+    });
+
+    // ============================================================
+    // Task 12：导入后刷新恢复 Pending 状态
+    // ============================================================
+    console.log("\n=== Task 12: 刷新后 Pending 恢复 ===");
+
+    await check("导入任务写入存储，刷新重启后恢复为 Pending 且不重复、不影响 Completed", () => {
+        const completedSeed = {
+            id: "c1",
+            text: "已完成的历史任务",
+            priority: "low",
+            completed: true,
+            createdAt: "2026-01-01T00:00:00.000Z"
+        };
+        const api1 = loadReadyApi({ [KEYS.tasks]: JSON.stringify([completedSeed]) });
+        api1.setTaskOrganizerPreviewActive("刷新测试输入");
+        buildTaskOrganizerPreview(api1, [{ title: "导入任务 A", checked: true }]);
+        api1.importOrganizedTasks();
+
+        const storedRaw = api1._localStorage.getItem(KEYS.tasks);
+        const storedTasks = JSON.parse(storedRaw);
+        assert.strictEqual(storedTasks.length, 2, "存储中应为原 1 条 + 导入 1 条");
+        const storedImported = storedTasks.find((task) => task.text.includes("导入任务 A"));
+        assert.ok(storedImported, "导入任务应写入存储");
+        assert.strictEqual(storedImported.completed, false, "导入任务应标记为未完成");
+        assert.strictEqual(storedImported.priority, "medium", "导入任务优先级应保留");
+
+        // 模拟页面刷新：新建独立环境，仅复用同一份存储内容，按页面真实初始化顺序重新加载
+        const api2 = loadApi({ seed: { ...seededStore(), [KEYS.tasks]: storedRaw } });
+        api2.loadDailyFocus();
+        api2.loadNotes();
+        api2.loadIdeas();
+        api2.loadDocumentHistory();
+        api2.loadTasks();
+        api2.refreshDailyPlanning(false);
+        const reloaded = api2.getTasks();
+        assert.strictEqual(reloaded.length, 2, "刷新后任务数量应一致，不产生重复");
+        const pending = reloaded.filter((task) => !task.completed);
+        const completed = reloaded.filter((task) => task.completed);
+        assert.strictEqual(pending.length, 1, "导入任务应出现在 Pending 列表");
+        assert.ok(pending[0].text.includes("导入任务 A"), "Pending 列表应包含导入任务");
+        assert.strictEqual(completed.length, 1, "原有 Completed 任务应保持完成状态");
+        assert.strictEqual(completed[0].id, "c1", "Completed 任务不应被替换");
+        const ids = reloaded.map((task) => task.id);
+        assert.strictEqual(new Set(ids).size, ids.length, "任务 id 不应重复");
+
+        // 再次执行 loadTasks 应保持幂等，不复制任务
+        api2.loadTasks();
+        assert.strictEqual(api2.getTasks().length, 2, "重复初始化不应产生重复任务");
+    });
+
+    // ============================================================
+    // Task 11：Task Manager 优先级修改
+    // ============================================================
+    console.log("\n=== Task 11: Task Manager 优先级修改 ===");
+
+    const priorityTaskSeed = [
+        { id: "t1", text: "Task One", priority: "high", completed: false, createdAt: "2026-01-01T00:00:00.000Z" },
+        { id: "t2", text: "Task Two", priority: "medium", completed: false, createdAt: "2026-01-02T00:00:00.000Z" },
+        { id: "t3", text: "Task Three", priority: "low", completed: true, createdAt: "2026-01-03T00:00:00.000Z" },
+    ];
+    const priorityApi = (extraSeed = {}) => loadReadyApi({ [KEYS.tasks]: JSON.stringify(priorityTaskSeed), ...extraSeed });
+    const getTask = (api, id) => JSON.parse(api._localStorage.getItem(KEYS.tasks)).find((t) => t.id === id);
+
+    await check("High → Medium 只更新目标任务且字段完整保留", () => {
+        const api = priorityApi();
+        api.changeTaskPriority("t1", "medium");
+        const t1 = getTask(api, "t1");
+        assert.strictEqual(t1.priority, "medium");
+        assert.strictEqual(t1.text, "Task One", "text 保留");
+        assert.strictEqual(t1.completed, false, "completed 保留");
+        assert.strictEqual(t1.createdAt, "2026-01-01T00:00:00.000Z", "createdAt 保留");
+    });
+
+    await check("Medium → Low", () => {
+        const api = priorityApi();
+        api.changeTaskPriority("t2", "low");
+        assert.strictEqual(getTask(api, "t2").priority, "low");
+    });
+
+    await check("Low → High（Completed 任务）", () => {
+        const api = priorityApi();
+        api.changeTaskPriority("t3", "high");
+        const t3 = getTask(api, "t3");
+        assert.strictEqual(t3.priority, "high");
+        assert.strictEqual(t3.completed, true, "completed 保留");
+    });
+
+    await check("只更新目标任务，其他任务不变", () => {
+        const api = priorityApi();
+        api.changeTaskPriority("t1", "low");
+        const tasks = JSON.parse(api._localStorage.getItem(KEYS.tasks));
+        assert.strictEqual(tasks.find((t) => t.id === "t2").priority, "medium", "t2 不变");
+        assert.strictEqual(tasks.find((t) => t.id === "t3").priority, "low", "t3 不变");
+        assert.strictEqual(tasks.length, 3, "任务数量不变");
+    });
+
+    await check("任务其他字段完整保留", () => {
+        const api = priorityApi();
+        const before = getTask(api, "t1");
+        api.changeTaskPriority("t1", "medium");
+        const after = getTask(api, "t1");
+        assert.deepStrictEqual({ ...after, priority: before.priority }, before, "除 priority 外字段不变");
+    });
+
+    await check("优先级修改后持久化正确", () => {
+        const api = priorityApi();
+        api.changeTaskPriority("t1", "low");
+        assert.strictEqual(getTask(api, "t1").priority, "low");
+        const api2 = loadReadyApi({ [KEYS.tasks]: api._localStorage.getItem(KEYS.tasks) });
+        assert.strictEqual(api2.getTasks().find((t) => t.id === "t1").priority, "low", "重新加载后仍为 low");
+    });
+
+    await check("非法优先级被拒绝", () => {
+        const api = priorityApi();
+        api.changeTaskPriority("t1", "urgent");
+        assert.strictEqual(getTask(api, "t1").priority, "high", "非法值不应改变优先级");
+    });
+
+    await check("task-manager 停用时禁止修改", () => {
+        const api = priorityApi();
+        api.setModuleEnabled("task-manager", false);
+        api.changeTaskPriority("t1", "low");
+        assert.strictEqual(getTask(api, "t1").priority, "high", "停用时优先级不变");
+    });
+
+    await check("Data Center 恢复锁定时禁止修改", () => {
+        const api = priorityApi();
+        api.lockDataCenterForRecoveryFailure(["x"]);
+        api.changeTaskPriority("t1", "low");
+        assert.strictEqual(getTask(api, "t1").priority, "high", "恢复锁定时优先级不变");
+    });
+
+    await check("存储不可用时不能错误显示修改成功", () => {
+        const localStorage = makeFailingStorage({ [KEYS.tasks]: JSON.stringify(priorityTaskSeed) }, "set", KEYS.tasks);
+        const api = loadApi({ localStorage });
+        api.loadTasks();
+        api.changeTaskPriority("t1", "low");
+        assert.strictEqual(api.getTasks().find((t) => t.id === "t1").priority, "high", "写入失败后内存态应保持原值");
+    });
+
+    // ============================================================
+    // Task 13：Notes 标准化验证补充（第二模块）
+    // ============================================================
+    console.log("\n=== Task 13: Notes 标准化验证补充 ===");
+
+    await check("Notes 损坏数据加载 fail-closed，不静默清空", () => {
+        const corruptRaw = "{ not valid json";
+        const api = loadReadyApi({ [KEYS.notes]: corruptRaw });
+        assert.strictEqual(api.getReady().notesStorageReady, false, "损坏数据应使存储不可用");
+        assert.strictEqual(api._document.getElementById("note-input").disabled, true, "输入框应被禁用");
+        assert.ok(api._document.getElementById("notes-status").textContent.includes("Unable to load"), "应提示加载失败");
+        assert.strictEqual(api._localStorage.getItem(KEYS.notes), corruptRaw, "原始数据不得被清空");
+    });
+
+    await check("Notes 非法字段结构加载被拒绝", () => {
+        const bad = JSON.stringify([{ id: "n1", text: 123, createdAt: "not-a-date" }]);
+        const api = loadReadyApi({ [KEYS.notes]: bad });
+        assert.strictEqual(api.getReady().notesStorageReady, false, "非法字段应使存储不可用");
+        assert.strictEqual(api._localStorage.getItem(KEYS.notes), bad, "原始数据不得被改写");
+    });
+
+    await check("Notes 持久化 setItem 失败返回 false 且内存态不变", () => {
+        const storage = makeFailingStorage({ [KEYS.notes]: JSON.stringify([VALID_NOTE]) }, "set", KEYS.notes);
+        const api = loadApi({ localStorage: storage });
+        api.loadNotes();
+        const beforeMem = api.getNotes();
+        const beforeRaw = storage.getItem(KEYS.notes);
+        const r = api.persistNotes([{ ...VALID_NOTE, id: "n2", text: "new" }]);
+        assert.strictEqual(r, false, "写入失败应返回 false");
+        assert.deepStrictEqual(api.getNotes(), beforeMem, "内存态不得变化");
+        assert.strictEqual(storage.getItem(KEYS.notes), beforeRaw, "localStorage 不得变化");
+    });
+
+    await check("Notes 持久化后重新加载回读字段完整", () => {
+        const api1 = loadReadyApi({ [KEYS.notes]: "[]" });
+        const note = { id: "n1", text: "hello", createdAt: "2026-01-01T00:00:00.000Z" };
+        assert.strictEqual(api1.persistNotes([note]), true);
+        const storedRaw = api1._localStorage.getItem(KEYS.notes);
+        const api2 = loadApi({ seed: { ...seededStore(), [KEYS.notes]: storedRaw } });
+        api2.loadNotes();
+        assert.deepStrictEqual(api2.getNotes(), [note], "重新加载后字段应完整一致");
     });
 
     // ============================================================
