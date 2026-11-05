@@ -16,7 +16,7 @@
 |---|---|---|
 | 【已验证】 | 已在 Task Manager 与 Notes 两个模块中实现、通过自动化测试、并经 iPhone / iPad / Mac 人工验收的实践 | 可强制要求 |
 | 【推荐实践】 | 建议新模块采用，但允许根据模块特征调整 | 默认采用，偏离需说明理由 |
-| 【待验证】 | 尚未在实际模块中验证的抽象能力或阈值（如统一 AI Service、桌面列宽阈值等） | 仅作方向，不得写成既定事实 |
+| 【待验证】 | 尚未在实际模块中验证的抽象能力或阈值（如更高层 AI Service 抽象、桌面列宽阈值等） | 仅作方向，不得写成既定事实 |
 
 > 当前事实基线：Task Manager 样板验证与 Notes 第二模块验证均已通过人工验收；自动化测试 **187 passed / 0 failed**；HEAD `70145e8`；`v1.3.0` 已发布；Task Manager 后续增强与 Notes 新增测试**尚未提交、尚未纳入 v1.3.0**；三份规范已定型为 v1.0。
 
@@ -139,15 +139,16 @@
 
 > 仅适用于带 AI 工作流的模块（`embedded-workflow` 或横向 AI 能力）；无 AI 模块跳过本节。
 
-> 当前实现形态（【已验证】事实）：五个 AI 工作流（AI Assistant、Daily Planning、Task Organization、Document Summary、Ideas & Writing）**各自维护**独立的请求控制器、AccessVersion 与权限检查逻辑，是**独立实现，尚未形成统一可复用的 AI Service**。本节只记录已验证的"独立取消 + 版本丢弃"事实，不暗示存在统一 AI 请求接入函数；无 AI 能力的模块（如 Notes）**不需要**接入 AI 控制器。
+> 当前实现形态（【已验证】事实）：五个 AI 工作流（AI Assistant、Daily Planning、Task Organization、Document Summary、Ideas & Writing）均已接入统一的 AI 请求传输层 `requestAI`（[ARCHITECTURE.md](../ARCHITECTURE.md) §9.1），并**各自独立维护**请求控制器、AccessVersion、权限检查、Prompt、领域解析与数据写回。本节区分三个概念：**AI Request Layer**（`requestAI`，统一请求传输层，已实现）、**AI Workflow**（各业务工作流的独立业务逻辑）与 **AI Service**（更高层服务抽象，未来规划）。无 AI 能力的模块（如 Notes）**不需要**接入 AI 控制器。
 
+- 【已验证】统一请求传输层 `requestAI` 统一处理：请求发送、HTTP 状态检查、JSON 解析、`{ reply, model }` 响应契约、90 秒超时、错误分类（`TimeoutError` / `AbortError` / `NetworkError` / `HTTPError` / `InvalidResponseError`）、调用方 signal 桥接、迟到响应丢弃（`isAllowed` 回调）与定时器/监听器清理；`requestAI` **不承担**各模块的领域逻辑，也不操作 DOM、不写业务数据，只做传输。
 - 【已验证】每个 AI 工作流持独立 `AbortController` 与 `AccessVersion`（如 Task Organization 的 `taskOrganizerRequestController` / `taskOrganizerAccessVersion`），实现：停用 `abort()`、迟到响应按版本丢弃。
 - 【已验证】入口校验访问状态：停用 / 父停用 / 数据未就绪时拒绝发起新请求。
 - 【已验证】请求落地前二次校验（版本未变、输入未变、模块未停用）再写入预览或结果。
 - 【已验证】AI 结果落库仍走受守卫的 `persistX`（如 `importOrganizedTasks` → `persistTasks`），不直接写 `localStorage`。
 - 【已验证】API Key / Secret 不得进入前端代码或公开仓库（[ARCHITECTURE.md](../ARCHITECTURE.md) §9.2）。
 - 【推荐实践】提示词与解析校验**契约一致**（字段说明、JSON 示例、校验逻辑三方对齐，如 `confirmationReason` 与 `needsConfirmation` 配对规则）。
-- 【待验证】统一 AI Service / 多模型适配器（[ARCHITECTURE.md](../ARCHITECTURE.md) §9.2）为未来规划，不作为当前模块强制要求。
+- 【待验证】更高层的 AI Service 抽象（统一模型适配器、多模型路由与调度、服务端复杂查询与 RAG，见 [ARCHITECTURE.md](../ARCHITECTURE.md) §9.2）为未来规划，不作为当前模块强制要求；当前已实现的仅为 `requestAI` 统一请求传输层。
 
 ---
 
