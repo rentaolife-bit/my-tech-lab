@@ -2512,9 +2512,31 @@
 
         .task-form {
             display: grid;
-            grid-template-columns: minmax(0, 1fr) 140px auto;
+            grid-template-columns: minmax(0, 1fr) 140px 150px;
             align-items: end;
             gap: 12px;
+        }
+
+        .task-field-note {
+            grid-column: 1 / -1;
+        }
+
+        .task-form-actions {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .task-cancel-edit {
+            background: transparent;
+            border-color: var(--border);
+            color: #aab5c3;
+            font-weight: 400;
+        }
+
+        .task-due-date {
+            color-scheme: dark;
         }
 
         .task-field {
@@ -2649,12 +2671,46 @@
         }
 
         .task-name {
-            min-width: 0;
-            flex: 1;
             color: #d7e0eb;
             font-size: 14px;
             line-height: 1.5;
             overflow-wrap: anywhere;
+        }
+
+        .task-content {
+            min-width: 0;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .task-title-row {
+            display: flex;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .task-due {
+            flex: 0 0 auto;
+            padding: 2px 8px;
+            border: 1px solid rgba(157, 232, 212, 0.2);
+            border-radius: 999px;
+            color: var(--accent);
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 10px;
+            line-height: 1.4;
+        }
+
+        .task-note {
+            margin: 0;
+            color: #8a95a6;
+            font-size: 12px;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+            white-space: pre-wrap;
         }
 
         .task-priority {
@@ -2702,6 +2758,32 @@
             border-color: rgba(157, 232, 212, 0.18);
             background-color: var(--accent-soft);
             color: var(--accent);
+        }
+
+        .task-edit {
+            min-height: 32px;
+            padding: 0 9px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: transparent;
+            color: #aab5c3;
+            font: inherit;
+            font-size: 12px;
+            font-weight: 400;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+        }
+
+        .task-edit:hover,
+        .task-edit:focus-visible {
+            border-color: rgba(157, 232, 212, 0.4);
+            color: var(--accent);
+        }
+
+        .task-edit:disabled {
+            cursor: not-allowed;
+            opacity: 0.55;
         }
 
         .task-delete {
@@ -3578,6 +3660,10 @@
                 gap: 8px;
             }
 
+            .task-field-name {
+                grid-column: 1 / -1;
+            }
+
             .task-input,
             .task-priority-select {
                 margin-top: auto;
@@ -3592,7 +3678,6 @@
             }
 
             .task-add {
-                grid-column: 1 / -1;
                 min-height: 36px;
             }
 
@@ -4055,8 +4140,13 @@
                 grid-template-columns: 1fr;
             }
 
-            .task-add {
-                grid-column: auto;
+            .task-form-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .task-add,
+            .task-cancel-edit {
                 width: 100%;
             }
 
@@ -4094,7 +4184,7 @@
                 padding: 12px;
             }
 
-            .task-name {
+            .task-content {
                 flex-basis: calc(100% - 40px);
             }
 
@@ -4102,8 +4192,12 @@
                 margin-left: 29px;
             }
 
-            .task-delete {
+            .task-edit {
                 margin-left: auto;
+            }
+
+            .task-delete {
+                margin-left: 0;
             }
 
             .daily-focus-item {
@@ -4740,8 +4834,8 @@
                 <h2 class="projects-heading" id="tasks-title">Task Manager</h2>
                 <div class="tasks-panel">
                     <form class="task-form" id="task-form">
-                        <label class="task-field">
-                            <span class="clock-label">New task</span>
+                        <label class="task-field task-field-name">
+                            <span class="clock-label" id="task-field-label">New task</span>
                             <input class="task-input" id="task-input" name="task" type="text" placeholder="What needs to get done?" maxlength="240" required>
                         </label>
                         <label class="task-field">
@@ -4752,7 +4846,18 @@
                                 <option value="low">Low</option>
                             </select>
                         </label>
-                        <button class="task-add" id="task-add" type="submit">Add task</button>
+                        <label class="task-field">
+                            <span class="clock-label">Due date</span>
+                            <input class="task-input task-due-date" id="task-due-date" name="dueDate" type="date">
+                        </label>
+                        <label class="task-field task-field-note">
+                            <span class="clock-label">Note</span>
+                            <input class="task-input task-note-input" id="task-note-input" name="note" type="text" placeholder="Optional note…" maxlength="500">
+                        </label>
+                        <div class="task-form-actions">
+                            <button class="task-add" id="task-add" type="submit">Add task</button>
+                            <button class="task-add task-cancel-edit" id="task-cancel-edit" type="button" hidden>Cancel</button>
+                        </div>
                     </form>
                     <section class="task-organizer" id="task-organizer" aria-labelledby="task-organizer-title">
                         <div class="task-organizer-header">
@@ -6150,8 +6255,13 @@
         const completedEmpty = document.getElementById("completed-empty");
         const pendingCount = document.getElementById("pending-count");
         const completedCount = document.getElementById("completed-count");
+        const taskDueDate = document.getElementById("task-due-date");
+        const taskNoteInput = document.getElementById("task-note-input");
+        const taskCancelEdit = document.getElementById("task-cancel-edit");
+        const taskFieldLabel = document.getElementById("task-field-label");
         let tasks = [];
         let tasksStorageReady = false;
+        let editingTaskId = null;
         const dailyFocusStorageKey = "my-tech-lab-daily-focus";
         const dailyFocusDate = document.getElementById("daily-focus-date");
         const dailyFocusInputs = [...document.querySelectorAll(".daily-focus-input")];
@@ -6231,15 +6341,7 @@
                 name: "Task Manager",
                 key: tasksStorageKey,
                 emptyValue: () => [],
-                validate: (data) => Array.isArray(data) && data.every((task) =>
-                    task &&
-                    typeof task.id === "string" &&
-                    typeof task.text === "string" &&
-                    ["high", "medium", "low"].includes(task.priority) &&
-                    typeof task.completed === "boolean" &&
-                    typeof task.createdAt === "string" &&
-                    !Number.isNaN(Date.parse(task.createdAt))
-                ),
+                validate: (data) => Array.isArray(data) && data.every((task) => isValidTask(task)),
                 count: (data) => data.length,
                 latest: (data) => latestDataCenterDate(data.map((task) => task.createdAt))
             },
@@ -7576,7 +7678,9 @@
             taskInput.disabled = !tasksAccess.enabled || !tasksStorageReady;
             taskPriority.disabled = !tasksAccess.enabled || !tasksStorageReady;
             taskAdd.disabled = !tasksAccess.enabled || !tasksStorageReady;
-            document.querySelectorAll(".task-checkbox, .task-delete, .task-priority-edit").forEach((control) => {
+            taskDueDate.disabled = !tasksAccess.enabled || !tasksStorageReady;
+            taskNoteInput.disabled = !tasksAccess.enabled || !tasksStorageReady;
+            document.querySelectorAll(".task-checkbox, .task-delete, .task-priority-edit, .task-edit").forEach((control) => {
                 control.disabled = !tasksAccess.enabled || !tasksStorageReady;
             });
             updateDailyFocusControls();
@@ -8970,15 +9074,7 @@
         function getTasksForOrganizationImport() {
             const storedTasks = localStorage.getItem(tasksStorageKey);
             const latestTasks = storedTasks === null ? [] : JSON.parse(storedTasks);
-            if (!Array.isArray(latestTasks) || latestTasks.some((task) =>
-                !task ||
-                typeof task.id !== "string" ||
-                typeof task.text !== "string" ||
-                !["high", "medium", "low"].includes(task.priority) ||
-                typeof task.completed !== "boolean" ||
-                typeof task.createdAt !== "string" ||
-                Number.isNaN(Date.parse(task.createdAt))
-            )) {
+            if (!Array.isArray(latestTasks) || latestTasks.some((task) => !isValidTask(task))) {
                 throw new Error("Stored tasks have an invalid format.");
             }
             return latestTasks;
@@ -9240,15 +9336,7 @@
             const today = getLocalDateKey(new Date());
             const savedTasks = localStorage.getItem(tasksStorageKey);
             const latestTasks = savedTasks === null ? [] : JSON.parse(savedTasks);
-            if (!Array.isArray(latestTasks) || latestTasks.some((task) =>
-                !task ||
-                typeof task.id !== "string" ||
-                typeof task.text !== "string" ||
-                !["high", "medium", "low"].includes(task.priority) ||
-                typeof task.completed !== "boolean" ||
-                typeof task.createdAt !== "string" ||
-                Number.isNaN(Date.parse(task.createdAt))
-            )) {
+            if (!Array.isArray(latestTasks) || latestTasks.some((task) => !isValidTask(task))) {
                 throw new Error("Stored tasks have an invalid format.");
             }
 
@@ -10317,6 +10405,8 @@
             taskInput.disabled = true;
             taskPriority.disabled = true;
             taskAdd.disabled = true;
+            taskDueDate.disabled = true;
+            taskNoteInput.disabled = true;
             if (error) {
                 console.error("Task Manager error:", error);
             }
@@ -10338,9 +10428,31 @@
                 checkbox.setAttribute("aria-label", `${task.completed ? "Mark as pending" : "Mark as completed"}: ${task.text}`);
                 checkbox.addEventListener("change", () => toggleTask(task.id));
 
+                const content = document.createElement("div");
+                content.className = "task-content";
+
+                const titleRow = document.createElement("div");
+                titleRow.className = "task-title-row";
+
                 const name = document.createElement("span");
                 name.className = "task-name";
                 name.textContent = task.text;
+                titleRow.append(name);
+
+                if (task.dueDate) {
+                    const due = document.createElement("span");
+                    due.className = "task-due";
+                    due.textContent = `Due ${dateFormatter.format(new Date(`${task.dueDate}T12:00:00`))}`;
+                    titleRow.append(due);
+                }
+                content.append(titleRow);
+
+                if (task.note) {
+                    const note = document.createElement("p");
+                    note.className = "task-note";
+                    note.textContent = task.note;
+                    content.append(note);
+                }
 
                 const priority = document.createElement("select");
                 priority.className = `task-priority task-priority-edit task-priority-${task.priority}`;
@@ -10358,6 +10470,13 @@
                 priority.value = task.priority;
                 priority.addEventListener("change", () => changeTaskPriority(task.id, priority.value));
 
+                const editButton = document.createElement("button");
+                editButton.className = "task-edit";
+                editButton.type = "button";
+                editButton.textContent = "Edit";
+                editButton.setAttribute("aria-label", `Edit task: ${task.text}`);
+                editButton.addEventListener("click", () => startEditTask(task.id));
+
                 const deleteButton = document.createElement("button");
                 deleteButton.className = "task-delete";
                 deleteButton.type = "button";
@@ -10365,7 +10484,7 @@
                 deleteButton.setAttribute("aria-label", `Delete task: ${task.text}`);
                 deleteButton.addEventListener("click", () => deleteTask(task.id));
 
-                item.append(checkbox, name, priority, deleteButton);
+                item.append(checkbox, content, priority, editButton, deleteButton);
                 list.append(item);
             }
         }
@@ -10408,7 +10527,13 @@
                 return;
             }
             const nextTasks = tasks.map((task) =>
-                task.id === taskId ? { ...task, completed: !task.completed } : task
+                task.id === taskId
+                    ? {
+                        ...task,
+                        completed: !task.completed,
+                        completedAt: task.completed ? null : new Date().toISOString()
+                    }
+                    : task
             );
             persistTasks(nextTasks);
         }
@@ -10448,20 +10573,63 @@
             }
         }
 
+        function isValidTaskDate(value) {
+            if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+                return false;
+            }
+            const parsed = new Date(`${value}T00:00:00Z`);
+            return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+        }
+
+        function isValidTask(task) {
+            if (!task || typeof task !== "object") return false;
+            if (typeof task.id !== "string") return false;
+            if (typeof task.text !== "string") return false;
+            if (!["high", "medium", "low"].includes(task.priority)) return false;
+            if (typeof task.completed !== "boolean") return false;
+            if (typeof task.createdAt !== "string" || Number.isNaN(Date.parse(task.createdAt))) return false;
+            if (task.dueDate !== undefined && task.dueDate !== "" && !isValidTaskDate(task.dueDate)) return false;
+            if (task.completedAt !== undefined && task.completedAt !== null &&
+                (typeof task.completedAt !== "string" || Number.isNaN(Date.parse(task.completedAt)))) return false;
+            if (task.note !== undefined && typeof task.note !== "string") return false;
+            return true;
+        }
+
+        function resetTaskForm() {
+            taskInput.value = "";
+            taskPriority.value = "medium";
+            taskDueDate.value = "";
+            taskNoteInput.value = "";
+            editingTaskId = null;
+            taskAdd.textContent = "Add task";
+            taskCancelEdit.hidden = true;
+            taskFieldLabel.textContent = "New task";
+        }
+
+        function startEditTask(taskId) {
+            const task = tasks.find((item) => item.id === taskId);
+            if (!task) return;
+            editingTaskId = taskId;
+            taskInput.value = task.text;
+            taskPriority.value = task.priority;
+            taskDueDate.value = task.dueDate || "";
+            taskNoteInput.value = task.note || "";
+            taskAdd.textContent = "Save changes";
+            taskCancelEdit.hidden = false;
+            taskFieldLabel.textContent = "Edit task";
+            taskInput.focus();
+        }
+
+        function cancelEditTask() {
+            resetTaskForm();
+        }
+
         function loadTasks() {
             try {
                 const savedTasks = localStorage.getItem(tasksStorageKey);
                 if (savedTasks !== null) {
                     const parsedTasks = JSON.parse(savedTasks);
-                    if (!Array.isArray(parsedTasks) || parsedTasks.some((task) =>
-                        !task ||
-                        typeof task.id !== "string" ||
-                        typeof task.text !== "string" ||
-                        !["high", "medium", "low"].includes(task.priority) ||
-                        typeof task.completed !== "boolean" ||
-                        typeof task.createdAt !== "string" ||
-                        Number.isNaN(Date.parse(task.createdAt))
-                    )) {
+                    if (!Array.isArray(parsedTasks) || parsedTasks.some((task) => !isValidTask(task))) {
                         throw new Error("Stored tasks have an invalid format.");
                     }
                     tasks = parsedTasks;
@@ -10488,20 +10656,44 @@
             if (!tasksStorageReady) {
                 return;
             }
+            const dueDate = taskDueDate.value.trim();
+            const note = taskNoteInput.value.trim();
+
+            if (editingTaskId) {
+                if (!tasks.some((task) => task.id === editingTaskId)) {
+                    resetTaskForm();
+                    renderTasks();
+                    return;
+                }
+                const nextTasks = tasks.map((task) =>
+                    task.id === editingTaskId
+                        ? { ...task, text, priority: taskPriority.value, dueDate, note }
+                        : task
+                );
+                if (persistTasks(nextTasks)) {
+                    resetTaskForm();
+                    tasksStatus.textContent = "Task updated.";
+                }
+                return;
+            }
 
             const task = {
                 id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
                 text,
                 priority: taskPriority.value,
                 completed: false,
-                createdAt: new Date().toISOString()
+                createdAt: new Date().toISOString(),
+                completedAt: null,
+                dueDate,
+                note
             };
             if (persistTasks([task, ...tasks])) {
-                taskInput.value = "";
-                taskPriority.value = "medium";
+                resetTaskForm();
                 taskInput.focus();
             }
         });
+
+        taskCancelEdit.addEventListener("click", cancelEditTask);
 
         function parseDocumentAnalysisReply(reply) {
             const cleanedReply = reply.trim().replace(/^```(?:json)?\s*|\s*```$/gi, "");
