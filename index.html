@@ -11405,6 +11405,7 @@
             const existing = documentHistory.find((record) => record.id === currentDocumentId);
             const now = new Date().toISOString();
             const nextRecord = {
+                ...existing,
                 id: existing?.id ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`,
                 title: documentTitleInput.value.trim() || "未命名资料",
                 sourceText,
@@ -11840,6 +11841,7 @@
             const now = new Date().toISOString();
             const existing = ideas.find((idea) => idea.id === editingIdeaId);
             const nextIdea = {
+                ...existing,
                 id: existing?.id ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`,
                 title,
                 content,

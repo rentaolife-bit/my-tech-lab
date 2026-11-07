@@ -219,4 +219,11 @@ My Tech Lab（Personal Command Center）
 
 ---
 
+## 九、用户身份与账号体系（非工作区澄清）
+
+- 用户身份与账号体系是**基础架构能力**，**不是**新的工作区，也**不是**独立业务模块，因此不进入上述五大工作区树。
+- 未来接入 FastAPI + PostgreSQL 与多设备同步时，数据以 **User ID** 为归属锚点（区分 User ID / Username / Display Name / Login Account）；当前仍是个人单用户工作台，不开发登录/注册/用户管理。详见 `ARCHITECTURE.md` §13。
+
+---
+
 **附注**：本文为研究与设计成果，未修改任何项目文件、未改动 Git 状态、未建数据库、未开发 Flask、未设计详细 SQL、未 Commit/Push。

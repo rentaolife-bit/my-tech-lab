@@ -85,6 +85,7 @@ function makeElement(tagName = "div") {
         focus() {},
         scrollIntoView() {},
         click() {},
+        reset() {},
         before() {},
         after() {},
         closest() { return null; },
@@ -256,6 +257,16 @@ function loadApi(options = {}) {
     requestIdeasAI, updateIdeasWritingAccessUI,
     getIdeasAIRequestPending: () => ideasAIRequestPending,
     getIdeasAIRequestController: () => ideasAIRequestController,
+    // --- 测试辅助：Ideas / Document 编辑字段保留 ---
+    ideaForm, ideaTitleInput, ideaContentInput,
+    setEditingIdeaId: (id) => { editingIdeaId = id; },
+    documentTitleInput, documentResultInputs,
+    documentSaveButton: document.getElementById("document-save"),
+    setCurrentDocumentId: (id) => { currentDocumentId = id; },
+    setHasDocumentSummary: (v) => { hasDocumentSummary = v; },
+    setSummarizedDocumentSource: (v) => { summarizedDocumentSource = v; },
+    setDocumentAnalysisMode: (v) => { currentDocumentAnalysisMode = v; },
+    setDocumentModel: (v) => { currentDocumentModel = v; },
     // --- Data Center ---
     createDataCenterBackup, createDataCenterRecoverySnapshot, confirmDataCenterImport, confirmDataCenterClear, confirmDataCenterRecovery, applyDataCenterData, dataCenterModules,
     runDataCenterRecoveryTransaction,
@@ -3567,6 +3578,85 @@ async function main() {
         await planningP;
         assert.strictEqual(api.getDailyPlanningPending(), false, "Planning 结束后应清理自身状态");
         assert.strictEqual(api.getDailyPlanningController(), null, "Planning controller 应独立释放");
+    });
+
+    // ============================================================
+    // Task 19: Ideas / Document 编辑保留未知字段
+    // ============================================================
+    console.log("\n=== Task 19: Ideas / Document 编辑保留未知字段 ===");
+
+    await check("Ideas 编辑：未知字段保留、修改字段更新", () => {
+        const api = loadReadyApi({ [KEYS.ideas]: JSON.stringify([{ ...VALID_IDEA, id: "i1", customField: "keep-me" }]) });
+        api.setEditingIdeaId("i1");
+        api.ideaTitleInput.value = "新标题";
+        api.ideaContentInput.value = "新内容";
+        api.ideaForm.dispatchEvent({ type: "submit", preventDefault() {} });
+        const ideas = api.getIdeas();
+        assert.strictEqual(ideas.length, 1, "仍为 1 条");
+        assert.strictEqual(ideas[0].customField, "keep-me", "未知字段 customField 应保留");
+        assert.strictEqual(ideas[0].title, "新标题", "标题应更新");
+        assert.strictEqual(ideas[0].content, "新内容", "内容应更新");
+        assert.strictEqual(ideas[0].id, "i1", "id 不变");
+        assert.strictEqual(ideas[0].createdAt, VALID_IDEA.createdAt, "createdAt 不变");
+        assert.notStrictEqual(ideas[0].updatedAt, VALID_IDEA.updatedAt, "updatedAt 应刷新");
+    });
+
+    await check("Ideas 新建：行为不变", () => {
+        const api = loadReadyApi({ [KEYS.ideas]: "[]" });
+        api.setEditingIdeaId(null);
+        api.ideaTitleInput.value = "新灵感";
+        api.ideaContentInput.value = "新灵感内容";
+        api.ideaForm.dispatchEvent({ type: "submit", preventDefault() {} });
+        const ideas = api.getIdeas();
+        assert.strictEqual(ideas.length, 1);
+        assert.strictEqual(ideas[0].title, "新灵感");
+        assert.strictEqual(ideas[0].content, "新灵感内容");
+        assert.ok(ideas[0].id && ideas[0].createdAt && ideas[0].updatedAt, "应含 id/createdAt/updatedAt");
+    });
+
+    await check("Document 更新：未知字段保留、修改字段更新", () => {
+        const api = loadReadyApi({ [KEYS.documents]: JSON.stringify([{ ...VALID_DOC, id: "d1", customField: "keep-me" }]) });
+        api.setCurrentDocumentId("d1");
+        api.setHasDocumentSummary(true);
+        api.documentSourceInput.value = "新原文";
+        api.setSummarizedDocumentSource("新原文");
+        api.documentTitleInput.value = "新标题";
+        api.setDocumentAnalysisMode("full");
+        api.setDocumentModel("");
+        api.documentResultInputs.executive.value = "exec";
+        api.documentResultInputs.keyPoints.value = "kp";
+        api.documentResultInputs.important.value = "imp";
+        api.documentResultInputs.actions.value = "act";
+        api.documentResultInputs.deepAnalysis.value = "";
+        api.documentSaveButton.dispatchEvent({ type: "click" });
+        const docs = api.getDocumentHistory();
+        assert.strictEqual(docs.length, 1, "仍为 1 条");
+        assert.strictEqual(docs[0].customField, "keep-me", "未知字段 customField 应保留");
+        assert.strictEqual(docs[0].title, "新标题", "标题应更新");
+        assert.strictEqual(docs[0].sourceText, "新原文", "原文应更新");
+        assert.strictEqual(docs[0].id, "d1", "id 不变");
+        assert.strictEqual(docs[0].createdAt, VALID_DOC.createdAt, "createdAt 不变");
+    });
+
+    await check("Document 新建：行为不变", () => {
+        const api = loadReadyApi({ [KEYS.documents]: "[]" });
+        api.setCurrentDocumentId(null);
+        api.setHasDocumentSummary(true);
+        api.documentSourceInput.value = "新原文";
+        api.setSummarizedDocumentSource("新原文");
+        api.documentTitleInput.value = "新资料";
+        api.setDocumentAnalysisMode("full");
+        api.setDocumentModel("");
+        api.documentResultInputs.executive.value = "exec";
+        api.documentResultInputs.keyPoints.value = "kp";
+        api.documentResultInputs.important.value = "imp";
+        api.documentResultInputs.actions.value = "act";
+        api.documentResultInputs.deepAnalysis.value = "";
+        api.documentSaveButton.dispatchEvent({ type: "click" });
+        const docs = api.getDocumentHistory();
+        assert.strictEqual(docs.length, 1);
+        assert.strictEqual(docs[0].title, "新资料");
+        assert.strictEqual(docs[0].sourceText, "新原文");
     });
 
     // ============================================================
