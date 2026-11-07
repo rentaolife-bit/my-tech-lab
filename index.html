@@ -2417,7 +2417,8 @@
         }
 
         .notes-save,
-        .note-delete {
+        .note-delete,
+        .note-edit {
             border: 1px solid rgba(157, 232, 212, 0.22);
             border-radius: 8px;
             background: var(--accent-soft);
@@ -2438,7 +2439,9 @@
         .notes-save:hover,
         .notes-save:focus-visible,
         .note-delete:hover,
-        .note-delete:focus-visible {
+        .note-delete:focus-visible,
+        .note-edit:hover,
+        .note-edit:focus-visible {
             border-color: rgba(157, 232, 212, 0.5);
             background: rgba(157, 232, 212, 0.16);
         }
@@ -2447,6 +2450,32 @@
         .notes-input:disabled {
             cursor: not-allowed;
             opacity: 0.55;
+        }
+
+        .notes-form-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .notes-cancel {
+            min-height: 40px;
+            padding: 0 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: transparent;
+            color: #aab5c3;
+            font: inherit;
+            font-size: 13px;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+        }
+
+        .notes-cancel:hover,
+        .notes-cancel:focus-visible {
+            border-color: rgba(157, 232, 212, 0.4);
+            color: var(--accent);
         }
 
         .notes-list {
@@ -2490,7 +2519,8 @@
             line-height: 1.5;
         }
 
-        .note-delete {
+        .note-delete,
+        .note-edit {
             flex: 0 0 auto;
             min-height: 34px;
             padding: 0 10px;
@@ -2498,6 +2528,13 @@
             background: transparent;
             color: #aab5c3;
             font-size: 12px;
+        }
+
+        .note-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 0 0 auto;
         }
 
         .notes-empty {
@@ -4157,8 +4194,13 @@
                 flex-direction: column;
             }
 
-            .notes-save {
+            .notes-form-actions {
                 width: 100%;
+            }
+
+            .notes-save,
+            .notes-cancel {
+                flex: 1;
             }
 
             .note-item {
@@ -4826,11 +4868,14 @@
                 <h2 class="projects-heading" id="notes-title">Quick Notes</h2>
                 <div class="notes-panel">
                     <form class="notes-form" id="notes-form">
-                        <label class="clock-label" for="note-input">Capture a thought</label>
+                        <label class="clock-label" for="note-input" id="notes-field-label">Capture a thought</label>
                         <textarea class="notes-input" id="note-input" name="note" placeholder="Write a quick note..." required></textarea>
                         <div class="notes-form-footer">
                             <p class="notes-status" id="notes-status" role="status" aria-live="polite"></p>
-                            <button class="notes-save" id="notes-save" type="submit">Save note</button>
+                            <div class="notes-form-actions">
+                                <button class="notes-save" id="notes-save" type="submit">Save note</button>
+                                <button class="notes-cancel" id="notes-cancel" type="button" hidden>Cancel</button>
+                            </div>
                         </div>
                     </form>
                     <ul class="notes-list" id="notes-list" aria-label="Saved notes"></ul>
@@ -6193,11 +6238,14 @@
         const notesForm = document.getElementById("notes-form");
         const noteInput = document.getElementById("note-input");
         const notesSave = document.getElementById("notes-save");
+        const notesCancel = document.getElementById("notes-cancel");
+        const notesFieldLabel = document.getElementById("notes-field-label");
         const notesList = document.getElementById("notes-list");
         const notesEmpty = document.getElementById("notes-empty");
         const notesStatus = document.getElementById("notes-status");
         let notes = [];
         let notesStorageReady = false;
+        let editingNoteId = null;
         const ideasStorageKey = "my-tech-lab-ideas";
         const ideasWorkspace = document.getElementById("ideas-workspace");
         const ideasAccessStatus = document.getElementById("ideas-access-status");
@@ -7679,7 +7727,8 @@
             const notesAccess = getModuleAccessStatus("quick-notes");
             noteInput.disabled = !notesAccess.enabled || !notesStorageReady;
             notesSave.disabled = !notesAccess.enabled || !notesStorageReady;
-            notesList.querySelectorAll(".note-delete").forEach((button) => {
+            notesCancel.disabled = !notesAccess.enabled || !notesStorageReady;
+            notesList.querySelectorAll(".note-delete, .note-edit").forEach((button) => {
                 button.disabled = !notesAccess.enabled || !notesStorageReady;
             });
             const tasksAccess = getModuleAccessStatus("task-manager");
@@ -10286,6 +10335,7 @@
             notesStatus.setAttribute("role", "alert");
             noteInput.disabled = true;
             notesSave.disabled = true;
+            notesCancel.disabled = true;
             if (error) {
                 console.error("Quick Notes error:", error);
             }
@@ -10312,6 +10362,16 @@
                 timestamp.dateTime = note.createdAt;
                 timestamp.textContent = noteTimestampFormatter.format(new Date(note.createdAt));
 
+                const actions = document.createElement("div");
+                actions.className = "note-actions";
+
+                const editButton = document.createElement("button");
+                editButton.className = "note-edit";
+                editButton.type = "button";
+                editButton.textContent = "Edit";
+                editButton.setAttribute("aria-label", `Edit note saved ${timestamp.textContent}`);
+                editButton.addEventListener("click", () => startEditNote(note.id));
+
                 const deleteButton = document.createElement("button");
                 deleteButton.className = "note-delete";
                 deleteButton.type = "button";
@@ -10319,8 +10379,9 @@
                 deleteButton.setAttribute("aria-label", `Delete note saved ${timestamp.textContent}`);
                 deleteButton.addEventListener("click", () => deleteNote(note.id));
 
+                actions.append(editButton, deleteButton);
                 content.append(text, timestamp);
-                item.append(content, deleteButton);
+                item.append(content, actions);
                 notesList.append(item);
             }
         }
@@ -10351,10 +10412,44 @@
             if (!notesStorageReady) {
                 return;
             }
+            const target = notes.find((note) => note.id === noteId);
+            if (!target) {
+                return;
+            }
+            if (!window.confirm("Delete this note? This cannot be undone.")) {
+                return;
+            }
             const nextNotes = notes.filter((note) => note.id !== noteId);
             if (persistNotes(nextNotes)) {
+                if (editingNoteId === noteId) {
+                    resetNoteForm();
+                }
                 notesStatus.textContent = "Note deleted.";
             }
+        }
+
+        function resetNoteForm() {
+            editingNoteId = null;
+            noteInput.value = "";
+            notesSave.textContent = "Save note";
+            notesCancel.hidden = true;
+            notesFieldLabel.textContent = "Capture a thought";
+        }
+
+        function startEditNote(noteId) {
+            const note = notes.find((item) => item.id === noteId);
+            if (!note) return;
+            if (!requireModuleAccess("quick-notes", notesStatus)) {
+                updateModuleAccessUI();
+                return;
+            }
+            editingNoteId = noteId;
+            noteInput.value = note.text;
+            notesSave.textContent = "Save changes";
+            notesCancel.hidden = false;
+            notesFieldLabel.textContent = "Edit note";
+            notesStatus.textContent = "Editing a saved note.";
+            noteInput.focus();
         }
 
         function loadNotes() {
@@ -10396,15 +10491,43 @@
                 return;
             }
 
+            const existing = notes.find((note) => note.id === editingNoteId);
+            if (existing) {
+                const nextNotes = notes.map((note) =>
+                    note.id === editingNoteId ? { ...note, text } : note
+                );
+                if (persistNotes(nextNotes)) {
+                    resetNoteForm();
+                    notesStatus.textContent = "Note updated.";
+                    noteInput.focus();
+                }
+                return;
+            }
+
             const note = {
                 id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
                 text,
                 createdAt: new Date().toISOString()
             };
             if (persistNotes([note, ...notes])) {
-                noteInput.value = "";
+                resetNoteForm();
                 noteInput.focus();
             }
+        });
+
+        notesCancel.addEventListener("click", () => {
+            if (!requireModuleAccess("quick-notes", notesStatus)) {
+                updateModuleAccessUI();
+                return;
+            }
+            const original = notes.find((note) => note.id === editingNoteId);
+            const hasChanges = editingNoteId !== null && original && noteInput.value !== original.text;
+            if (hasChanges && !window.confirm("Discard unsaved changes to this note?")) {
+                return;
+            }
+            resetNoteForm();
+            notesStatus.textContent = "Edit cancelled.";
+            noteInput.focus();
         });
 
         function setTasksUnavailable(message, error) {
