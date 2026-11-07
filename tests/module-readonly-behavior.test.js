@@ -1818,7 +1818,7 @@ async function main() {
         assert.strictEqual(api.taskOrganizerPreview.hidden, true, "全部导入后预览结束");
     });
 
-    await check("日期有值、时间为空仍可导入", () => {
+    await check("日期有值、时间为空：日期写入独立 dueDate，不再拼进 text", () => {
         const api = loadReadyApi({ [KEYS.tasks]: "[]" });
         api.setTaskOrganizerPreviewActive("abc");
         buildTaskOrganizerPreview(api, [{ title: "A", checked: true, date: "2026-11-05", time: "" }]);
@@ -1827,7 +1827,20 @@ async function main() {
         api.importOrganizedTasks();
         const tasks = JSON.parse(api._localStorage.getItem(KEYS.tasks));
         assert.strictEqual(tasks.length, 1);
-        assert.ok(tasks[0].text.includes("截止: 2026-11-05"), "应含日期后缀且无时间");
+        assert.strictEqual(tasks[0].text, "A", "标题不应再拼日期");
+        assert.strictEqual(tasks[0].dueDate, "2026-11-05", "日期应写入独立 dueDate 字段");
+    });
+
+    await check("无日期导入：dueDate 为空值、note 不含截止时间", () => {
+        const api = loadReadyApi({ [KEYS.tasks]: "[]" });
+        api.setTaskOrganizerPreviewActive("abc");
+        buildTaskOrganizerPreview(api, [{ title: "B", checked: true, date: "", time: "" }]);
+        api.updateTaskImportButton();
+        api.importOrganizedTasks();
+        const tasks = JSON.parse(api._localStorage.getItem(KEYS.tasks));
+        assert.strictEqual(tasks.length, 1);
+        assert.strictEqual(tasks[0].text, "B");
+        assert.strictEqual(tasks[0].dueDate, "", "无日期应使用空值格式");
     });
 
     await check("重复任务去重仍有效且不移除预览项", () => {
@@ -1882,6 +1895,59 @@ async function main() {
         needsConfirmation: true,
         confirmationReason: "原文未明确优先级，按默认值预览",
         ...overrides
+    });
+
+    await check("有 evidence 时导入：note 保持为空（AI 依据不进入任务列表），日期独立", () => {
+        const api = loadReadyApi({ [KEYS.tasks]: "[]" });
+        api.setTaskOrganizerPreviewActive("abc");
+        const item = api.createTaskPreviewItem(previewTaskFixture({
+            title: "买牛奶",
+            sourceExcerpt: "明天买牛奶",
+            dateEvidence: "明天",
+            dueDate: "2026-11-08"
+        }), 0);
+        item.querySelector(".task-preview-confirm-checkbox").checked = true;
+        api.taskPreviewList.append(item);
+        api.updateTaskImportButton();
+        api.importOrganizedTasks();
+        const tasks = JSON.parse(api._localStorage.getItem(KEYS.tasks));
+        assert.strictEqual(tasks.length, 1);
+        assert.strictEqual(tasks[0].text, "买牛奶", "标题不应拼日期或依据");
+        assert.strictEqual(tasks[0].dueDate, "2026-11-08", "dueDate 应独立保存");
+        assert.strictEqual(tasks[0].note, "", "AI 提取依据不应写入 note");
+        assert.ok(!tasks[0].text.includes("明天"), "标题不应包含原文依据");
+    });
+
+    await check("无 evidence 的导入不影响正常写入（note 为空）", () => {
+        const api = loadReadyApi({ [KEYS.tasks]: "[]" });
+        api.setTaskOrganizerPreviewActive("abc");
+        buildTaskOrganizerPreview(api, [{ title: "C", checked: true }]);
+        api.updateTaskImportButton();
+        api.importOrganizedTasks();
+        const tasks = JSON.parse(api._localStorage.getItem(KEYS.tasks));
+        assert.strictEqual(tasks.length, 1);
+        assert.strictEqual(tasks[0].text, "C");
+        assert.strictEqual(tasks[0].note, "", "无 evidence 时 note 应为空");
+    });
+
+    await check("导入后刷新重载，dueDate 保留且 note 为空", () => {
+        const api = loadReadyApi({ [KEYS.tasks]: "[]" });
+        api.setTaskOrganizerPreviewActive("abc");
+        const item = api.createTaskPreviewItem(previewTaskFixture({
+            title: "买牛奶",
+            sourceExcerpt: "明天买牛奶",
+            dateEvidence: "明天",
+            dueDate: "2026-11-08"
+        }), 0);
+        item.querySelector(".task-preview-confirm-checkbox").checked = true;
+        api.taskPreviewList.append(item);
+        api.importOrganizedTasks();
+        const api2 = loadReadyApi({ [KEYS.tasks]: api._localStorage.getItem(KEYS.tasks) });
+        api2.loadTasks();
+        const tasks = api2.getTasks();
+        assert.strictEqual(tasks.length, 1);
+        assert.strictEqual(tasks[0].dueDate, "2026-11-08", "刷新后 dueDate 应保留");
+        assert.strictEqual(tasks[0].note, "", "刷新后 note 应为空（无 AI 依据）");
     });
 
     await check("编辑任一预览字段后自动取消该项确认，且不影响其他项", () => {

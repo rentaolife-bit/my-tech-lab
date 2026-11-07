@@ -2537,6 +2537,11 @@
 
         .task-due-date {
             color-scheme: dark;
+            /* iOS Safari 原生 date 控件固有最小宽度会忽略 width:100%，导致在固定列/单列中溢出或对不齐；
+               移除原生外观才能真正收缩，max-width:100% 兜底防止超出。 */
+            max-width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
         }
 
         .task-field {
@@ -2704,13 +2709,9 @@
             line-height: 1.4;
         }
 
-        .task-note {
-            margin: 0;
-            color: #8a95a6;
-            font-size: 12px;
-            line-height: 1.5;
-            overflow-wrap: anywhere;
-            white-space: pre-wrap;
+        .task-due-overdue {
+            border-color: rgba(255, 143, 143, 0.4);
+            color: #ff9d9d;
         }
 
         .task-priority {
@@ -3649,7 +3650,7 @@
 
         @media (max-width: 900px) {
             .task-form {
-                grid-template-columns: minmax(0, 1fr) 120px;
+                grid-template-columns: minmax(0, 1fr);
                 align-items: stretch;
                 gap: 8px;
             }
@@ -4021,6 +4022,35 @@
             .project-card h3 {
                 margin-top: 25px;
             }
+
+            /* 任务卡片：手机端换行为两行——第一行复选框+标题（标题占满剩余宽度），
+               第二行优先级+编辑+删除；避免复选框/优先级/按钮挤占标题空间。 */
+            .task-item {
+                flex-wrap: wrap;
+                gap: 10px;
+                padding: 12px;
+            }
+
+            .task-checkbox {
+                align-self: flex-start;
+                margin-top: 2px;
+            }
+
+            .task-content {
+                flex-basis: calc(100% - 40px);
+            }
+
+            .task-priority {
+                margin-left: 29px;
+            }
+
+            .task-edit {
+                margin-left: auto;
+            }
+
+            .task-delete {
+                margin-left: 0;
+            }
         }
 
         /* 手机与平板（≤1279px，含 iPhone 竖屏/横屏、iPad mini 竖屏 768px、横屏 1024px）：
@@ -4176,28 +4206,6 @@
             .idea-item-content {
                 grid-column: 1;
                 grid-row: auto;
-            }
-
-            .task-item {
-                flex-wrap: wrap;
-                gap: 10px;
-                padding: 12px;
-            }
-
-            .task-content {
-                flex-basis: calc(100% - 40px);
-            }
-
-            .task-priority {
-                margin-left: 29px;
-            }
-
-            .task-edit {
-                margin-left: auto;
-            }
-
-            .task-delete {
-                margin-left: 0;
             }
 
             .daily-focus-item {
@@ -9117,28 +9125,28 @@
                 const content = item.querySelector(".task-preview-content").value.trim();
                 const priority = item.querySelector(".task-preview-priority").value;
                 const date = item.querySelector('input[type="date"]').value;
-                const time = item.querySelector('input[type="time"]').value;
                 const titleAndContent = content ? `${title}：${content}` : title;
                 if (!title || !["high", "medium", "low"].includes(priority)) {
                     taskOrganizerStatus.textContent = "请为每条待导入任务填写有效标题并确认优先级。";
                     taskOrganizerStatus.setAttribute("role", "alert");
                     return;
                 }
-                const dueSuffix = date
-                    ? `（截止: ${date}${time ? ` ${time}` : ""}）`
-                    : time ? `（时间: ${time}，日期待确认）` : "";
-                const taskText = `${titleAndContent}${dueSuffix}`;
-                if (taskText.length > 240) {
-                    taskOrganizerStatus.textContent = "任务标题、内容和日期合并后不能超过 240 个字符，请缩短后再添加。";
+                if (titleAndContent.length > 240) {
+                    taskOrganizerStatus.textContent = "任务标题和内容合并后不能超过 240 个字符，请缩短后再添加。";
                     taskOrganizerStatus.setAttribute("role", "alert");
                     return;
                 }
+
+                // AI 分析过程（原文依据、优先级解释、日期/待确认说明、截止时间）仅用于预览阶段，
+                // 不写入任务 note，避免污染普通任务卡片；note 仅保留用户手动填写的内容。
                 additions.push({
                     id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-                    text: taskText,
+                    text: titleAndContent,
                     priority,
                     completed: false,
-                    createdAt: importedAt
+                    createdAt: importedAt,
+                    dueDate: date || "",
+                    note: ""
                 });
             }
 
@@ -10442,17 +10450,12 @@
                 if (task.dueDate) {
                     const due = document.createElement("span");
                     due.className = "task-due";
-                    due.textContent = `Due ${dateFormatter.format(new Date(`${task.dueDate}T12:00:00`))}`;
+                    const isOverdue = isDueDateOverdue(task.dueDate);
+                    due.textContent = `截止：${task.dueDate}${isOverdue ? "（已逾期）" : ""}`;
+                    if (isOverdue) due.classList.add("task-due-overdue");
                     titleRow.append(due);
                 }
                 content.append(titleRow);
-
-                if (task.note) {
-                    const note = document.createElement("p");
-                    note.className = "task-note";
-                    note.textContent = task.note;
-                    content.append(note);
-                }
 
                 const priority = document.createElement("select");
                 priority.className = `task-priority task-priority-edit task-priority-${task.priority}`;
@@ -10579,6 +10582,15 @@
             }
             const parsed = new Date(`${value}T00:00:00Z`);
             return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+        }
+
+        function isDueDateOverdue(dueDate, referenceDate) {
+            if (typeof dueDate !== "string" || !isValidTaskDate(dueDate)) {
+                return false;
+            }
+            const reference = referenceDate instanceof Date ? referenceDate : new Date();
+            const todayKey = `${reference.getFullYear()}-${String(reference.getMonth() + 1).padStart(2, "0")}-${String(reference.getDate()).padStart(2, "0")}`;
+            return dueDate < todayKey;
         }
 
         function isValidTask(task) {

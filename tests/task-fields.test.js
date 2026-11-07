@@ -149,7 +149,7 @@ function loadApi(options = {}) {
 
     const returnStmt = `
 ; return {
-    isValidTask, isValidTaskDate,
+    isValidTask, isValidTaskDate, isDueDateOverdue,
     loadTasks, loadDailyFocus, persistTasks, toggleTask, changeTaskPriority, deleteTask,
     startEditTask, cancelEditTask, resetTaskForm,
     getTasks: () => tasks,
@@ -245,6 +245,25 @@ check("非法 note 类型 → false", () => {
 });
 check("缺失必需字段 → false", () => {
     assert.strictEqual(loadApi().isValidTask({ id: "x", text: "y", priority: "medium", completed: false }), false);
+});
+
+console.log("\n=== 2.5 isDueDateOverdue 逾期判断 ===");
+check("过去日期（相对固定参考日）→ true", () => {
+    assert.strictEqual(loadApi().isDueDateOverdue("2026-11-01", new Date(2026, 10, 7)), true);
+});
+check("未来日期 → false", () => {
+    assert.strictEqual(loadApi().isDueDateOverdue("2026-11-20", new Date(2026, 10, 7)), false);
+});
+check("当天日期 → false（当天不算逾期）", () => {
+    assert.strictEqual(loadApi().isDueDateOverdue("2026-11-07", new Date(2026, 10, 7)), false);
+});
+check("空值 / 非法值 → false", () => {
+    assert.strictEqual(loadApi().isDueDateOverdue(""), false);
+    assert.strictEqual(loadApi().isDueDateOverdue("bad-date"), false);
+    assert.strictEqual(loadApi().isDueDateOverdue(undefined), false);
+});
+check("跨年边界：12-31 相对次年 1-1 → true", () => {
+    assert.strictEqual(loadApi().isDueDateOverdue("2026-12-31", new Date(2027, 0, 1)), true);
 });
 
 console.log("\n=== 3. loadTasks 兼容老数据与新数据 ===");
