@@ -268,7 +268,7 @@ quick-notes / ideas / document-summary：各自独立，仅被 Dashboard 读
 #### 首个 Owner 的安全初始化 **[已确定（2026-11-20 决策）]**
 
 - 认证已定为邮箱 OTP，Owner 即「绑定 Owner 邮箱的唯一账号」，初始化**不涉及密码或一次性令牌**。
-- 采用**服务器本地命令行引导**（非公开 HTTP 接口）：首次部署时由使用者在迷你主机（SSH/控制台）执行，例如 `python -m app.cli bootstrap-owner --email <owner邮箱>`，创建 `users` 中的 Owner 记录 + `auth_identities(provider='email', provider_sub=邮箱)`。
+- 采用**服务器本地命令行引导**（非公开 HTTP 接口）：首次部署时由使用者在迷你主机（SSH/控制台）执行，例如 `bootstrap-owner --email <owner邮箱>`，创建 `users` 中的 Owner 记录 + `auth_identities(provider='email', provider_sub=邮箱)`。
 - 引导**必须幂等**：已存在 Owner 时重复执行不产生第二个；数据库层对 Owner 角色加唯一约束兜底。
 - 之后登录走标准流程：输入邮箱 → 发 OTP → 换 access + refresh 令牌。
 - 变更 Owner 邮箱仅允许已登录 Owner 在已验证会话内操作，或再次受控执行 CLI；**不开放公开注册/初始化端点**。
