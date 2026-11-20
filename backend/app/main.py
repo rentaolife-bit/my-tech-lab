@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 
 from .config import get_settings
+from .routers import auth, notes
 
 
 def create_app() -> FastAPI:
@@ -14,6 +15,9 @@ def create_app() -> FastAPI:
             "service": settings.app_name,
             "environment": settings.environment,
         }
+
+    app.include_router(auth.router)
+    app.include_router(notes.router)
 
     return app
 

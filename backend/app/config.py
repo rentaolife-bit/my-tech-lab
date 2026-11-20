@@ -17,6 +17,16 @@ class Settings(BaseSettings):
     access_token_ttl_minutes: int = 30
     refresh_token_ttl_days: int = 30
     otp_ttl_seconds: int = 600
+    otp_max_attempts: int = 5
+    otp_sender: str = "console"
+    jwt_secret: str = "dev-only-change-me-in-production"
+
+    smtp_host: str = ""
+    smtp_port: int = 465
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_from: str = ""
+    smtp_use_tls: bool = False
 
 
 @lru_cache
