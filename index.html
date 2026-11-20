@@ -5426,6 +5426,53 @@
                 };
             }
 
+            function mapTask(item) {
+                return {
+                    id: String(item.id),
+                    text: item.text,
+                    priority: item.priority,
+                    completed: item.completed,
+                    dueDate: item.due_date || "",
+                    note: item.note || "",
+                    completedAt: item.completed_at || null,
+                    createdAt: item.created_at,
+                    version: item.version
+                };
+            }
+
+            function mapIdea(item) {
+                return {
+                    id: String(item.id),
+                    title: item.title,
+                    content: item.content,
+                    createdAt: item.created_at,
+                    updatedAt: item.updated_at,
+                    version: item.version
+                };
+            }
+
+            function mapDocument(item) {
+                return {
+                    id: String(item.id),
+                    title: item.title,
+                    sourceText: item.source_text,
+                    summary: item.summary,
+                    analysisMode: item.analysis_mode || null,
+                    model: item.model || null,
+                    createdAt: item.created_at,
+                    updatedAt: item.updated_at,
+                    version: item.version
+                };
+            }
+
+            function mapDailyFocus(item) {
+                return {
+                    date: item.focus_date,
+                    priorities: item.priorities,
+                    version: item.version
+                };
+            }
+
             return {
                 fromApi,
                 async listNotes() {
@@ -5446,6 +5493,107 @@
                 },
                 async deleteNote(id) {
                     return apiClient.sendJson(`/api/v1/notes/${encodeURIComponent(id)}`, "DELETE");
+                },
+                async listTasks() {
+                    const data = await apiClient.getJson("/api/v1/tasks");
+                    return data.map(mapTask);
+                },
+                async createTask(task) {
+                    const created = await apiClient.sendJson("/api/v1/tasks", "POST", {
+                        text: task.text,
+                        priority: task.priority || "medium",
+                        due_date: task.dueDate || null,
+                        note: task.note || null
+                    });
+                    return mapTask(created);
+                },
+                async updateTask(id, task) {
+                    const updated = await apiClient.sendJson(
+                        `/api/v1/tasks/${encodeURIComponent(id)}`,
+                        "PATCH",
+                        {
+                            text: task.text,
+                            priority: task.priority,
+                            completed: task.completed,
+                            due_date: task.dueDate || null,
+                            note: task.note || null,
+                            completed_at: task.completedAt || null,
+                            version: task.version
+                        }
+                    );
+                    return mapTask(updated);
+                },
+                async deleteTask(id) {
+                    return apiClient.sendJson(`/api/v1/tasks/${encodeURIComponent(id)}`, "DELETE");
+                },
+                async listIdeas() {
+                    const data = await apiClient.getJson("/api/v1/ideas");
+                    return data.map(mapIdea);
+                },
+                async createIdea(idea) {
+                    const created = await apiClient.sendJson("/api/v1/ideas", "POST", {
+                        title: idea.title,
+                        content: idea.content
+                    });
+                    return mapIdea(created);
+                },
+                async updateIdea(id, idea) {
+                    const updated = await apiClient.sendJson(
+                        `/api/v1/ideas/${encodeURIComponent(id)}`,
+                        "PATCH",
+                        { title: idea.title, content: idea.content, version: idea.version }
+                    );
+                    return mapIdea(updated);
+                },
+                async deleteIdea(id) {
+                    return apiClient.sendJson(`/api/v1/ideas/${encodeURIComponent(id)}`, "DELETE");
+                },
+                async listDocuments() {
+                    const data = await apiClient.getJson("/api/v1/documents");
+                    return data.map(mapDocument);
+                },
+                async createDocument(document) {
+                    const created = await apiClient.sendJson("/api/v1/documents", "POST", {
+                        title: document.title,
+                        source_text: document.sourceText || "",
+                        summary: document.summary,
+                        analysis_mode: document.analysisMode || null,
+                        model: document.model || null
+                    });
+                    return mapDocument(created);
+                },
+                async updateDocument(id, document) {
+                    const updated = await apiClient.sendJson(
+                        `/api/v1/documents/${encodeURIComponent(id)}`,
+                        "PATCH",
+                        {
+                            title: document.title,
+                            source_text: document.sourceText,
+                            summary: document.summary,
+                            analysis_mode: document.analysisMode || null,
+                            model: document.model || null,
+                            version: document.version
+                        }
+                    );
+                    return mapDocument(updated);
+                },
+                async deleteDocument(id) {
+                    return apiClient.sendJson(`/api/v1/documents/${encodeURIComponent(id)}`, "DELETE");
+                },
+                async listDailyFocus() {
+                    const data = await apiClient.getJson("/api/v1/daily-focus");
+                    return data.map(mapDailyFocus);
+                },
+                async saveDailyFocus(date, priorities) {
+                    const saved = await apiClient.sendJson(
+                        `/api/v1/daily-focus/${encodeURIComponent(date)}`,
+                        "PUT",
+                        { focus_date: date, priorities }
+                    );
+                    return mapDailyFocus(saved);
+                },
+                async exportData() {
+                    return apiClient.getJson("/api/v1/data-center/export");
                 }
             };
         })();
@@ -6572,6 +6720,7 @@
         let ideas = [];
         let ideasStorageReady = false;
         let editingIdeaId = null;
+        let editingIdeaVersion = null;
         let ideasAccessAvailable = null;
         let ideasAccessVersion = 0;
         let ideasAIRequestController = null;
@@ -6628,6 +6777,7 @@
         let tasks = [];
         let tasksStorageReady = false;
         let editingTaskId = null;
+        let editingTaskVersion = null;
         const dailyFocusStorageKey = "my-tech-lab-daily-focus";
         const dailyFocusDate = document.getElementById("daily-focus-date");
         const dailyFocusInputs = [...document.querySelectorAll(".daily-focus-input")];
@@ -6646,6 +6796,7 @@
         let dailyFocus = { date: "", priorities: ["", "", ""] };
         let dailyFocusStorageReady = false;
         let dailyFocusHistorySelectedDate = "";
+        let dailyFocusApiArchive = null;
         const dailyFocusSchemaVersion = 1;
         const dashboardPendingTasks = document.getElementById("dashboard-pending-tasks");
         const dashboardCompletedTasks = document.getElementById("dashboard-completed-tasks");
@@ -7417,7 +7568,26 @@
             };
         }
 
-        function exportDataCenterBackup() {
+        async function exportDataCenterBackup() {
+            if (MTLLab.dataSource === "api") {
+                try {
+                    const data = await DataService.exportData();
+                    const filename = downloadDataCenterBackup(
+                        {
+                            format: "my-tech-lab-server-export",
+                            version: 1,
+                            exportedAt: data.exportedAt || new Date().toISOString(),
+                            data
+                        },
+                        "server-backup"
+                    );
+                    setDataCenterStatus(`已从服务器导出数据（${filename}）。请妥善保存文件。`);
+                } catch (error) {
+                    setDataCenterStatus("服务器导出失败，请重试。", true);
+                    console.error("Data Center server export failed:", error);
+                }
+                return;
+            }
             try {
                 if (dataCenterRecoveryFailed) {
                     const filename = downloadDataCenterBackup(createDataCenterRecoverySnapshot(), "recovery-snapshot");
@@ -9439,6 +9609,9 @@
         }
 
         function getTasksForOrganizationImport() {
+            if (MTLLab.dataSource === "api") {
+                return tasks;
+            }
             const storedTasks = localStorage.getItem(tasksStorageKey);
             const latestTasks = storedTasks === null ? [] : JSON.parse(storedTasks);
             if (!Array.isArray(latestTasks) || latestTasks.some((task) => !isValidTask(task))) {
@@ -9447,7 +9620,7 @@
             return latestTasks;
         }
 
-        function importOrganizedTasks() {
+        async function importOrganizedTasks() {
             if (!requireTaskOrganizationAccess(taskOrganizerStatus)) {
                 updateTaskOrganizationAccessUI();
                 return;
@@ -9532,7 +9705,27 @@
                     updateTaskOrganizationAccessUI();
                     return;
                 }
-                if (persistTasks([...latestTasks, ...additions])) {
+                if (MTLLab.dataSource === "api") {
+                    const createdItems = [];
+                    for (const addition of additions) {
+                        const created = await DataService.createTask(addition);
+                        createdItems.push(created);
+                    }
+                    tasks = [...tasks, ...createdItems];
+                    renderTasks();
+                    selectedItems.forEach((item) => item.remove());
+                    const remainingCount = taskPreviewList.querySelectorAll(".task-preview-item").length;
+                    updateTaskImportButton();
+                    taskOrganizerStatus.setAttribute("role", "status");
+                    if (remainingCount === 0) {
+                        taskOrganizerImportedVersion = taskOrganizerPreviewVersion;
+                        taskOrganizerImportedSources.add(taskOrganizerPreviewSource);
+                        taskOrganizerPreview.hidden = true;
+                        taskOrganizerStatus.textContent = "所有任务已导入。";
+                    } else {
+                        taskOrganizerStatus.textContent = `已导入 ${additions.length} 项，剩余 ${remainingCount} 项待确认。`;
+                    }
+                } else if (persistTasks([...latestTasks, ...additions])) {
                     selectedItems.forEach((item) => item.remove());
                     const remainingCount = taskPreviewList.querySelectorAll(".task-preview-item").length;
                     updateTaskImportButton();
@@ -10271,6 +10464,9 @@
         }
 
         function readDailyFocusArchive(rawValue = localStorage.getItem(dailyFocusStorageKey)) {
+            if (MTLLab.dataSource === "api") {
+                return { archive: dailyFocusApiArchive, rawValue: null, needsMigration: false };
+            }
             if (rawValue === null) {
                 return { archive: null, rawValue, needsMigration: false };
             }
@@ -10312,6 +10508,10 @@
         }
 
         function writeDailyFocusArchive(nextArchive, expectedRawValue) {
+            if (MTLLab.dataSource === "api") {
+                dailyFocusApiArchive = cloneDailyFocusArchive(nextArchive);
+                return JSON.stringify(dailyFocusApiArchive);
+            }
             if (!requireModuleAccess("daily-focus", dailyFocusStatus)) {
                 throw new Error(dailyFocusStatus.textContent);
             }
@@ -10465,9 +10665,69 @@
             }
         }
 
+        async function loadDailyFocusFromApi() {
+            dailyFocusStatus.textContent = "正在加载每日重点…";
+            try {
+                const entries = await DataService.listDailyFocus();
+                const records = {};
+                for (const entry of entries) {
+                    records[entry.date] = { priorities: [...entry.priorities] };
+                }
+                const today = getLocalDateKey(new Date());
+                const activeDate = records[today]
+                    ? today
+                    : (Object.keys(records).sort().pop() || today);
+                dailyFocusApiArchive = {
+                    schemaVersion: dailyFocusSchemaVersion,
+                    activeDate,
+                    records: records[activeDate]
+                        ? records
+                        : { ...records, [activeDate]: { priorities: ["", "", ""] } }
+                };
+                dailyFocus = {
+                    date: activeDate,
+                    priorities: [...(dailyFocusApiArchive.records[activeDate].priorities)]
+                };
+                dailyFocusStorageReady = true;
+                renderActiveDailyFocus();
+                updateDailyFocusControls();
+                dailyFocusStatus.textContent = "每日重点已从服务器加载。";
+                dailyFocusStatus.setAttribute("role", "status");
+            } catch (error) {
+                setDailyFocusUnavailable("无法读取每日重点，请检查网络或登录状态后重试。", error);
+            }
+        }
+
+        async function saveDailyFocusToApi(nextFocus) {
+            dailyFocusStatus.textContent = "正在保存…";
+            try {
+                const saved = await DataService.saveDailyFocus(nextFocus.date, nextFocus.priorities);
+                dailyFocus = { date: saved.date, priorities: [...saved.priorities] };
+                if (!dailyFocusApiArchive) {
+                    dailyFocusApiArchive = {
+                        schemaVersion: dailyFocusSchemaVersion,
+                        activeDate: saved.date,
+                        records: {}
+                    };
+                }
+                dailyFocusApiArchive.records[saved.date] = { priorities: [...saved.priorities] };
+                dailyFocusApiArchive.activeDate = saved.date;
+                renderActiveDailyFocus();
+                dailyFocusStatus.textContent = "每日重点已保存。";
+                dailyFocusStatus.setAttribute("role", "status");
+            } catch (error) {
+                dailyFocusStatus.textContent = "保存失败，请重试。";
+                dailyFocusStatus.setAttribute("role", "alert");
+            }
+        }
+
         function persistDailyFocus(nextFocus = dailyFocus) {
             if (!requireModuleAccess("daily-focus", dailyFocusStatus)) {
                 return false;
+            }
+            if (MTLLab.dataSource === "api") {
+                saveDailyFocusToApi(nextFocus);
+                return true;
             }
             if (!nextFocus ||
                 !isDailyFocusDateKey(nextFocus.date) ||
@@ -11089,6 +11349,68 @@
             }
         }
 
+        async function loadTasksFromApi() {
+            tasksStatus.textContent = "Loading tasks…";
+            tasksStatus.setAttribute("role", "status");
+            try {
+                const items = await DataService.listTasks();
+                tasks = items;
+                tasksStorageReady = true;
+                renderTasks();
+                updateModuleAccessUI();
+                tasksStatus.textContent = "已从服务器加载。";
+                tasksStatus.setAttribute("role", "status");
+            } catch (error) {
+                setTasksUnavailable("无法加载任务，请检查网络或登录状态后重试。", error);
+            }
+        }
+
+        async function createTaskToApi(task) {
+            tasksStatus.textContent = "Saving…";
+            try {
+                const created = await DataService.createTask(task);
+                tasks = [created, ...tasks];
+                renderTasks();
+                tasksStatus.textContent = "Task saved.";
+                return true;
+            } catch (error) {
+                tasksStatus.textContent = "保存失败，请重试。";
+                return false;
+            }
+        }
+
+        async function updateTaskToApi(taskId, task) {
+            tasksStatus.textContent = "Saving…";
+            try {
+                const updated = await DataService.updateTask(taskId, task);
+                tasks = tasks.map((item) => (item.id === taskId ? updated : item));
+                renderTasks();
+                tasksStatus.textContent = "Task updated.";
+                return true;
+            } catch (error) {
+                if (error && error.name === "ConflictError") {
+                    tasksStatus.textContent = "已在别处修改，请刷新后重试。";
+                } else {
+                    tasksStatus.textContent = "保存失败，请重试。";
+                }
+                return false;
+            }
+        }
+
+        async function deleteTaskFromApi(taskId) {
+            tasksStatus.textContent = "Deleting…";
+            try {
+                await DataService.deleteTask(taskId);
+                tasks = tasks.filter((item) => item.id !== taskId);
+                renderTasks();
+                tasksStatus.textContent = "Task deleted.";
+                return true;
+            } catch (error) {
+                tasksStatus.textContent = "删除失败，请重试。";
+                return false;
+            }
+        }
+
         function toggleTask(taskId) {
             if (!requireModuleAccess("task-manager", tasksStatus)) {
                 renderTasks();
@@ -11098,15 +11420,20 @@
             if (!tasksStorageReady) {
                 return;
             }
-            const nextTasks = tasks.map((task) =>
-                task.id === taskId
-                    ? {
-                        ...task,
-                        completed: !task.completed,
-                        completedAt: task.completed ? null : new Date().toISOString()
-                    }
-                    : task
-            );
+            const task = tasks.find((item) => item.id === taskId);
+            if (!task) {
+                return;
+            }
+            const next = {
+                ...task,
+                completed: !task.completed,
+                completedAt: task.completed ? null : new Date().toISOString()
+            };
+            if (MTLLab.dataSource === "api") {
+                updateTaskToApi(taskId, next);
+                return;
+            }
+            const nextTasks = tasks.map((item) => (item.id === taskId ? next : item));
             persistTasks(nextTasks);
         }
 
@@ -11124,8 +11451,17 @@
                 renderTasks();
                 return;
             }
-            const nextTasks = tasks.map((task) =>
-                task.id === taskId ? { ...task, priority: newPriority } : task
+            const task = tasks.find((item) => item.id === taskId);
+            if (!task) {
+                renderTasks();
+                return;
+            }
+            if (MTLLab.dataSource === "api") {
+                updateTaskToApi(taskId, { ...task, priority: newPriority });
+                return;
+            }
+            const nextTasks = tasks.map((item) =>
+                item.id === taskId ? { ...item, priority: newPriority } : item
             );
             if (!persistTasks(nextTasks)) {
                 renderTasks();
@@ -11138,6 +11474,10 @@
                 return;
             }
             if (!tasksStorageReady) {
+                return;
+            }
+            if (MTLLab.dataSource === "api") {
+                deleteTaskFromApi(taskId);
                 return;
             }
             if (persistTasks(tasks.filter((task) => task.id !== taskId))) {
@@ -11182,6 +11522,7 @@
             taskDueDate.value = "";
             taskNoteInput.value = "";
             editingTaskId = null;
+            editingTaskVersion = null;
             taskAdd.textContent = "Add task";
             taskCancelEdit.hidden = true;
             taskFieldLabel.textContent = "New task";
@@ -11191,6 +11532,7 @@
             const task = tasks.find((item) => item.id === taskId);
             if (!task) return;
             editingTaskId = taskId;
+            editingTaskVersion = typeof task.version === "number" ? task.version : null;
             taskInput.value = task.text;
             taskPriority.value = task.priority;
             taskDueDate.value = task.dueDate || "";
@@ -11222,7 +11564,7 @@
             }
         }
 
-        taskForm.addEventListener("submit", (event) => {
+        taskForm.addEventListener("submit", async (event) => {
             event.preventDefault();
             if (!requireModuleAccess("task-manager", tasksStatus)) {
                 updateModuleAccessUI();
@@ -11239,16 +11581,33 @@
             }
             const dueDate = taskDueDate.value.trim();
             const note = taskNoteInput.value.trim();
+            const priority = taskPriority.value;
 
             if (editingTaskId) {
-                if (!tasks.some((task) => task.id === editingTaskId)) {
+                const existing = tasks.find((task) => task.id === editingTaskId);
+                if (!existing) {
                     resetTaskForm();
                     renderTasks();
                     return;
                 }
+                if (MTLLab.dataSource === "api") {
+                    const ok = await updateTaskToApi(editingTaskId, {
+                        ...existing,
+                        text,
+                        priority,
+                        dueDate,
+                        note,
+                        version: editingTaskVersion
+                    });
+                    if (ok) {
+                        resetTaskForm();
+                        taskInput.focus();
+                    }
+                    return;
+                }
                 const nextTasks = tasks.map((task) =>
                     task.id === editingTaskId
-                        ? { ...task, text, priority: taskPriority.value, dueDate, note }
+                        ? { ...task, text, priority, dueDate, note }
                         : task
                 );
                 if (persistTasks(nextTasks)) {
@@ -11258,10 +11617,19 @@
                 return;
             }
 
+            if (MTLLab.dataSource === "api") {
+                const ok = await createTaskToApi({ text, priority, dueDate, note, completed: false });
+                if (ok) {
+                    resetTaskForm();
+                    taskInput.focus();
+                }
+                return;
+            }
+
             const task = {
                 id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
                 text,
-                priority: taskPriority.value,
+                priority,
                 completed: false,
                 createdAt: new Date().toISOString(),
                 completedAt: null,
@@ -11608,6 +11976,80 @@
             });
         }
 
+        async function loadDocumentHistoryFromApi() {
+            documentHistoryStatus.textContent = "正在加载资料历史…";
+            try {
+                const items = await DataService.listDocuments();
+                documentHistory = items.map((record) => ({
+                    ...record,
+                    summary: {
+                        executive: "",
+                        keyPoints: "",
+                        important: "",
+                        actions: "",
+                        ...(record.summary || {}),
+                        deepAnalysis: record.summary?.deepAnalysis ??
+                            "旧版记录未保存深度分析，请重新分析后补充。"
+                    },
+                    analysisMode: record.analysisMode ?? "full",
+                    model: record.model ?? ""
+                }));
+                documentStorageReady = true;
+                renderDocumentHistory();
+                documentHistoryStatus.textContent = "资料历史已从服务器加载。";
+                documentHistoryStatus.setAttribute("role", "status");
+            } catch (error) {
+                documentHistoryStatus.textContent = "无法读取资料历史，请检查网络或登录状态后重试。";
+                documentHistoryStatus.setAttribute("role", "alert");
+            }
+        }
+
+        async function createDocumentToApi(record) {
+            documentHistoryStatus.textContent = "正在保存…";
+            try {
+                const created = await DataService.createDocument(record);
+                documentHistory = [created, ...documentHistory];
+                renderDocumentHistory();
+                return created;
+            } catch (error) {
+                documentHistoryStatus.textContent = "保存失败，请重试。";
+                return null;
+            }
+        }
+
+        async function updateDocumentToApi(recordId, record) {
+            documentHistoryStatus.textContent = "正在保存…";
+            try {
+                const updated = await DataService.updateDocument(recordId, record);
+                documentHistory = documentHistory.map((item) =>
+                    item.id === recordId ? updated : item
+                );
+                renderDocumentHistory();
+                return updated;
+            } catch (error) {
+                documentHistoryStatus.textContent =
+                    error && error.name === "ConflictError"
+                        ? "已在别处修改，请刷新后重试。"
+                        : "保存失败，请重试。";
+                return null;
+            }
+        }
+
+        async function deleteDocumentFromApi(recordId) {
+            documentHistoryStatus.textContent = "正在删除…";
+            try {
+                await DataService.deleteDocument(recordId);
+                documentHistory = documentHistory.filter((item) => item.id !== recordId);
+                if (currentDocumentId === recordId) {
+                    currentDocumentId = null;
+                }
+                renderDocumentHistory();
+                documentHistoryStatus.textContent = "已删除。";
+            } catch (error) {
+                documentHistoryStatus.textContent = "删除失败，请重试。";
+            }
+        }
+
         function persistDocumentHistory(nextHistory) {
             if (!requireDocumentSummaryAccess(documentHistoryStatus)) {
                 updateDocumentSummaryAccessUI();
@@ -11703,6 +12145,10 @@
                 return;
             }
             if (!window.confirm(`确定删除“${record.title}”及其原始资料和总结吗？此操作无法撤销。`)) {
+                return;
+            }
+            if (MTLLab.dataSource === "api") {
+                deleteDocumentFromApi(recordId);
                 return;
             }
             if (persistDocumentHistory(documentHistory.filter((item) => item.id !== recordId))) {
@@ -11828,7 +12274,7 @@
             void organizeCurrentDocument();
         });
 
-        document.getElementById("document-save").addEventListener("click", () => {
+        document.getElementById("document-save").addEventListener("click", async () => {
             if (!requireDocumentSummaryAccess(documentHistoryStatus)) {
                 updateDocumentSummaryAccessUI();
                 return;
@@ -11849,6 +12295,33 @@
             }
 
             const existing = documentHistory.find((record) => record.id === currentDocumentId);
+            if (MTLLab.dataSource === "api") {
+                const payload = {
+                    title: documentTitleInput.value.trim() || "未命名资料",
+                    sourceText,
+                    summary: getDocumentSummaryValues(),
+                    analysisMode: currentDocumentAnalysisMode,
+                    model: currentDocumentModel
+                };
+                if (existing) {
+                    const updated = await updateDocumentToApi(existing.id, {
+                        ...payload,
+                        version: existing.version
+                    });
+                    if (updated) {
+                        currentDocumentId = updated.id;
+                        documentResultsStatus.textContent = "资料、原文和总结已更新。";
+                    }
+                } else {
+                    const created = await createDocumentToApi(payload);
+                    if (created) {
+                        currentDocumentId = created.id;
+                        documentResultsStatus.textContent = "资料、原文和总结已保存到历史。";
+                    }
+                }
+                return;
+            }
+
             const now = new Date().toISOString();
             const nextRecord = {
                 ...existing,
@@ -11938,6 +12411,7 @@
                         return;
                     }
                     editingIdeaId = idea.id;
+                    editingIdeaVersion = typeof idea.version === "number" ? idea.version : null;
                     ideaTitleInput.value = idea.title;
                     ideaContentInput.value = idea.content;
                     ideaSaveButton.textContent = "保存修改";
@@ -11958,6 +12432,69 @@
                 ideaList.append(item);
             });
             updateIdeasWritingAccessUI();
+        }
+
+        async function loadIdeasFromApi() {
+            ideaStatus.textContent = "正在加载灵感…";
+            try {
+                const items = await DataService.listIdeas();
+                ideas = items;
+                ideasStorageReady = true;
+                renderIdeas();
+                updateIdeasWritingAccessUI();
+                ideaStatus.textContent = "灵感已从服务器加载。";
+                ideaStatus.setAttribute("role", "status");
+            } catch (error) {
+                ideaStatus.textContent = "无法读取灵感，请检查网络或登录状态后重试。";
+                ideaStatus.setAttribute("role", "alert");
+            }
+        }
+
+        async function createIdeaToApi(idea) {
+            ideaStatus.textContent = "正在保存…";
+            try {
+                const created = await DataService.createIdea(idea);
+                ideas = [created, ...ideas];
+                renderIdeas();
+                return true;
+            } catch (error) {
+                ideaStatus.textContent = "灵感保存失败，请重试。";
+                return false;
+            }
+        }
+
+        async function updateIdeaToApi(ideaId, idea) {
+            ideaStatus.textContent = "正在保存…";
+            try {
+                const updated = await DataService.updateIdea(ideaId, idea);
+                ideas = ideas.map((item) => (item.id === ideaId ? updated : item));
+                renderIdeas();
+                return true;
+            } catch (error) {
+                if (error && error.name === "ConflictError") {
+                    ideaStatus.textContent = "已在别处修改，请刷新后重试。";
+                } else {
+                    ideaStatus.textContent = "灵感保存失败，请重试。";
+                }
+                return false;
+            }
+        }
+
+        async function deleteIdeaFromApi(ideaId) {
+            ideaStatus.textContent = "正在删除…";
+            try {
+                await DataService.deleteIdea(ideaId);
+                ideas = ideas.filter((item) => item.id !== ideaId);
+                if (editingIdeaId === ideaId) {
+                    resetIdeaForm();
+                }
+                renderIdeas();
+                ideaStatus.textContent = "已删除灵感。";
+                return true;
+            } catch (error) {
+                ideaStatus.textContent = "删除失败，请重试。";
+                return false;
+            }
         }
 
         function persistIdeas(nextIdeas) {
@@ -12017,6 +12554,7 @@
                 return;
             }
             editingIdeaId = null;
+            editingIdeaVersion = null;
             ideaForm.reset();
             ideaSaveButton.textContent = "保存灵感";
             ideaCancelEditButton.hidden = true;
@@ -12032,6 +12570,10 @@
             }
             const deletedIdea = ideas.find((idea) => idea.id === ideaId);
             if (!deletedIdea) {
+                return;
+            }
+            if (MTLLab.dataSource === "api") {
+                deleteIdeaFromApi(ideaId);
                 return;
             }
             if (persistIdeas(ideas.filter((idea) => idea.id !== ideaId))) {
@@ -12266,7 +12808,7 @@
             }
         }
 
-        ideaForm.addEventListener("submit", (event) => {
+        ideaForm.addEventListener("submit", async (event) => {
             event.preventDefault();
             if (!requireIdeasWritingAccess()) {
                 updateIdeasWritingAccessUI();
@@ -12284,8 +12826,29 @@
                 return;
             }
 
-            const now = new Date().toISOString();
             const existing = ideas.find((idea) => idea.id === editingIdeaId);
+            if (MTLLab.dataSource === "api") {
+                if (existing) {
+                    const ok = await updateIdeaToApi(existing.id, {
+                        title,
+                        content,
+                        version: editingIdeaVersion
+                    });
+                    if (ok) {
+                        resetIdeaForm();
+                        ideaStatus.textContent = "灵感已更新。";
+                    }
+                } else {
+                    const ok = await createIdeaToApi({ title, content });
+                    if (ok) {
+                        resetIdeaForm();
+                        ideaStatus.textContent = "灵感已保存。";
+                    }
+                }
+                return;
+            }
+
+            const now = new Date().toISOString();
             const nextIdea = {
                 ...existing,
                 id: existing?.id ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`,
@@ -13014,7 +13577,11 @@
             migrateModuleSettings();
         }
         renderModuleManagementCenter();
-        loadDailyFocus();
+        if (MTLLab.dataSource === "api") {
+            loadDailyFocusFromApi();
+        } else {
+            loadDailyFocus();
+        }
         updateClock();
         window.setInterval(updateClock, 1000);
         if (MTLLab.dataSource === "api") {
@@ -13022,9 +13589,18 @@
         } else {
             loadNotes();
         }
-        loadIdeas();
-        loadDocumentHistory();
-        loadTasks();
+        if (MTLLab.dataSource === "api") {
+            loadIdeasFromApi();
+            loadDocumentHistoryFromApi();
+        } else {
+            loadIdeas();
+            loadDocumentHistory();
+        }
+        if (MTLLab.dataSource === "api") {
+            loadTasksFromApi();
+        } else {
+            loadTasks();
+        }
         updateModuleAccessUI();
         refreshDailyPlanning(false);
         renderDataCenterOverview();
