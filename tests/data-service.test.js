@@ -181,6 +181,52 @@ tests.push(async function test_auth_remember_and_silent_refresh() {
     assert.strictEqual(storage.getItem("my-tech-lab-refresh-token"), null);
 });
 
+tests.push(async function test_knowledge_create_and_mapping() {
+    const posted = [];
+    const routes = {
+        "https://api.example/api/v1/knowledge": (url, opts) => {
+            if (opts && opts.method === "POST") {
+                posted.push(JSON.parse(opts.body));
+                return okJson({
+                    id: "k1",
+                    title: "T",
+                    content: "C",
+                    tags: ["a"],
+                    links: [{ id: "l1", source_type: "note", source_id: "n1" }],
+                    created_at: "2026-01-01T00:00:00Z",
+                    updated_at: "2026-01-01T00:00:00Z",
+                    version: 1
+                }, 201);
+            }
+            return okJson([]);
+        }
+    };
+    const { api } = loadApi({
+        fetchImpl: async (url, opts) => {
+            const route = routes[url];
+            if (route) return route(url, opts);
+            throw new Error("unexpected " + url);
+        }
+    });
+
+    const created = await api.DataService.createKnowledge({
+        title: "T",
+        content: "C",
+        tags: ["a"],
+        source_links: [{ source_type: "note", source_id: "n1" }]
+    });
+
+    assert.strictEqual(created.id, "k1");
+    assert.deepStrictEqual(created.tags, ["a"]);
+    assert.strictEqual(created.links[0].source_id, "n1");
+    assert.deepStrictEqual(posted[0], {
+        title: "T",
+        content: "C",
+        tags: ["a"],
+        source_links: [{ source_type: "note", source_id: "n1" }]
+    });
+});
+
 (async () => {
     let passed = 0;
     let failed = 0;

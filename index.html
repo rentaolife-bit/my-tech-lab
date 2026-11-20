@@ -4368,6 +4368,109 @@
         .login-submit {
             width: 100%;
         }
+        .knowledge-panel {
+            max-width: 42rem;
+            margin: 0 auto;
+            padding: 1.25rem;
+            border-radius: 1rem;
+            background: var(--surface, #10151f);
+            border: 1px solid var(--border, #263041);
+        }
+        .knowledge-form {
+            display: grid;
+            gap: 0.6rem;
+        }
+        .knowledge-title-input,
+        .knowledge-content-input,
+        .knowledge-tags-input,
+        .knowledge-source-note {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 0.7rem 0.8rem;
+            border-radius: 0.6rem;
+            border: 1px solid var(--border, #263041);
+            background: var(--input, #0b0f16);
+            color: inherit;
+            font-size: 1rem;
+        }
+        .knowledge-content-input {
+            min-height: 8rem;
+            resize: vertical;
+        }
+        .knowledge-form-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+        .knowledge-status {
+            flex: 1;
+            min-height: 1.25rem;
+            margin: 0;
+            font-size: 0.85rem;
+            opacity: 0.85;
+        }
+        .knowledge-save,
+        .knowledge-cancel {
+            padding: 0.6rem 0.9rem;
+            border-radius: 0.6rem;
+            border: 1px solid var(--border, #263041);
+            background: var(--accent, #4f8cff);
+            color: #fff;
+            cursor: pointer;
+        }
+        .knowledge-cancel {
+            background: transparent;
+            color: inherit;
+        }
+        .knowledge-list {
+            list-style: none;
+            margin: 1rem 0 0;
+            padding: 0;
+            display: grid;
+            gap: 0.75rem;
+        }
+        .knowledge-item {
+            padding: 0.9rem;
+            border: 1px solid var(--border, #263041);
+            border-radius: 0.75rem;
+        }
+        .knowledge-item-title {
+            margin: 0 0 0.25rem;
+            font-size: 1rem;
+        }
+        .knowledge-item-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            margin: 0.25rem 0;
+        }
+        .knowledge-tag {
+            font-size: 0.75rem;
+            padding: 0.15rem 0.5rem;
+            border-radius: 999px;
+            background: rgba(79, 140, 255, 0.15);
+            color: var(--accent, #8fb5ff);
+        }
+        .knowledge-item-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        .knowledge-item-actions button {
+            padding: 0.3rem 0.6rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border, #263041);
+            background: transparent;
+            color: inherit;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .knowledge-empty {
+            margin: 0.75rem 0 0;
+            opacity: 0.7;
+        }
         @media (max-width: 480px) {
             .login-row {
                 grid-template-columns: 1fr;
@@ -4390,6 +4493,7 @@
                         <a class="header-link" href="#daily-focus-section">Daily Focus</a>
                         <a class="header-link" href="#task-manager-section">Tasks</a>
                         <a class="header-link" href="#quick-notes-section">Notes</a>
+                        <a class="header-link" href="#knowledge-base-section">Knowledge</a>
                     </div>
                 </div>
                 <div class="nav-group">
@@ -4412,6 +4516,7 @@
                     <a class="header-link" href="#daily-focus-section">Daily Focus</a>
                     <a class="header-link" href="#task-manager-section">Tasks</a>
                     <a class="header-link" href="#quick-notes-section">Notes</a>
+                    <a class="header-link" href="#knowledge-base-section">Knowledge</a>
                 </div>
                 <div class="nav-mobile-panel" id="mobile-panel-projects-creation" hidden>
                     <a class="header-link" href="#projects">Projects</a>
@@ -5087,6 +5192,26 @@
                     </section>
                 </div>
             </section>
+            <section class="knowledge-section" id="knowledge-base-section" aria-labelledby="knowledge-title">
+                <h2 class="projects-heading" id="knowledge-title">Knowledge Base</h2>
+                <div class="knowledge-panel">
+                    <form class="knowledge-form" id="knowledge-form">
+                        <label class="clock-label" for="knowledge-title-input" id="knowledge-field-label">New knowledge item</label>
+                        <input class="knowledge-title-input" id="knowledge-title-input" name="title" placeholder="Title" required>
+                        <textarea class="knowledge-content-input" id="knowledge-content-input" name="content" placeholder="Markdown 正文..." required></textarea>
+                        <input class="knowledge-tags-input" id="knowledge-tags-input" name="tags" placeholder="标签（用逗号分隔，例如：研究, 医学）">
+                        <label class="clock-label" for="knowledge-source-note">来源笔记（可选）</label>
+                        <select class="knowledge-source-note" id="knowledge-source-note"></select>
+                        <div class="knowledge-form-actions">
+                            <p class="knowledge-status" id="knowledge-status" role="status" aria-live="polite"></p>
+                            <button class="knowledge-save" id="knowledge-save" type="submit">保存知识</button>
+                            <button class="knowledge-cancel" id="knowledge-cancel" type="button" hidden>Cancel</button>
+                        </div>
+                    </form>
+                    <ul class="knowledge-list" id="knowledge-list" aria-label="Saved knowledge items"></ul>
+                    <p class="knowledge-empty" id="knowledge-empty">Your knowledge items will appear here.</p>
+                </div>
+            </section>
             </div>
 
             <section id="projects" aria-labelledby="projects-title">
@@ -5473,6 +5598,19 @@
                 };
             }
 
+            function mapKnowledge(item) {
+                return {
+                    id: String(item.id),
+                    title: item.title,
+                    content: item.content,
+                    tags: Array.isArray(item.tags) ? item.tags : [],
+                    links: Array.isArray(item.links) ? item.links : [],
+                    createdAt: item.created_at,
+                    updatedAt: item.updated_at,
+                    version: item.version
+                };
+            }
+
             return {
                 fromApi,
                 async listNotes() {
@@ -5594,6 +5732,36 @@
                 },
                 async exportData() {
                     return apiClient.getJson("/api/v1/data-center/export");
+                },
+                async listKnowledge() {
+                    const data = await apiClient.getJson("/api/v1/knowledge");
+                    return data.map(mapKnowledge);
+                },
+                async createKnowledge(item) {
+                    const created = await apiClient.sendJson("/api/v1/knowledge", "POST", {
+                        title: item.title,
+                        content: item.content,
+                        tags: item.tags,
+                        source_links: item.source_links || []
+                    });
+                    return mapKnowledge(created);
+                },
+                async updateKnowledge(id, item) {
+                    const updated = await apiClient.sendJson(
+                        `/api/v1/knowledge/${encodeURIComponent(id)}`,
+                        "PATCH",
+                        {
+                            title: item.title,
+                            content: item.content,
+                            tags: item.tags,
+                            source_links: item.source_links || [],
+                            version: item.version
+                        }
+                    );
+                    return mapKnowledge(updated);
+                },
+                async deleteKnowledge(id) {
+                    return apiClient.sendJson(`/api/v1/knowledge/${encodeURIComponent(id)}`, "DELETE");
                 }
             };
         })();
@@ -5803,6 +5971,21 @@
                 entry: {
                     targetSelector: "#quick-notes-section",
                     navigationSelector: '.site-nav a[href="#quick-notes-section"]',
+                    shortcutSelector: null
+                },
+                parentId: null,
+                status: "implemented",
+                dataOwnership: "own"
+            },
+            {
+                id: "knowledge-base",
+                name: "Knowledge Base",
+                description: "沉淀和组织个人知识条目，支持标签与来源笔记关联。",
+                category: "work-knowledge",
+                type: "standalone",
+                entry: {
+                    targetSelector: "#knowledge-base-section",
+                    navigationSelector: '.site-nav a[href="#knowledge-base-section"]',
                     shortcutSelector: null
                 },
                 parentId: null,
@@ -11129,7 +11312,8 @@
                 loadTasksFromApi(),
                 loadIdeasFromApi(),
                 loadDocumentHistoryFromApi(),
-                loadDailyFocusFromApi()
+                loadDailyFocusFromApi(),
+                loadKnowledgeFromApi()
             ]);
         }
 
@@ -11246,6 +11430,295 @@
             notesStatus.textContent = "Edit cancelled.";
             noteInput.focus();
         });
+
+        // ===== Knowledge Base 模块 =====
+        const knowledgeStorageKey = "my-tech-lab-knowledge";
+        const knowledgeForm = document.getElementById("knowledge-form");
+        const knowledgeTitleInput = document.getElementById("knowledge-title-input");
+        const knowledgeContentInput = document.getElementById("knowledge-content-input");
+        const knowledgeTagsInput = document.getElementById("knowledge-tags-input");
+        const knowledgeSourceNoteSelect = document.getElementById("knowledge-source-note");
+        const knowledgeSaveButton = document.getElementById("knowledge-save");
+        const knowledgeCancelButton = document.getElementById("knowledge-cancel");
+        const knowledgeFieldLabel = document.getElementById("knowledge-field-label");
+        const knowledgeList = document.getElementById("knowledge-list");
+        const knowledgeEmpty = document.getElementById("knowledge-empty");
+        const knowledgeStatus = document.getElementById("knowledge-status");
+        let knowledgeItems = [];
+        let knowledgeStorageReady = false;
+        let editingKnowledgeId = null;
+        let editingKnowledgeVersion = null;
+
+        function parseKnowledgeTags(raw) {
+            return raw.split(",").map((tag) => tag.trim()).filter(Boolean);
+        }
+
+        function populateKnowledgeSourceNotes() {
+            const selected = knowledgeSourceNoteSelect.value;
+            knowledgeSourceNoteSelect.replaceChildren();
+            const empty = document.createElement("option");
+            empty.value = "";
+            empty.textContent = "无来源笔记";
+            knowledgeSourceNoteSelect.append(empty);
+            for (const note of notes) {
+                const option = document.createElement("option");
+                option.value = note.id;
+                option.textContent = note.text.length > 40 ? `${note.text.slice(0, 40)}…` : note.text;
+                knowledgeSourceNoteSelect.append(option);
+            }
+            knowledgeSourceNoteSelect.value = selected;
+        }
+
+        function renderKnowledge() {
+            knowledgeList.replaceChildren();
+            knowledgeEmpty.hidden = knowledgeItems.length > 0;
+            populateKnowledgeSourceNotes();
+            for (const item of knowledgeItems) {
+                const li = document.createElement("li");
+                li.className = "knowledge-item";
+
+                const title = document.createElement("h3");
+                title.className = "knowledge-item-title";
+                title.textContent = item.title;
+
+                const tags = document.createElement("div");
+                tags.className = "knowledge-item-tags";
+                for (const tag of item.tags || []) {
+                    const chip = document.createElement("span");
+                    chip.className = "knowledge-tag";
+                    chip.textContent = tag;
+                    tags.append(chip);
+                }
+
+                const actions = document.createElement("div");
+                actions.className = "knowledge-item-actions";
+                const editButton = document.createElement("button");
+                editButton.type = "button";
+                editButton.textContent = "编辑";
+                editButton.addEventListener("click", () => startEditKnowledge(item.id));
+                const deleteButton = document.createElement("button");
+                deleteButton.type = "button";
+                deleteButton.textContent = "删除";
+                deleteButton.addEventListener("click", () => deleteKnowledgeItem(item.id));
+                actions.append(editButton, deleteButton);
+
+                li.append(title, tags, actions);
+                knowledgeList.append(li);
+            }
+            updateKnowledgeAccessUI();
+        }
+
+        function resetKnowledgeForm() {
+            editingKnowledgeId = null;
+            editingKnowledgeVersion = null;
+            knowledgeForm.reset();
+            knowledgeSaveButton.textContent = "保存知识";
+            knowledgeCancelButton.hidden = true;
+            knowledgeFieldLabel.textContent = "New knowledge item";
+        }
+
+        function startEditKnowledge(itemId) {
+            const item = knowledgeItems.find((entry) => entry.id === itemId);
+            if (!item) return;
+            editingKnowledgeId = itemId;
+            editingKnowledgeVersion = typeof item.version === "number" ? item.version : null;
+            knowledgeTitleInput.value = item.title;
+            knowledgeContentInput.value = item.content;
+            knowledgeTagsInput.value = (item.tags || []).join(", ");
+            const sourceLink = (item.links || []).find((link) => link.source_type === "note");
+            knowledgeSourceNoteSelect.value = sourceLink ? sourceLink.source_id : "";
+            knowledgeSaveButton.textContent = "保存修改";
+            knowledgeCancelButton.hidden = false;
+            knowledgeFieldLabel.textContent = "Edit knowledge item";
+            knowledgeTitleInput.focus();
+        }
+
+        function currentKnowledgeSourceLinks() {
+            const sourceId = knowledgeSourceNoteSelect.value;
+            return sourceId ? [{ source_type: "note", source_id: sourceId }] : [];
+        }
+
+        function persistKnowledge(nextItems) {
+            try {
+                localStorage.setItem(knowledgeStorageKey, JSON.stringify(nextItems));
+                knowledgeItems = nextItems;
+                renderKnowledge();
+                knowledgeStatus.textContent = "知识已保存在此浏览器。";
+                knowledgeStatus.setAttribute("role", "status");
+                return true;
+            } catch (error) {
+                knowledgeStatus.textContent = "保存失败，请检查浏览器存储设置后重试。";
+                knowledgeStatus.setAttribute("role", "alert");
+                return false;
+            }
+        }
+
+        function loadKnowledge() {
+            try {
+                const saved = localStorage.getItem(knowledgeStorageKey);
+                if (saved !== null) {
+                    const parsed = JSON.parse(saved);
+                    if (!Array.isArray(parsed)) throw new Error("Invalid knowledge format.");
+                    knowledgeItems = parsed;
+                }
+                knowledgeStorageReady = true;
+                renderKnowledge();
+            } catch (error) {
+                knowledgeStatus.textContent = "无法读取已保存的知识，浏览器存储可能不可用或数据格式异常。";
+                knowledgeStatus.setAttribute("role", "alert");
+                updateKnowledgeAccessUI();
+            }
+        }
+
+        function deleteKnowledgeItem(itemId) {
+            const target = knowledgeItems.find((item) => item.id === itemId);
+            if (!target || !knowledgeStorageReady) return;
+            if (!window.confirm(`删除“${target.title}”吗？此操作无法撤销。`)) return;
+            if (MTLLab.dataSource === "api") {
+                deleteKnowledgeFromApi(itemId);
+                return;
+            }
+            if (persistKnowledge(knowledgeItems.filter((item) => item.id !== itemId))) {
+                if (editingKnowledgeId === itemId) resetKnowledgeForm();
+                knowledgeStatus.textContent = "已删除。";
+            }
+        }
+
+        knowledgeForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const title = knowledgeTitleInput.value.trim();
+            const content = knowledgeContentInput.value.trim();
+            if (!title || !content) {
+                knowledgeStatus.textContent = "请填写标题和正文。";
+                return;
+            }
+            if (!knowledgeStorageReady) return;
+            const tags = parseKnowledgeTags(knowledgeTagsInput.value);
+            const sourceLinks = currentKnowledgeSourceLinks();
+            const existing = knowledgeItems.find((item) => item.id === editingKnowledgeId);
+
+            if (MTLLab.dataSource === "api") {
+                if (existing) {
+                    const ok = await updateKnowledgeToApi(existing.id, {
+                        title, content, tags, sourceLinks, version: editingKnowledgeVersion
+                    });
+                    if (ok) {
+                        resetKnowledgeForm();
+                        knowledgeStatus.textContent = "知识已更新。";
+                    }
+                } else {
+                    const ok = await createKnowledgeToApi({ title, content, tags, sourceLinks });
+                    if (ok) {
+                        resetKnowledgeForm();
+                        knowledgeStatus.textContent = "知识已保存。";
+                    }
+                }
+                return;
+            }
+
+            const now = new Date().toISOString();
+            const next = {
+                ...existing,
+                id: existing?.id ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+                title,
+                content,
+                tags,
+                links: sourceLinks,
+                createdAt: existing?.createdAt ?? now,
+                updatedAt: now
+            };
+            const nextItems = existing
+                ? knowledgeItems.map((item) => item.id === existing.id ? next : item)
+                : [next, ...knowledgeItems];
+            if (persistKnowledge(nextItems)) {
+                resetKnowledgeForm();
+                knowledgeStatus.textContent = existing ? "知识已更新。" : "知识已保存到此浏览器。";
+            }
+        });
+
+        knowledgeCancelButton.addEventListener("click", () => {
+            resetKnowledgeForm();
+            knowledgeStatus.textContent = "已取消编辑。";
+        });
+
+        async function loadKnowledgeFromApi() {
+            knowledgeStatus.textContent = "正在加载知识库…";
+            try {
+                const items = await DataService.listKnowledge();
+                knowledgeItems = items;
+                knowledgeStorageReady = true;
+                renderKnowledge();
+                knowledgeStatus.textContent = "知识库已从服务器加载。";
+                knowledgeStatus.setAttribute("role", "status");
+            } catch (error) {
+                knowledgeStatus.textContent = "无法读取知识库，请检查网络或登录状态后重试。";
+                knowledgeStatus.setAttribute("role", "alert");
+                updateKnowledgeAccessUI();
+            }
+        }
+
+        async function createKnowledgeToApi(item) {
+            knowledgeStatus.textContent = "正在保存…";
+            try {
+                const created = await DataService.createKnowledge({
+                    title: item.title,
+                    content: item.content,
+                    tags: item.tags,
+                    source_links: item.sourceLinks
+                });
+                knowledgeItems = [created, ...knowledgeItems];
+                renderKnowledge();
+                return true;
+            } catch (error) {
+                knowledgeStatus.textContent = "保存失败，请重试。";
+                return false;
+            }
+        }
+
+        async function updateKnowledgeToApi(itemId, item) {
+            knowledgeStatus.textContent = "正在保存…";
+            try {
+                const updated = await DataService.updateKnowledge(itemId, {
+                    title: item.title,
+                    content: item.content,
+                    tags: item.tags,
+                    source_links: item.sourceLinks,
+                    version: item.version
+                });
+                knowledgeItems = knowledgeItems.map((entry) => entry.id === itemId ? updated : entry);
+                renderKnowledge();
+                return true;
+            } catch (error) {
+                knowledgeStatus.textContent =
+                    error && error.name === "ConflictError"
+                        ? "已在别处修改，请刷新后重试。"
+                        : "保存失败，请重试。";
+                return false;
+            }
+        }
+
+        async function deleteKnowledgeFromApi(itemId) {
+            knowledgeStatus.textContent = "正在删除…";
+            try {
+                await DataService.deleteKnowledge(itemId);
+                knowledgeItems = knowledgeItems.filter((item) => item.id !== itemId);
+                if (editingKnowledgeId === itemId) resetKnowledgeForm();
+                renderKnowledge();
+                knowledgeStatus.textContent = "已删除。";
+            } catch (error) {
+                knowledgeStatus.textContent = "删除失败，请重试。";
+            }
+        }
+
+        function updateKnowledgeAccessUI() {
+            const disabled = !knowledgeStorageReady;
+            knowledgeTitleInput.disabled = disabled;
+            knowledgeContentInput.disabled = disabled;
+            knowledgeTagsInput.disabled = disabled;
+            knowledgeSourceNoteSelect.disabled = disabled;
+            knowledgeSaveButton.disabled = disabled;
+            knowledgeCancelButton.disabled = disabled;
+        }
 
         function setTasksUnavailable(message, error) {
             tasksStatus.textContent = message;
@@ -13428,7 +13901,7 @@
         // ============================================================
         const WORKSPACE_SECTIONS = Object.freeze({
             dashboard: Object.freeze(["#dashboard", ".intro"]),
-            productivity: Object.freeze(["#quick-notes-section", "#task-manager-section", "#daily-focus-section"]),
+            productivity: Object.freeze(["#quick-notes-section", "#task-manager-section", "#daily-focus-section", "#knowledge-base-section"]),
             projects: Object.freeze(["#projects"]),
             assistant: Object.freeze(["#ai-assistant-section"]),
             system: Object.freeze(["#module-management-center-section", "#data-center-section"]),
@@ -13439,6 +13912,7 @@
             "#quick-notes-section": "productivity",
             "#task-manager-section": "productivity",
             "#daily-focus-section": "productivity",
+            "#knowledge-base-section": "productivity",
             "#projects": "projects",
             "#ai-assistant-section": "assistant",
             "#module-management-center-section": "system",
@@ -13596,6 +14070,7 @@
             loadIdeas();
             loadDocumentHistory();
             loadTasks();
+            loadKnowledge();
         }
         updateClock();
         window.setInterval(updateClock, 1000);
