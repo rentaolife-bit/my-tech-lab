@@ -15,6 +15,11 @@
 | V2 | 2026-11-08 | 修正多设备迁移假设：iPhone 为唯一实际数据源，Mac/iPad 后续接入 |
 | **V3** | 2026-11-08 | 第二轮架构审查修订：保留数据结构演进已完成的成果并明确能力边界、区分设备身份与数据来源、补全认证流程与 API 安全、区分三层版本与 Record Version 乐观并发、补充 DataService 异步适配、补充 AI 数据流安全、细化迁移规则与回滚、调整为九阶段实施路线 |
 | **V4** | 2026-11-08 | 第三轮审查修订：区分用户身份/认证/授权/用户管理四概念并确定单用户 Owner 原则、新增统一系统管理中心规划、明确 DataService 与 API Adapter 分层、补充数据库安全隔离（RLS/最小权限/隔离测试）、强化迁移可靠性（幂等/冻结窗口/中断重试/异常核对）、文档内部一致性修正、调整为七阶段实施路线 |
+| V4.1 | 2026-11-20 | 决策：认证方案确定为邮箱 OTP + 短期 Bearer 令牌，会话形态确定为 Authorization 头 + Bearer 令牌（见 §3.4、§3.5、§12） |
+| V4.2 | 2026-11-20 | 决策：业务表启用软删除（`deleted_at`），系统表与单行配置表不启用，并保留回收站恢复与“彻底删除”通道（见 §5.1、§12） |
+| V4.3 | 2026-11-20 | 决策：AI 对话默认持久化（`ai_conversations` / `ai_messages`），单段可关闭保存，与笔记同级管理/删除/导出（见 §4.2、§5.3、§12） |
+| V4.4 | 2026-11-20 | 决策：首个 Owner 通过服务器本地 CLI 引导初始化（幂等、不开放公开端点、数据库层唯一约束）（见 §3.4、§12） |
+| V4.5 | 2026-11-20 | 决策：AI 经 FastAPI 代理（阶段 2 后接入）；长期保持个人单用户；PostgreSQL RLS 单用户阶段暂不启用（见 §3.6、§6.7、§10.1、§12） |
 
 ---
 
@@ -260,11 +265,13 @@ quick-notes / ideas / document-summary：各自独立，仅被 Dashboard 读
 8. 数据归属验证    每次数据访问按 user_id 过滤，拒绝越权访问
 ```
 
-#### 首个 Owner 的安全初始化 **[建议]**
+#### 首个 Owner 的安全初始化 **[已确定（2026-11-20 决策）]**
 
-- 首个 Owner（所有者）通过**一次性初始化流程**创建：部署后由运维者在受控环境（本机/内网）执行初始化，生成 Owner 的 `users` 记录与登录身份，**不通过公开端点创建**。
-- 初始化凭据（如初始令牌/一次性链接）**不入仓库、不入前端**，初始化完成后立即失效或轮换。
-- 初始化必须幂等：重复执行不产生第二个 Owner。
+- 认证已定为邮箱 OTP，Owner 即「绑定 Owner 邮箱的唯一账号」，初始化**不涉及密码或一次性令牌**。
+- 采用**服务器本地命令行引导**（非公开 HTTP 接口）：首次部署时由使用者在迷你主机（SSH/控制台）执行，例如 `python -m app.cli bootstrap-owner --email <owner邮箱>`，创建 `users` 中的 Owner 记录 + `auth_identities(provider='email', provider_sub=邮箱)`。
+- 引导**必须幂等**：已存在 Owner 时重复执行不产生第二个；数据库层对 Owner 角色加唯一约束兜底。
+- 之后登录走标准流程：输入邮箱 → 发 OTP → 换 access + refresh 令牌。
+- 变更 Owner 邮箱仅允许已登录 Owner 在已验证会话内操作，或再次受控执行 CLI；**不开放公开注册/初始化端点**。
 
 #### 会话生命周期设计 **[建议]**
 
@@ -277,7 +284,7 @@ quick-notes / ideas / document-summary：各自独立，仅被 Dashboard 读
 | 会话撤销 | 服务端维护可撤销会话（登出、改密、异常检测时强制失效），撤销后立即拒绝后续请求 |
 
 - **[建议]** 认证产出**短期会话令牌**，后端校验；前端**不保存长期 Secret**。
-- **[待决策]** 具体认证供应商/协议（Cloudflare Access、邮箱 OTP、OIDC、短期令牌）留待后端实施阶段，结合「迷你主机自托管 + GitHub Pages 公开前端」拓扑再定，**当前不锁定供应商**。
+- **[已确定（2026-11-20 决策）]** 认证方案采用 **邮箱 OTP（一次性验证码 / 魔法链接）**：单用户、无密码、跨设备一致体验、自建不绑定第三方身份平台。发信渠道（SMTP 或轻量邮件服务）的凭据只放后端环境变量，不入仓库、不入前端。配套短期会话令牌采用 **Authorization 头 + Bearer 令牌**（见 §3.5）。
 
 ### 3.5 认证相关三要素区分 + CORS 澄清 **[已确定 / 建议]**
 
@@ -288,11 +295,12 @@ quick-notes / ideas / document-summary：各自独立，仅被 Dashboard 读
 | **Authorization** | 业务授权 | 决定「你能访问/操作什么」，与 Authentication 分层 |
 
 - **[已确定]** **CORS 不等于身份认证**：CORS 只是浏览器跨域资源访问策略，不能防止未授权访问，须配合认证令牌（与 `ARCHITECTURE.md` §14 一致）。
-- **[建议]** 若采用 **Cookie 会话**，需额外考虑：**CSRF 防护**、**SameSite 属性**、**跨域凭据配置**（`credentials` + CORS 白名单）。因前端（GitHub Pages）与后端（迷你主机）跨域，优先评估 **Authorization 头 + Bearer 令牌**，可规避 Cookie 跨域与 CSRF 的复杂性。
+- **[已确定（2026-11-20 决策）]** 会话形态采用 **Authorization 头 + Bearer 令牌**（短期 access token + 可撤销 refresh token），不采用 Cookie 会话；由此规避 CSRF / SameSite / 跨域凭据（`credentials` + CORS 白名单）的复杂度。access token 仅保存在内存，前端不保存长期 Secret。
 
-### 3.6 数据归属与权限边界 **[建议]**
+### 3.6 数据归属与权限边界 **[已确定 / 建议]**
 
 - 普通个人工作台数据：以 `user_id` 为归属边界。
+- **[已确定（2026-11-20 决策）]** 长期保持**个人单用户**：授权模型按「当前登录者 = 唯一 Owner」实现，第三阶段前不引入分享/协作/多用户。
 - 未来 Professional Applications：独立的 schema + 访问控制 + 审计，**不简单等同于**个人数据的 user 归属。
 - **[待决策]** 医疗等敏感数据的加密、审计、访问控制细节，待专业应用真正建设时另行设计。
 
@@ -317,7 +325,7 @@ quick-notes / ideas / document-summary：各自独立，仅被 Dashboard 读
 | Ideas | **独立表** | 未来与 Documents 拆分，先保留 |
 | Document Summary | **独立表** | `sourceText` 可能承载敏感资料，需独立边界 |
 | 模块设置 | **独立表（用户偏好）** | 系统配置与业务数据分离 |
-| AI 对话 | **不建表（暂）** | 属产品决策，待定是否持久化 |
+| AI 对话 | **建表（`ai_conversations` / `ai_messages`）** | 默认持久化；单段可关闭保存（不落库）；与笔记同级管理/删除/导出 |
 | Dashboard | **不建表** | 纯聚合视图 |
 
 ### 4.3 关联关系（外键候选）**[建议 / 待决策]**
@@ -397,7 +405,7 @@ quick-notes / ideas / document-summary：各自独立，仅被 Dashboard 读
 
 > **原则**：不把 localStorage 数据机械地 1:1 转成表。先按业务语义行化，再定字段。
 
-### 5.1 通用字段约定 **[建议]**
+### 5.1 通用字段约定 **[建议 / 部分已确定]**
 
 | 字段 | 类型 | 说明 |
 |---|---|---|
@@ -407,7 +415,9 @@ quick-notes / ideas / document-summary：各自独立，仅被 Dashboard 读
 | `version` | INT NOT NULL DEFAULT 1 | **Record Version**，乐观并发（见 §5.6） |
 | `created_at` | timestamptz NOT NULL | 默认 `now()` |
 | `updated_at` | timestamptz NOT NULL | 更新时刷新 |
-| `deleted_at` | timestamptz NULL | 软删除（可选，**[待决策]** 是否启用） |
+| `deleted_at` | timestamptz NULL | 软删除 **[已确定（2026-11-20 决策）]**：业务表启用、系统/单行配置表不用；查询默认过滤未删除，保留回收站恢复与“彻底删除”通道 |
+
+> **软删除范围（2026-11-20 决策）**：对可被用户删除的业务表（`tasks` / `notes` / `ideas` / `document_summaries`，及未来 `knowledge_items` / `ai_conversations`）启用 `deleted_at`；`users` / `auth_identities` / `migration_batches` / `user_preferences` 等系统表或单行配置表不启用。查询统一过滤 `deleted_at IS NULL`，列表默认隐藏，另提供回收站查看、恢复与“彻底删除”（物理删除，遵循先备份再确认后删除）；敏感字段（如 `source_text`）的彻底删除按敏感数据策略真正清除。保留期默认 30 天自动物理清理（或手动清空），具体期限待部署阶段定。软删除防误删、不替代备份。
 
 ### 5.2 设备身份与数据来源（区分四个概念）**[建议 / 待决策]**
 
@@ -482,6 +492,13 @@ created_at · updated_at · version INT DEFAULT 1
 UNIQUE (user_id, focus_date)
 ```
 
+**`ai_conversations` / `ai_messages`**（2026-11-20 决策：默认持久化）
+```text
+ai_conversations: id UUID PK · user_id FK · title TEXT NULL · created_at · updated_at · version INT DEFAULT 1 · deleted_at
+ai_messages:       id UUID PK · conversation_id FK → ai_conversations.id · role TEXT(user|assistant) · content TEXT · created_at · deleted_at
+```
+> 默认写入；某段对话被用户设为「不保存」时，该段消息**不落库**（非 schema 标记，而是行为开关）。对话与笔记同级：可删除、回收站恢复、Data Center 导出（Markdown/JSON）、随备份。
+
 **`user_preferences`**（承接模块设置）
 ```text
 user_id PK/FK · enabled_by_id JSONB · schema_version INT · updated_at
@@ -502,7 +519,6 @@ report JSONB（统计、异常、日志）
 |---|---|---|
 | `projects` | 跨模块组织中心 | Projects 正式管理能力启动时 |
 | `knowledge_items` / `knowledge_links` | 知识条目与来源关联 | Knowledge Base 建设（第三阶段） |
-| `ai_conversations` / `ai_messages` | AI 对话持久化 | 若决策持久化 AI 对话 |
 | `attachments` / `assets` | 附件与数字资产 | 附件存储能力启动时 |
 
 ### 5.4 localStorage → 表字段映射 **[建议]**
@@ -670,15 +686,15 @@ GET    /api/v1/health
 
 - **[建议]** **渐进式适配**：先选一个模块（建议 Quick Notes，见 §11）纵向打通，验证适配层后再推广到其余模块；**不要求一次性重写全部模块**。
 
-### 6.7 AI 请求衔接 **[建议 / 待决策]**
+### 6.7 AI 请求衔接 **[已确定（2026-11-20 决策）· 分阶段]**
 
 | 方案 | 说明 | 取舍 |
 |---|---|---|
 | **A. 前端直连现有 Worker（推荐初期）** | 前端 `requestAI` 继续指向 Worker | 零后端改动；Secret 仍在 Worker；后端不承担 AI |
 | B. 经 FastAPI 代理 | 前端 → FastAPI → DeepSeek（或其他模型） | 统一 Secret 管理、多模型路由、审计，但需新建代理、迁移 5 个工作流调用端点 |
 
-- **[建议]** 初期沿用方案 A，**不重建 AI 链路**；待需要多模型路由 / 统一密钥管理 / 服务端 RAG 时再评估方案 B。
-- **[待决策]** 方案 B 的触发时机与模型适配器设计。
+- **[已确定（2026-11-20 决策）]** 目标方向为**方案 B（经 FastAPI 代理）**：API Key 收归后端、统一错误处理与审计，前端不直接持有模型密钥；实施时机放在阶段 2（DataService 接入）之后，不阻塞阶段 1 建库。
+- **[已确定]** 触发时机：在 DataService 落地、至少一个模块经 API 读写稳定后接入；模型适配器设计细节在接入时定。
 - AI 数据流安全边界见 §10.2。
 
 ---
@@ -871,7 +887,7 @@ GitHub Pages（前端，HTTPS）
 
 - **所有数据查询必须根据认证上下文确定 `user_id`**：查询条件由后端从令牌上下文注入，**禁止信任客户端传入的 `user_id`**。
 - **增加跨用户数据访问隔离测试**：自动化测试验证用户 A 无法读取/修改用户 B 的数据。
-- **评估 PostgreSQL RLS（Row-Level Security）作为纵深防御**：即使应用层出现遗漏，RLS 仍能在数据库层兜底拦截跨用户访问（[待决策] 是否启用，需评估性能与复杂度）。
+- **PostgreSQL RLS 暂不启用（2026-11-20 决策）**：单用户阶段收益有限、复杂度高；先以应用层 `user_id` 过滤 + 跨用户隔离测试兜底，转多用户时再评估启用 RLS 作为纵深防御。
 - **数据库应用账号采用最小权限**：业务 API 使用**受限应用账号**，仅授予所需表的 DML 权限。
 - **数据库超级用户（superuser）不得用于业务 API**：超级用户仅用于运维、迁移与维护。
 - 未来 Professional Applications 的敏感数据**另行制定**安全与审计设计（不混入普通个人数据，见 §3.6、§12.5）。
@@ -925,22 +941,24 @@ GitHub Pages（前端，HTTPS）
 
 ## 12. 尚待决策的问题
 
-1. **认证方案**：自托管 + GitHub Pages 拓扑下，选用何种成熟认证（Cloudflare Access / 邮箱 OTP / OIDC / Bearer 令牌）？（§3.4）
-2. **会话形态**：Cookie 会话（需 CSRF/SameSite/跨域配置）还是 Authorization Bearer 令牌？（§3.5）
-3. **AI 代理**：AI 是否经 FastAPI 代理（方案 B），触发时机？（§6.7）
+> 已在本轮（2026-11-20）确定的决策：① **认证方案 = 邮箱 OTP + 短期 Bearer 令牌**；② **会话形态 = Authorization 头 + Bearer 令牌（access + 可撤销 refresh）**；③ **软删除 = 业务表启用 `deleted_at`，系统/单行配置表不启用，并保留回收站恢复与“彻底删除”通道**；④ **AI 对话 = 默认持久化 + 单段可关闭保存 + 与笔记同级管理/删除/导出**；⑤ **首个 Owner = 服务器本地 CLI 引导初始化，幂等、不开放公开端点、数据库层唯一约束**；⑥ **AI 代理 = 经 FastAPI 代理（阶段 2 后接入）**；⑦ **单用户 = 长期保持个人单用户，不引入分享/协作**；⑧ **RLS = 单用户阶段暂不启用**。其余问题仍待决策。
+
+1. **认证方案（已确定）**：采用邮箱 OTP + 短期 Bearer 令牌（见 §3.4）；后续只需落实发信渠道（SMTP 服务商/邮箱）与 OTP 有效期、限流等细节。
+2. **会话形态（已确定）**：采用 Authorization 头 + Bearer 令牌（access + 可撤销 refresh），不采用 Cookie 会话（见 §3.5）。
+3. **AI 代理（已确定）**：目标方向为经 FastAPI 代理（方案 B），API Key 收归后端、统一审计；触发时机在阶段 2 之后（见 §6.7）。
 4. **AI 数据流安全**：敏感数据脱敏规则、AI 请求审计、第三方模型数据保留条款核查？（§10.2）
-5. **AI 对话持久化**：是否持久化 AI Assistant 对话？隐私/保留/导出规则？（§4.2）
-6. **软删除**：业务表是否启用 `deleted_at` 软删除？（§5.1）
+5. **AI 对话持久化（已确定）**：默认持久化（`ai_conversations` / `ai_messages`），单段可关闭保存（不落库），与笔记同级支持管理/删除/导出（见 §4.2、§5.3）。第三方数据边界见第 4 条。
+6. **软删除（已确定）**：业务表启用 `deleted_at`，系统表与单行配置表不启用；查询默认过滤未删除，保留回收站恢复与“彻底删除”通道（见 §5.1）。保留期与自动清理周期待部署阶段定。
 7. **设备级追踪**：是否引入 Device ID / Created By Device / Updated By Device 审计？（当前无需求，§5.2）
 8. **Document `source_text` 保留策略**：保留时长、是否可删、是否脱敏？（§4.2）
-9. **多用户/共享协作**：未来是否引入分享、协作，还是长期保持「个人单用户」？（影响授权模型）
+9. **多用户/共享协作（已确定）**：长期保持个人单用户，第三阶段前不引入分享/协作；授权模型按「当前登录者 = 唯一 Owner」实现（见 §3.6）。
 10. **同步复杂度**：是否/何时进入 P2（离线缓存）、P3（离线写入 + 同步队列）？（§7.6）
 11. **备份频率与异地目标**：具体备份周期、加密与异地存储位置，待部署阶段定。（§10.3）
 12. **模块设置云端化**：`enabledById` 落库为 `user_preferences` 后，损坏隔离/恢复如何在服务端承接？（§5.3）
 13. **Daily Focus 字段演进**：`clone/normalize` 固定字段重建，未来为归档新增字段时如何演进（需同步更新白名单）？（§4.5）
 14. **iPhone 实际数据核实**：迁移前须由用户现场确认 iPhone 数据量与内容完整性（AI 无法直接读取 iPhone localStorage）。（§1.2、§8.1）
-15. **PostgreSQL RLS**：是否启用行级安全作为纵深防御（需评估性能与复杂度）？（§10.1）
-16. **首个 Owner 初始化方式**：Owner 的一次性初始化流程（本机/内网引导）具体实现方式？（§3.4）
+15. **PostgreSQL RLS（已确定）**：单用户阶段暂不启用，先靠应用层 `user_id` 过滤 + 隔离测试；转多用户时再评估（见 §10.1）。
+16. **首个 Owner 初始化方式（已确定）**：服务器本地 CLI 引导（如 `bootstrap-owner --email`），幂等、不开放公开端点，数据库对 Owner 角色加唯一约束（见 §3.4）。
 
 ---
 
