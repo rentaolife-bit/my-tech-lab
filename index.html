@@ -11117,14 +11117,20 @@
             }
         }
 
-        async function bootApiNotes() {
+        async function bootApiMode() {
             const ready = await authClient.ensureSession();
             if (!ready) {
                 showLogin();
                 return;
             }
             hideLogin();
-            await loadNotesFromApi();
+            await Promise.all([
+                loadNotesFromApi(),
+                loadTasksFromApi(),
+                loadIdeasFromApi(),
+                loadDocumentHistoryFromApi(),
+                loadDailyFocusFromApi()
+            ]);
         }
 
         // ===== Stage 2：登录浮层 =====
@@ -11170,7 +11176,7 @@
                 await authClient.login(email, code, remember);
                 loginCodeInput.value = "";
                 hideLogin();
-                await loadNotesFromApi();
+                await bootApiMode();
             } catch (error) {
                 loginStatus.textContent = "登录失败，请检查邮箱和验证码。";
             }
@@ -13583,29 +13589,16 @@
         }
         renderModuleManagementCenter();
         if (MTLLab.dataSource === "api") {
-            loadDailyFocusFromApi();
+            bootApiMode();
         } else {
             loadDailyFocus();
+            loadNotes();
+            loadIdeas();
+            loadDocumentHistory();
+            loadTasks();
         }
         updateClock();
         window.setInterval(updateClock, 1000);
-        if (MTLLab.dataSource === "api") {
-            bootApiNotes();
-        } else {
-            loadNotes();
-        }
-        if (MTLLab.dataSource === "api") {
-            loadIdeasFromApi();
-            loadDocumentHistoryFromApi();
-        } else {
-            loadIdeas();
-            loadDocumentHistory();
-        }
-        if (MTLLab.dataSource === "api") {
-            loadTasksFromApi();
-        } else {
-            loadTasks();
-        }
         updateModuleAccessUI();
         refreshDailyPlanning(false);
         renderDataCenterOverview();
