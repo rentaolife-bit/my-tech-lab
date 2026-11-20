@@ -10811,6 +10811,7 @@
                 notes = items;
                 notesStorageReady = true;
                 renderNotes();
+                updateModuleAccessUI();
                 notesStatus.textContent = "已从服务器加载。";
                 notesStatus.setAttribute("role", "status");
                 delete notesStatus.dataset.moduleAccessBlocked;
