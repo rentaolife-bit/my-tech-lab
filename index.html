@@ -4284,6 +4284,96 @@
             }
         }
     </style>
+    <style id="stage2-styles">
+        .login-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            background: rgba(10, 14, 22, 0.72);
+            backdrop-filter: blur(4px);
+        }
+        .login-overlay[hidden] {
+            display: none;
+        }
+        .login-card {
+            width: 100%;
+            max-width: 24rem;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            background: var(--surface, #10151f);
+            border: 1px solid var(--border, #263041);
+            box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+        }
+        .login-title {
+            margin: 0 0 0.5rem;
+            font-size: 1.25rem;
+        }
+        .login-copy {
+            margin: 0 0 1rem;
+            opacity: 0.8;
+            line-height: 1.5;
+        }
+        .login-label {
+            display: block;
+            margin: 0 0 0.35rem;
+            font-size: 0.9rem;
+        }
+        .login-card input[type="email"],
+        .login-card input[type="text"] {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 0.7rem 0.8rem;
+            border-radius: 0.6rem;
+            border: 1px solid var(--border, #263041);
+            background: var(--input, #0b0f16);
+            color: inherit;
+            font-size: 1rem;
+        }
+        .login-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+        .login-remember {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0.9rem 0;
+            font-size: 0.9rem;
+        }
+        .login-status {
+            min-height: 1.25rem;
+            margin: 0.25rem 0 0.75rem;
+            font-size: 0.85rem;
+            opacity: 0.85;
+        }
+        .login-card button {
+            padding: 0.65rem 0.9rem;
+            border-radius: 0.6rem;
+            border: 1px solid var(--border, #263041);
+            background: var(--accent, #4f8cff);
+            color: #fff;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+        .login-card button.secondary {
+            background: transparent;
+            color: inherit;
+        }
+        .login-submit {
+            width: 100%;
+        }
+        @media (max-width: 480px) {
+            .login-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="page-shell">
@@ -5118,6 +5208,26 @@
             <span class="footer-status">Always exploring</span>
         </footer>
     </div>
+    <div class="login-overlay" id="login-overlay" hidden>
+        <div class="login-card" role="dialog" aria-modal="true" aria-labelledby="login-title">
+            <h2 class="login-title" id="login-title">登录 My Tech Lab</h2>
+            <p class="login-copy">输入你的邮箱，我们会发送一次性验证码。</p>
+            <form id="login-otp-form">
+                <label class="login-label" for="login-email">邮箱</label>
+                <input id="login-email" type="email" autocomplete="email" required>
+                <div class="login-row">
+                    <input id="login-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6 位验证码" required>
+                    <button id="login-send-code" class="secondary" type="button">发送验证码</button>
+                </div>
+                <label class="login-remember">
+                    <input id="login-remember" type="checkbox" checked>
+                    <span>记住此设备（下次自动打开）</span>
+                </label>
+                <p class="login-status" id="login-status" role="status"></p>
+                <button class="login-submit" id="login-submit" type="submit">登录</button>
+            </form>
+        </div>
+    </div>
     <script>
         const weekdayFormatter = new Intl.DateTimeFormat(undefined, { weekday: "long" });
         const dateFormatter = new Intl.DateTimeFormat(undefined, {
@@ -5140,6 +5250,205 @@
         const aiChatClearButton = document.getElementById("ai-chat-clear");
         const aiAssistantSection = document.querySelector(".ai-assistant-section");
         const aiWorkerEndpoint = "https://my-tech-lab-api.rentao-life.workers.dev";
+
+        // ===== Stage 2：数据源开关 / 认证客户端 / API 客户端 =====
+        // 默认仍走 localStorage（local），后端就绪后把 MY_TECH_LAB_DATA_SOURCE 设为 "api"。
+        const MTLLab = {
+            dataSource: window.MY_TECH_LAB_DATA_SOURCE || "local",
+            apiBase: (window.MY_TECH_LAB_API_BASE || "http://localhost:8000").replace(/\/+$/, ""),
+            refreshTokenKey: "my-tech-lab-refresh-token"
+        };
+
+        const authClient = (() => {
+            let accessToken = null;
+
+            function getStoredRefreshToken() {
+                try {
+                    return localStorage.getItem(MTLLab.refreshTokenKey);
+                } catch (error) {
+                    return null;
+                }
+            }
+
+            return {
+                getAccessToken() {
+                    return accessToken;
+                },
+                hasSession() {
+                    return accessToken !== null;
+                },
+                setSession(tokens, remember) {
+                    accessToken = tokens.access_token || null;
+                    try {
+                        if (remember && tokens.refresh_token) {
+                            localStorage.setItem(MTLLab.refreshTokenKey, tokens.refresh_token);
+                        } else {
+                            localStorage.removeItem(MTLLab.refreshTokenKey);
+                        }
+                    } catch (error) {
+                        // 存储不可用时仅保留内存态。
+                    }
+                },
+                clearSession() {
+                    accessToken = null;
+                    try {
+                        localStorage.removeItem(MTLLab.refreshTokenKey);
+                    } catch (error) {
+                        // ignore
+                    }
+                },
+                async ensureSession() {
+                    if (accessToken) {
+                        return true;
+                    }
+                    const refreshToken = getStoredRefreshToken();
+                    if (!refreshToken) {
+                        return false;
+                    }
+                    try {
+                        const response = await fetch(`${MTLLab.apiBase}/api/v1/auth/refresh`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ refresh_token: refreshToken })
+                        });
+                        if (!response.ok) {
+                            this.clearSession();
+                            return false;
+                        }
+                        const data = await response.json();
+                        this.setSession(data, true);
+                        return true;
+                    } catch (error) {
+                        this.clearSession();
+                        return false;
+                    }
+                },
+                async requestOtp(email) {
+                    await fetch(`${MTLLab.apiBase}/api/v1/auth/otp/request`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ email })
+                    });
+                },
+                async login(email, code, remember) {
+                    const response = await fetch(`${MTLLab.apiBase}/api/v1/auth/login`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ email, code })
+                    });
+                    if (!response.ok) {
+                        const error = new Error("Login failed");
+                        error.status = response.status;
+                        throw error;
+                    }
+                    const data = await response.json();
+                    this.setSession(data, remember);
+                    return data;
+                },
+                async logout() {
+                    const refreshToken = getStoredRefreshToken();
+                    if (refreshToken) {
+                        fetch(`${MTLLab.apiBase}/api/v1/auth/logout`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ refresh_token: refreshToken })
+                        }).catch(() => {});
+                    }
+                    this.clearSession();
+                }
+            };
+        })();
+
+        const apiClient = (() => {
+            async function request(path, options = {}) {
+                const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
+                const token = authClient.getAccessToken();
+                if (token) {
+                    headers.Authorization = `Bearer ${token}`;
+                }
+                let response = await fetch(`${MTLLab.apiBase}${path}`, { ...options, headers });
+                if (response.status === 401) {
+                    const refreshed = await authClient.ensureSession();
+                    if (refreshed) {
+                        const nextToken = authClient.getAccessToken();
+                        if (nextToken) {
+                            headers.Authorization = `Bearer ${nextToken}`;
+                        }
+                        response = await fetch(`${MTLLab.apiBase}${path}`, { ...options, headers });
+                    }
+                }
+                return response;
+            }
+
+            function throwForStatus(response, fallback) {
+                if (response.ok) {
+                    return;
+                }
+                const error = new Error(fallback || `Request failed (${response.status})`);
+                error.status = response.status;
+                if (response.status === 409) {
+                    error.name = "ConflictError";
+                } else if (response.status === 401) {
+                    error.name = "AuthError";
+                } else {
+                    error.name = "HTTPError";
+                }
+                throw error;
+            }
+
+            return {
+                async getJson(path) {
+                    const response = await request(path);
+                    throwForStatus(response);
+                    return response.json();
+                },
+                async sendJson(path, method, body) {
+                    const response = await request(path, {
+                        method,
+                        body: body === undefined ? undefined : JSON.stringify(body)
+                    });
+                    throwForStatus(response);
+                    if (response.status === 204) {
+                        return null;
+                    }
+                    return response.json();
+                }
+            };
+        })();
+
+        const DataService = (() => {
+            function fromApi(note) {
+                return {
+                    id: String(note.id),
+                    text: note.text,
+                    createdAt: note.created_at,
+                    version: typeof note.version === "number" ? note.version : 1
+                };
+            }
+
+            return {
+                fromApi,
+                async listNotes() {
+                    const data = await apiClient.getJson("/api/v1/notes");
+                    return data.map(fromApi);
+                },
+                async createNote(text) {
+                    const note = await apiClient.sendJson("/api/v1/notes", "POST", { text });
+                    return fromApi(note);
+                },
+                async updateNote(id, text, version) {
+                    const note = await apiClient.sendJson(
+                        `/api/v1/notes/${encodeURIComponent(id)}`,
+                        "PATCH",
+                        { text, version }
+                    );
+                    return fromApi(note);
+                },
+                async deleteNote(id) {
+                    return apiClient.sendJson(`/api/v1/notes/${encodeURIComponent(id)}`, "DELETE");
+                }
+            };
+        })();
 
         // AI 传输层（纯传输，不操作 DOM、不写业务数据、不判定权限）。
         // 由调用方传入 AbortSignal 与权限校验回调；fetch/超时/HTTP/JSON/reply 契约在此统一处理。
@@ -6246,6 +6555,7 @@
         let notes = [];
         let notesStorageReady = false;
         let editingNoteId = null;
+        let editingNoteVersion = null;
         const ideasStorageKey = "my-tech-lab-ideas";
         const ideasWorkspace = document.getElementById("ideas-workspace");
         const ideasAccessStatus = document.getElementById("ideas-access-status");
@@ -10405,7 +10715,7 @@
             }
         }
 
-        function deleteNote(noteId) {
+        async function deleteNote(noteId) {
             if (!requireModuleAccess("quick-notes", notesStatus)) {
                 return;
             }
@@ -10419,6 +10729,21 @@
             if (!window.confirm("Delete this note? This cannot be undone.")) {
                 return;
             }
+            if (MTLLab.dataSource === "api") {
+                notesStatus.textContent = "Deleting…";
+                try {
+                    await DataService.deleteNote(noteId);
+                    notes = notes.filter((note) => note.id !== noteId);
+                    if (editingNoteId === noteId) {
+                        resetNoteForm();
+                    }
+                    renderNotes();
+                    notesStatus.textContent = "Note deleted.";
+                } catch (error) {
+                    notesStatus.textContent = "删除失败，请重试。";
+                }
+                return;
+            }
             const nextNotes = notes.filter((note) => note.id !== noteId);
             if (persistNotes(nextNotes)) {
                 if (editingNoteId === noteId) {
@@ -10430,6 +10755,7 @@
 
         function resetNoteForm() {
             editingNoteId = null;
+            editingNoteVersion = null;
             noteInput.value = "";
             notesSave.textContent = "Save note";
             notesCancel.hidden = true;
@@ -10444,6 +10770,7 @@
                 return;
             }
             editingNoteId = noteId;
+            editingNoteVersion = typeof note.version === "number" ? note.version : null;
             noteInput.value = note.text;
             notesSave.textContent = "Save changes";
             notesCancel.hidden = false;
@@ -10475,7 +10802,115 @@
             }
         }
 
-        notesForm.addEventListener("submit", (event) => {
+        // ===== Stage 2：Quick Notes 的 API 模式异步编排 =====
+        async function loadNotesFromApi() {
+            notesStatus.textContent = "Loading notes…";
+            notesStatus.setAttribute("role", "status");
+            try {
+                const items = await DataService.listNotes();
+                notes = items;
+                notesStorageReady = true;
+                renderNotes();
+                notesStatus.textContent = "已从服务器加载。";
+                notesStatus.setAttribute("role", "status");
+                delete notesStatus.dataset.moduleAccessBlocked;
+            } catch (error) {
+                setNotesUnavailable("无法加载笔记，请检查网络或登录状态后重试。", error);
+            }
+        }
+
+        async function createNoteToApi(text) {
+            notesStatus.textContent = "Saving…";
+            try {
+                const created = await DataService.createNote(text);
+                notes = [created, ...notes];
+                renderNotes();
+                resetNoteForm();
+                notesStatus.textContent = "Note saved.";
+                noteInput.focus();
+            } catch (error) {
+                notesStatus.textContent = "保存失败，请重试。";
+            }
+        }
+
+        async function updateNoteToApi(noteId, text, version) {
+            notesStatus.textContent = "Saving…";
+            try {
+                const updated = await DataService.updateNote(noteId, text, version);
+                notes = notes.map((note) => (note.id === noteId ? updated : note));
+                renderNotes();
+                resetNoteForm();
+                notesStatus.textContent = "Note updated.";
+                noteInput.focus();
+            } catch (error) {
+                if (error && error.name === "ConflictError") {
+                    notesStatus.textContent = "已在别处修改，请刷新后重试。";
+                } else {
+                    notesStatus.textContent = "保存失败，请重试。";
+                }
+            }
+        }
+
+        async function bootApiNotes() {
+            const ready = await authClient.ensureSession();
+            if (!ready) {
+                showLogin();
+                return;
+            }
+            hideLogin();
+            await loadNotesFromApi();
+        }
+
+        // ===== Stage 2：登录浮层 =====
+        const loginOverlay = document.getElementById("login-overlay");
+        const loginOtpForm = document.getElementById("login-otp-form");
+        const loginEmailInput = document.getElementById("login-email");
+        const loginCodeInput = document.getElementById("login-code");
+        const loginSendCodeButton = document.getElementById("login-send-code");
+        const loginRememberInput = document.getElementById("login-remember");
+        const loginStatus = document.getElementById("login-status");
+
+        function showLogin() {
+            loginOverlay.hidden = false;
+            loginEmailInput.focus();
+        }
+
+        function hideLogin() {
+            loginOverlay.hidden = true;
+        }
+
+        loginSendCodeButton.addEventListener("click", async () => {
+            const email = loginEmailInput.value.trim();
+            if (!email) {
+                loginStatus.textContent = "请先输入邮箱。";
+                return;
+            }
+            loginStatus.textContent = "正在发送验证码…";
+            try {
+                await authClient.requestOtp(email);
+                loginStatus.textContent = "验证码已发送，请查收邮箱。";
+            } catch (error) {
+                loginStatus.textContent = "发送失败，请重试。";
+            }
+        });
+
+        loginOtpForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const email = loginEmailInput.value.trim();
+            const code = loginCodeInput.value.trim();
+            const remember = loginRememberInput.checked;
+            loginStatus.textContent = "正在登录…";
+            try {
+                await authClient.login(email, code, remember);
+                loginCodeInput.value = "";
+                hideLogin();
+                await loadNotesFromApi();
+            } catch (error) {
+                loginStatus.textContent = "登录失败，请检查邮箱和验证码。";
+            }
+        });
+
+        notesForm.addEventListener("submit", async (event) => {
             event.preventDefault();
             if (!requireModuleAccess("quick-notes", notesStatus)) {
                 updateModuleAccessUI();
@@ -10488,6 +10923,16 @@
                 return;
             }
             if (!notesStorageReady) {
+                return;
+            }
+
+            if (MTLLab.dataSource === "api") {
+                const existing = notes.find((note) => note.id === editingNoteId);
+                if (existing) {
+                    await updateNoteToApi(editingNoteId, text, editingNoteVersion);
+                } else {
+                    await createNoteToApi(text);
+                }
                 return;
             }
 
@@ -12571,7 +13016,11 @@
         loadDailyFocus();
         updateClock();
         window.setInterval(updateClock, 1000);
-        loadNotes();
+        if (MTLLab.dataSource === "api") {
+            bootApiNotes();
+        } else {
+            loadNotes();
+        }
         loadIdeas();
         loadDocumentHistory();
         loadTasks();
