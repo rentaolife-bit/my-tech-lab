@@ -2,7 +2,16 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .config import get_settings
-from .routers import auth, daily_focus, data_center, documents, ideas, notes, tasks
+from .routers import (
+    auth,
+    daily_focus,
+    data_center,
+    documents,
+    ideas,
+    knowledge,
+    notes,
+    tasks,
+)
 
 
 def create_app() -> FastAPI:
@@ -32,6 +41,7 @@ def create_app() -> FastAPI:
     app.include_router(documents.router)
     app.include_router(daily_focus.router)
     app.include_router(data_center.router)
+    app.include_router(knowledge.router)
 
     return app
 

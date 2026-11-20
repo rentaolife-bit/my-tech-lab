@@ -318,3 +318,33 @@ class RefreshToken(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
+
+
+class KnowledgeItem(SoftDeleteBusinessMixin, Base):
+    __tablename__ = "knowledge_items"
+
+    title: Mapped[str] = mapped_column(Text, nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False, server_default=sa_text("''"))
+    tags: Mapped[list] = mapped_column(JSONB, nullable=False, server_default=sa_text("'[]'::jsonb"))
+
+    links: Mapped[list["KnowledgeLink"]] = relationship(
+        back_populates="item", cascade="all, delete-orphan"
+    )
+
+
+class KnowledgeLink(Base):
+    __tablename__ = "knowledge_links"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, primary_key=True, server_default=sa_text("gen_random_uuid()")
+    )
+    knowledge_item_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("knowledge_items.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    source_type: Mapped[str] = mapped_column(Text, nullable=False)
+    source_id: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    item: Mapped["KnowledgeItem"] = relationship(back_populates="links")

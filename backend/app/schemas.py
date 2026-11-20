@@ -174,3 +174,39 @@ class DailyFocusOut(BaseModel):
     created_at: datetime
     updated_at: datetime
     version: int
+
+
+class KnowledgeLinkOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    source_type: str
+    source_id: str
+
+
+class KnowledgeItemCreate(BaseModel):
+    title: str = Field(min_length=1, max_length=10000)
+    content: str = Field(default="", max_length=500000)
+    tags: list[str] = []
+    source_links: list[dict] = []
+
+
+class KnowledgeItemUpdate(BaseModel):
+    title: str | None = Field(default=None, min_length=1, max_length=10000)
+    content: str | None = Field(default=None, max_length=500000)
+    tags: list[str] | None = None
+    source_links: list[dict] | None = None
+    version: int | None = None
+
+
+class KnowledgeItemOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    title: str
+    content: str
+    tags: list
+    created_at: datetime
+    updated_at: datetime
+    version: int
+    links: list[KnowledgeLinkOut] = []
