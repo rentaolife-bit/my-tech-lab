@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     otp_max_attempts: int = 5
     otp_sender: str = "console"
     jwt_secret: str = "dev-only-change-me-in-production"
+    cors_origins: str = "http://localhost,http://127.0.0.1,null"
 
     smtp_host: str = ""
     smtp_port: int = 465
