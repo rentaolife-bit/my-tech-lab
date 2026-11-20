@@ -9894,11 +9894,16 @@
             }
 
             const today = getLocalDateKey(new Date());
-            const savedTasks = localStorage.getItem(tasksStorageKey);
-            const latestTasks = savedTasks === null ? [] : JSON.parse(savedTasks);
-            if (!Array.isArray(latestTasks) || latestTasks.some((task) => !isValidTask(task))) {
-                throw new Error("Stored tasks have an invalid format.");
-            }
+            const latestTasks = MTLLab.dataSource === "api"
+                ? tasks
+                : (() => {
+                    const savedTasks = localStorage.getItem(tasksStorageKey);
+                    const latest = savedTasks === null ? [] : JSON.parse(savedTasks);
+                    if (!Array.isArray(latest) || latest.some((task) => !isValidTask(task))) {
+                        throw new Error("Stored tasks have an invalid format.");
+                    }
+                    return latest;
+                })();
 
             const priorities = readDailyFocusPriorities(today);
 
