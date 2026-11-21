@@ -6980,6 +6980,7 @@
         let dailyFocusStorageReady = false;
         let dailyFocusHistorySelectedDate = "";
         let dailyFocusApiArchive = null;
+        let dailyFocusSaveSeq = 0;
         const dailyFocusSchemaVersion = 1;
         const dashboardPendingTasks = document.getElementById("dashboard-pending-tasks");
         const dashboardCompletedTasks = document.getElementById("dashboard-completed-tasks");
@@ -10887,9 +10888,13 @@
         }
 
         async function saveDailyFocusToApi(nextFocus) {
+            const seq = ++dailyFocusSaveSeq;
             dailyFocusStatus.textContent = "正在保存…";
             try {
                 const saved = await DataService.saveDailyFocus(nextFocus.date, nextFocus.priorities);
+                if (seq !== dailyFocusSaveSeq) {
+                    return;
+                }
                 dailyFocus = { date: saved.date, priorities: [...saved.priorities] };
                 if (!dailyFocusApiArchive) {
                     dailyFocusApiArchive = {
@@ -10900,10 +10905,14 @@
                 }
                 dailyFocusApiArchive.records[saved.date] = { priorities: [...saved.priorities] };
                 dailyFocusApiArchive.activeDate = saved.date;
-                renderActiveDailyFocus();
+                updateDashboardStats();
+                renderDailyFocusHistory();
                 dailyFocusStatus.textContent = "每日重点已保存。";
                 dailyFocusStatus.setAttribute("role", "status");
             } catch (error) {
+                if (seq !== dailyFocusSaveSeq) {
+                    return;
+                }
                 dailyFocusStatus.textContent = "保存失败，请重试。";
                 dailyFocusStatus.setAttribute("role", "alert");
             }
@@ -11066,6 +11075,13 @@
                 }
                 const priorities = [...dailyFocus.priorities];
                 priorities[index] = "";
+                if (MTLLab.dataSource === "api") {
+                    dailyFocusInputs[index].value = "";
+                    persistDailyFocus({ date: dailyFocus.date, priorities });
+                    dailyFocusStatus.textContent = `Priority ${index + 1} cleared.`;
+                    dailyFocusInputs[index].focus();
+                    return;
+                }
                 if (persistDailyFocus({ date: dailyFocus.date, priorities })) {
                     dailyFocusStatus.textContent = `Priority ${index + 1} cleared.`;
                     dailyFocusInputs[index].focus();
