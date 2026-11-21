@@ -1,0 +1,33 @@
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-mytechlab}
+      POSTGRES_USER: ${POSTGRES_USER:-mytechlab}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mytechlab} -d ${POSTGRES_DB:-mytechlab}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  backend:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-mytechlab}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-mytechlab}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
+      OTP_SENDER: ${OTP_SENDER:-console}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost,http://127.0.0.1,null}
+      ENVIRONMENT: production
+    ports:
+      - "8000:8000"
+
+volumes:
+  pgdata:
